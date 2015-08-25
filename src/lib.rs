@@ -24,11 +24,15 @@ use types::MultiPoint;
 use types::MultiLineString;
 use types::MultiPolygon;
 
+mod parser;
 mod tokenizer;
 mod towkt;
 pub mod types;
 
 pub use towkt::ToWkt;
+
+#[macro_use]
+extern crate nom;
 
 
 pub enum Geometry {
