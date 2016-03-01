@@ -11,6 +11,12 @@ enum Coord {
     XY(f64, f64),
 }
 
+// FIXME: this doesn't properly parse floating points
+// number = ?/[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?/? ;
+named!(number<&[u8], f64>, map!(
+    digit, |x| { FromStr::from_str(from_utf8(x).unwrap()).unwrap() }
+));
+
 // empty_set = "EMPTY";
 named!(empty_set<&[u8], Coord>, map!(
     tag!("EMPTY"), |_| { Coord::Empty }
@@ -34,20 +40,13 @@ named!(point_text<&[u8], Coord>, alt!(
 
 // point = x y [ z ] [ m ];
 named!(point<&[u8], Coord>, chain!(
-    x: digit ~
+    x: number ~
     multispace ~
-    y: digit ,
-    || { Coord::XY(FromStr::from_str(from_utf8(x).unwrap()).unwrap(),
-                   FromStr::from_str(from_utf8(y).unwrap()).unwrap()) }
+    y: number ,
+    || { Coord::XY(x, y) }
 ));
 
 named!(parenthesized<&[u8], Coord>, delimited!(
-    delimited!(opt!(multispace), tag!("("), opt!(multispace)),
-    point,
-    delimited!(opt!(multispace), tag!(")"), opt!(multispace))
-));
-
-named!(number<&[u8], Coord>, delimited!(
     delimited!(opt!(multispace), tag!("("), opt!(multispace)),
     point,
     delimited!(opt!(multispace), tag!(")"), opt!(multispace))
