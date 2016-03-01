@@ -10,4 +10,4 @@ repository = "https://github.com/georust/rust-wkt"
 
 [dependencies]
 geo = "0.0.4"
-nom = "~0.3.0"
+nom = "~1.2.1"

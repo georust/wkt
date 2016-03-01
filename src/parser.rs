@@ -1,15 +1,20 @@
-use nom::{self, multispace, IResult};
+use nom::{self, multispace, IResult, digit};
+use std::str::FromStr;
+use std::str::from_utf8;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 struct Point(Coord);
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 enum Coord {
     Empty,
-    XY(f64),
+    XY(f64, f64),
 }
 
-const EMPTY_SET: &'static str = "EMPTY";
+// empty_set = "EMPTY";
+named!(empty_set<&[u8], Coord>, map!(
+    tag!("EMPTY"), |_| { Coord::Empty }
+));
 
 // point_text_representation = "POINT" [ z_m ] point_text;
 named!(point_text_representation<&[u8], Point>, chain!(
@@ -23,14 +28,17 @@ named!(point_text_representation<&[u8], Point>, chain!(
 //    empty_set |
 //    left_paren point right_paren;
 named!(point_text<&[u8], Coord>, alt!(
-    map!(tag!(EMPTY_SET), |_| { Coord::Empty }) |
+    empty_set |
     parenthesized
 ));
 
 // point = x y [ z ] [ m ];
 named!(point<&[u8], Coord>, chain!(
-    map!(tag!("HI"), |_| { Coord::Empty }) ,
-    || { Coord::XY(1f64) }
+    x: digit ~
+    multispace ~
+    y: digit ,
+    || { Coord::XY(FromStr::from_str(from_utf8(x).unwrap()).unwrap(),
+                   FromStr::from_str(from_utf8(y).unwrap()).unwrap()) }
 ));
 
 named!(parenthesized<&[u8], Coord>, delimited!(
@@ -58,12 +66,12 @@ mod tests {
         assert_eq!(IResult::Done(b"" as &[u8], Point(Coord::Empty)), point);
     }
 
-/*
     #[test]
-    fn test_empty_point() {
-        let input = b"[abcdabcd]";
-        let point = brackets(input);
-        assert_eq!(IResult::Done(b"" as &[u8], Point{x: 0, y: 0}), point);
+    fn test_point() {
+        let input = b"POINT (1 2)";
+        let point = point_text_representation(input);
+        assert_eq!(
+            IResult::Done(b"" as &[u8], Point(Coord::XY(1., 2.))),
+            point);
     }
-    */
 }
