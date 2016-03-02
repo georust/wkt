@@ -32,9 +32,9 @@ named!(right_paren<&[u8], &[u8]>, delimited!(
 ));
 
 // empty_set = "EMPTY";
-named!(empty_set<&[u8], Option<Coord> >, map!(
-    tag!("EMPTY"), |_| { None }
-));
+fn empty_set<T>(input: &[u8]) -> IResult<&[u8], Option<T>> {
+    map!(input, tag!("EMPTY"), |_| { None })
+}
 
 // POINT
 
