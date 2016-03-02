@@ -3,13 +3,10 @@ use std::str::FromStr;
 use std::str::from_utf8;
 
 #[derive(Debug, PartialEq)]
-struct Point(Coord);
+struct Point(Option<Coord>);
 
 #[derive(Debug, PartialEq)]
-enum Coord {
-    Empty,
-    XY(f64, f64),
-}
+struct Coord(f64, f64);
 
 // FIXME: this doesn't properly parse floating points
 // number = ?/[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?/? ;
@@ -35,9 +32,11 @@ named!(right_paren<&[u8], &[u8]>, delimited!(
 ));
 
 // empty_set = "EMPTY";
-named!(empty_set<&[u8], Coord>, map!(
-    tag!("EMPTY"), |_| { Coord::Empty }
+named!(empty_set<&[u8], Option<Coord> >, map!(
+    tag!("EMPTY"), |_| { None }
 ));
+
+// POINT
 
 // point_text_representation = "POINT" [ z_m ] point_text;
 named!(point_text_representation<&[u8], Point>, chain!(
@@ -48,24 +47,52 @@ named!(point_text_representation<&[u8], Point>, chain!(
 ));
 
 // point_text =
-//    empty_set |
-//    left_paren point right_paren;
-named!(point_text<&[u8], Coord>, alt!(
+//     empty_set |
+//     left_paren point right_paren;
+named!(point_text<&[u8], Option<Coord> >, alt!(
     empty_set |
     delimited!(left_paren, point, right_paren)
 ));
 
 // point = x y [ z ] [ m ];
-named!(point<&[u8], Coord>, chain!(
+named!(point<&[u8], Option<Coord> >, chain!(
     x: number ~
     multispace ~
     y: number ,
-    || { Coord::XY(x, y) }
+    || { Some(Coord(x, y)) }
+));
+
+// LINESTRING
+
+// empty_set = "EMPTY";
+named!(empty_set_linestring<&[u8], Option<Vec<Coord>> >, map!(
+    tag!("EMPTY"), |_| { None }
 ));
 
 // linestring_text =
-//   empty_set |
-//   left_paren point { comma point } right_paren;
+//     empty_set |
+//     left_paren point { comma point } right_paren;
+/*
+named!(linestring_text<&[u8], Option<Vec<Coord>> >, alt!(
+    empty_set_linestring |
+    delimited!(
+        left_paren,
+        separated_nonempty_list!(char!(','), expr_opt!(point)),
+        right_paren
+    )
+));
+*/
+
+// linestring_text_representation =
+//     "LINESTRING" [ z_m ] linestring_text_body;
+/*
+named!(point_text_representation<&[u8], Point>, chain!(
+    tag!("LINESTRING") ~
+    multispace ~
+    coord: point_text ,
+    || { Point(coord) }
+));
+*/
 
 
 #[cfg(test)]
@@ -77,7 +104,7 @@ mod tests {
     fn test_empty_point() {
         let input = b"POINT EMPTY";
         let point = point_text_representation(input);
-        assert_eq!(IResult::Done(b"" as &[u8], Point(Coord::Empty)), point);
+        assert_eq!(IResult::Done(b"" as &[u8], Point(None)), point);
     }
 
     #[test]
@@ -85,7 +112,7 @@ mod tests {
         let input = b"POINT (1.9 2)";
         let point = point_text_representation(input);
         assert_eq!(
-            IResult::Done(b"" as &[u8], Point(Coord::XY(1.9, 2.))),
+            IResult::Done(b"" as &[u8], Point(Some(Coord(1.9, 2.)))),
             point);
     }
 }
