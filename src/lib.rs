@@ -28,6 +28,8 @@ mod tokenizer;
 mod towkt;
 pub mod types;
 
+mod wkt;
+
 pub use towkt::ToWkt;
 
 

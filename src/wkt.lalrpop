@@ -1,0 +1,30 @@
+// http://svn.osgeo.org/postgis/trunk/doc/bnf-wkt.txt
+
+use std::str::FromStr;
+
+grammar;
+
+//FIXME: https://github.com/nikomatsakis/lalrpop/issues/97
+//Float: f64 = r"[+-]?([0-9]+(.[0-9]*)?|.[0-9]+)([eE][+-]?[0-9]+)?" => f64::from_str(<>).unwrap();
+
+Float: f64 = r"[+-0-9eE.]+" => f64::from_str(<>).unwrap();
+
+pub PointTextRepresentation = "POINT" <PointText>;
+
+pub LineStringTextRepresentation = "LINESTRING" <LineStringTextBody>;
+
+pub LineStringTextBody = LineStringText;
+
+pub PointText: Option<(f64, f64)> = {
+    "EMPTY" => None,
+    "(" <p:Point> ")" => Some(p),
+};
+
+pub Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
+
+/*
+pub LineStringText: Option<Vec<(f64, f64)>> = {
+    "EMPTY" => None,
+    "(" <p:Point> ")" => Some(p),
+};
+*/
