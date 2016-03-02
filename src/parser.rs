@@ -13,8 +13,15 @@ enum Coord {
 
 // FIXME: this doesn't properly parse floating points
 // number = ?/[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?/? ;
+fn is_numeric_byte(c: u8) -> bool {
+    match c as char {
+        '0'...'9' | '.' | 'e' | 'E' | '+' | '-' => true,
+        _ => false,
+    }
+}
 named!(number<&[u8], f64>, map!(
-    digit, |x| { FromStr::from_str(from_utf8(x).unwrap()).unwrap() }
+    take_while!(is_numeric_byte),
+    |x| { FromStr::from_str(from_utf8(x).unwrap()).unwrap() }
 ));
 
 // empty_set = "EMPTY";
@@ -67,10 +74,10 @@ mod tests {
 
     #[test]
     fn test_point() {
-        let input = b"POINT (1 2)";
+        let input = b"POINT (1.9 2)";
         let point = point_text_representation(input);
         assert_eq!(
-            IResult::Done(b"" as &[u8], Point(Coord::XY(1., 2.))),
+            IResult::Done(b"" as &[u8], Point(Coord::XY(1.9, 2.))),
             point);
     }
 }
