@@ -8,7 +8,6 @@ struct Point(Option<Coord>);
 #[derive(Debug, PartialEq)]
 struct Coord(f64, f64);
 
-// FIXME: this doesn't properly parse floating points
 // number = ?/[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?/? ;
 fn is_numeric_byte(c: u8) -> bool {
     match c as char {
@@ -16,9 +15,12 @@ fn is_numeric_byte(c: u8) -> bool {
         _ => false,
     }
 }
-named!(number<&[u8], f64>, map!(
-    take_while!(is_numeric_byte),
-    |x| { FromStr::from_str(from_utf8(x).unwrap()).unwrap() }
+named!(number<&[u8], f64>, map_res!(
+    map_res!(
+        take_while!(is_numeric_byte),
+        |bytes| { from_utf8(bytes) }
+    ),
+    |string: &str| { string.parse::<f64>() }
 ));
 
 // left_paren = "(";
