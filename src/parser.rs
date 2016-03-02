@@ -24,6 +24,16 @@ named!(number<&[u8], f64>, map!(
     |x| { FromStr::from_str(from_utf8(x).unwrap()).unwrap() }
 ));
 
+// left_paren = "(";
+named!(left_paren<&[u8], &[u8]>, delimited!(
+    opt!(multispace), tag!("("), opt!(multispace)
+));
+
+// right_paren = ")";
+named!(right_paren<&[u8], &[u8]>, delimited!(
+    opt!(multispace), tag!(")"), opt!(multispace)
+));
+
 // empty_set = "EMPTY";
 named!(empty_set<&[u8], Coord>, map!(
     tag!("EMPTY"), |_| { Coord::Empty }
@@ -42,7 +52,7 @@ named!(point_text_representation<&[u8], Point>, chain!(
 //    left_paren point right_paren;
 named!(point_text<&[u8], Coord>, alt!(
     empty_set |
-    parenthesized
+    delimited!(left_paren, point, right_paren)
 ));
 
 // point = x y [ z ] [ m ];
@@ -53,11 +63,9 @@ named!(point<&[u8], Coord>, chain!(
     || { Coord::XY(x, y) }
 ));
 
-named!(parenthesized<&[u8], Coord>, delimited!(
-    delimited!(opt!(multispace), tag!("("), opt!(multispace)),
-    point,
-    delimited!(opt!(multispace), tag!(")"), opt!(multispace))
-));
+// linestring_text =
+//   empty_set |
+//   left_paren point { comma point } right_paren;
 
 
 #[cfg(test)]
