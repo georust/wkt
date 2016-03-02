@@ -9,11 +9,16 @@ grammar;
 
 Float: f64 = r"[+-0-9eE.]+" => f64::from_str(<>).unwrap();
 
+Comma<T>: Vec<T> = {
+    <h:(<T> ",")*> <t:T?> =>
+        h.into_iter().chain(t).collect()
+};
+
 pub PointTextRepresentation = "POINT" <PointText>;
 
-//pub LineStringTextRepresentation = "LINESTRING" <LineStringTextBody>;
+pub LineStringTextRepresentation = "LINESTRING" <LineStringTextBody>;
 
-//pub LineStringTextBody = LineStringText;
+pub LineStringTextBody = LineStringText;
 
 pub PointText: Option<(f64, f64)> = {
     "EMPTY" => None,
@@ -22,7 +27,7 @@ pub PointText: Option<(f64, f64)> = {
 
 pub Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
 
-//pub LineStringText: Option<Vec<(f64, f64)>> = {
-    //"EMPTY" => None,
-    //"(" <p:Point> ")" => Some(p),
-//};
+pub LineStringText: Option<Vec<(f64, f64)>> = {
+    "EMPTY" => None,
+    "(" <p:Comma<Point>> ")" => Some(p),
+};
