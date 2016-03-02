@@ -11,9 +11,9 @@ Float: f64 = r"[+-0-9eE.]+" => f64::from_str(<>).unwrap();
 
 pub PointTextRepresentation = "POINT" <PointText>;
 
-pub LineStringTextRepresentation = "LINESTRING" <LineStringTextBody>;
+//pub LineStringTextRepresentation = "LINESTRING" <LineStringTextBody>;
 
-pub LineStringTextBody = LineStringText;
+//pub LineStringTextBody = LineStringText;
 
 pub PointText: Option<(f64, f64)> = {
     "EMPTY" => None,
@@ -22,9 +22,7 @@ pub PointText: Option<(f64, f64)> = {
 
 pub Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
 
-/*
-pub LineStringText: Option<Vec<(f64, f64)>> = {
-    "EMPTY" => None,
-    "(" <p:Point> ")" => Some(p),
-};
-*/
+//pub LineStringText: Option<Vec<(f64, f64)>> = {
+    //"EMPTY" => None,
+    //"(" <p:Point> ")" => Some(p),
+//};
