@@ -1,4 +1,7 @@
-// http://svn.osgeo.org/postgis/trunk/doc/bnf-wkt.txt
+// Document: Simple Feature Access - Part 1: Common Architecture
+// Version: 1.2.1
+// Document #: 06-103r4
+// Sections: 7.2
 
 use std::str::FromStr;
 use ::New;
@@ -7,9 +10,11 @@ use {PointType, LineStringType, CircularStringType, PolygonType, MultiPointType,
 grammar;
 
 //FIXME: https://github.com/nikomatsakis/lalrpop/issues/97
+//FIXME: closely follow spec here
 //Float: f64 = r"[+-]?([0-9]+(.[0-9]*)?|.[0-9]+)([eE][+-]?[0-9]+)?" => f64::from_str(<>).unwrap();
-
 Float: f64 = r"[+-0-9eE.]+" => f64::from_str(<>).unwrap();
+
+Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
 
 Comma<T>: Vec<T> = {
     <h:(<T> ",")*> <t:T?> =>
@@ -65,8 +70,6 @@ PointText: PointType = {
     "EMPTY" => None,
     "(" <n:Point> ")" => Some(n),
 };
-
-Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
 
 LineStringText: LineStringType = {
     "EMPTY" => vec![],
