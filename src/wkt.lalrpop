@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 use ::New;
-use {PointType, LineStringType, CircularStringType, PolygonType, MultiPointType};
+use {PointType, LineStringType, CircularStringType, PolygonType, MultiPointType, CompoundCurveType};
 
 grammar;
 
@@ -30,11 +30,14 @@ PointTextRepresentation: New = "POINT" <n:PointText> => New::Point(n);
 CurveTextRepresentation: New = {
     <LineStringTextRepresentation> => New::LineString(<>),
     <CircularStringTextRepresentation> => New::CircularString(<>),
+    <CompoundCurveTextRepresentation> => New::CompoundCurve(<>),
 };
 
 LineStringTextRepresentation = "LINESTRING" <LineStringTextBody>;
 
 CircularStringTextRepresentation = "CIRCULARSTRING" <CircularStringText>;
+
+CompoundCurveTextRepresentation = "COMPOUNDCURVE" <CompoundCurveText>;
 
 SurfaceTextRepresentation = CurvePolygonTextRepresentation;
 
@@ -70,9 +73,20 @@ LineStringText: LineStringType = {
     "(" <n:Comma<Point>> ")" => n,
 };
 
-CircularStringText: CircularStringType = {
+// FIXME: this should be CircularStringType
+CircularStringText: LineStringType = {
     "EMPTY" => vec![],
     "(" <n:Comma<Point>> ")" => n,
+};
+
+CompoundCurveText: CompoundCurveType = {
+    "EMPTY" => vec![],
+    "(" <n:Comma<SingleCurveText>> ")" => n,
+};
+
+SingleCurveText = {
+    LineStringTextBody,
+    CircularStringTextRepresentation,
 };
 
 PolygonText: PolygonType = {

@@ -45,6 +45,7 @@ pub type Coord = (f64, f64);
 pub type PointType = Option<Coord>;
 pub type LineStringType = Vec<Coord>;
 pub type CircularStringType = Vec<Coord>;
+pub type CompoundCurveType = Vec<Vec<Coord>>;
 pub type PolygonType = Vec<LineStringType>;
 pub type MultiPointType = Vec<Coord>;
 
@@ -52,6 +53,7 @@ pub enum New {
     Point(PointType),
     LineString(LineStringType),
     CircularString(CircularStringType),
+    CompoundCurve(CompoundCurveType),
     Polygon(PolygonType),
     MultiPoint(MultiPointType),
     Curve(Vec<Coord>),
