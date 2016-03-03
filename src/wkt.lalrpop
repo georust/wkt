@@ -28,6 +28,17 @@ pub WellKnownTextRepresentation = {
     CollectionTextRepresentation,
 };
 
+//PointTaggedText = point <PointText>
+//LineStringTaggedText = linestring <LinestringText>
+//PolygonTaggedText = polygon <PolygonText>
+//PolyhedralSurfaceTaggedText = polyhedralsurface <PolyhedralSurfaceText>
+//TriangleTaggedText = triangle <PolygonText>
+//TinTaggedText tin <PolyhedralSurfaceText>
+//MultiPointTaggedText = multipoint <MultiPointText>
+//MultiLineStringTaggedText = multilinestring <MultiLineStringText>
+//MultiPolygonTaggedText = multipolygon <MultiPolygonText>
+//GeometryCollectionTaggedText = geometrycollection <GeometryCollectionText>
+
 PointTextRepresentation: New = "POINT" <n:PointText> => New::Point(n);
 
 ////// DONE /////////
