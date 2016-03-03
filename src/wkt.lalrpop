@@ -2,6 +2,7 @@
 
 use std::str::FromStr;
 use ::New;
+use {PointType, LineStringType, PolygonType};
 
 grammar;
 
@@ -52,19 +53,19 @@ LineStringTextBody = LineStringText;
 
 PolygonTextBody = PolygonText;
 
-PointText: ::PointType = {
+PointText: PointType = {
     "EMPTY" => None,
     "(" <n:Point> ")" => Some(n),
 };
 
 Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
 
-LineStringText: Vec<(f64, f64)> = {
+LineStringText: LineStringType = {
     "EMPTY" => vec![],
     "(" <n:Comma<Point>> ")" => n,
 };
 
-PolygonText: Vec<Vec<(f64, f64)>> = {
+PolygonText: PolygonType = {
     "EMPTY" => vec![],
     "(" <n:Comma<LineStringText>> ")" => n,
 };
