@@ -35,10 +35,19 @@ mod wkt;
 pub use towkt::ToWkt;
 
 
+/// Coordinate (x, y)
+pub type Coord = (f64, f64);
+
+pub type PointType = Option<Coord>;
+pub type LineStringType = Vec<Coord>;
+pub type PolygonType = Vec<LineStringType>;
+
 pub enum New {
-    Point(Option<(f64, f64)>),
-    Curve(Vec<(f64, f64)>),
-    Surface(Vec<Vec<(f64, f64)>>),
+    Point(PointType),
+    LineString(LineStringType),
+    Polygon(PolygonType),
+    Curve(Vec<Coord>),
+    Surface(Vec<Vec<Coord>>),
     Collection(Vec<New>),
 }
 

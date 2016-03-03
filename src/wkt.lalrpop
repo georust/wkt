@@ -15,25 +15,25 @@ Comma<T>: Vec<T> = {
         h.into_iter().chain(t).collect()
 };
 
-pub WellKnownTextRepresentation: New = {
-    PointTextRepresentation => New::Point(<>),
-    CurveTextRepresentation => New::Curve(<>),
-    SurfaceTextRepresentation => New::Surface(<>),
+pub WellKnownTextRepresentation = {
+    PointTextRepresentation,
+    CurveTextRepresentation,
+    SurfaceTextRepresentation,
     CollectionTextRepresentation,
 };
 
-PointTextRepresentation = "POINT" <PointText>;
+PointTextRepresentation: New = "POINT" <n:PointText> => New::Point(n);
 
-CurveTextRepresentation = {
-    LineStringTextRepresentation,
+CurveTextRepresentation: New = {
+    <LineStringTextRepresentation> => New::LineString(<>),
 };
 
 LineStringTextRepresentation = "LINESTRING" <LineStringTextBody>;
 
 SurfaceTextRepresentation = CurvePolygonTextRepresentation;
 
-CurvePolygonTextRepresentation = {
-    PolygonTextRepresentation,
+CurvePolygonTextRepresentation: New = {
+    <PolygonTextRepresentation> => New::Polygon(<>),
 };
 
 PolygonTextRepresentation = "POLYGON" <PolygonTextBody>;
@@ -52,7 +52,7 @@ LineStringTextBody = LineStringText;
 
 PolygonTextBody = PolygonText;
 
-PointText: Option<(f64, f64)> = {
+PointText: ::PointType = {
     "EMPTY" => None,
     "(" <n:Point> ")" => Some(n),
 };
