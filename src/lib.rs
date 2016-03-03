@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![feature(test)]
+
 use std::ascii::AsciiExt;
 use std::default::Default;
 
@@ -25,14 +27,16 @@ use types::MultiLineString;
 use types::MultiPolygon;
 
 mod tokenizer;
-#[cfg(feature = "with-geo")]
+#[cfg(feature = "geo-interop")]
 mod towkt;
 pub mod types;
 
 mod wkt;
 
-#[cfg(feature = "with-geo")]
+#[cfg(feature = "geo-interop")]
 pub use towkt::ToWkt;
+
+extern crate test;
 
 
 /// Coordinate (x, y)
@@ -180,6 +184,7 @@ trait FromTokens: Sized+Default {
 mod tests {
     use {Wkt, Geometry};
     use types::{MultiPolygon, Point};
+    use test::Bencher;
 
     #[test]
     fn empty_string() {
@@ -203,5 +208,9 @@ mod tests {
                 assert_eq!(polygons.len(), 0),
             _ => unreachable!(),
         };
+    }
+
+    #[bench]
+    fn tmp(_: &mut Bencher) {
     }
 }

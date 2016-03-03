@@ -15,5 +15,5 @@ lalrpop-util = "0.11.0"
 lalrpop = "0.11.0"
 
 [features]
-default = ["with-geo"]
-with-geo = ["geo"]
+default = ["geo-interop"]
+geo-interop = ["geo"]
