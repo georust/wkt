@@ -19,7 +19,7 @@ pub WellKnownTextRepresentation: New = {
     PointTextRepresentation => New::Point(<>),
     CurveTextRepresentation => New::Curve(<>),
     SurfaceTextRepresentation => New::Surface(<>),
-    CollectionTextRepresentation => New::Collection(<>),
+    CollectionTextRepresentation,
 };
 
 PointTextRepresentation = "POINT" <PointText>;
@@ -38,9 +38,12 @@ CurvePolygonTextRepresentation = {
 
 PolygonTextRepresentation = "POLYGON" <PolygonTextBody>;
 
-CollectionTextRepresentation = {
-    GeometryCollectionTextRepresentation,
+CollectionTextRepresentation: New = {
+    MultiPointTextRepresentation => New::Curve(<>),
+    GeometryCollectionTextRepresentation => New::Collection(<>),
 };
+
+MultiPointTextRepresentation = "MULTIPOINT" <MultiPointText>;
 
 GeometryCollectionTextRepresentation =
     "GEOMETRYCOLLECTION" <GeometryCollectionText>;
@@ -66,6 +69,10 @@ PolygonText: Vec<Vec<(f64, f64)>> = {
     "(" <n:Comma<LineStringText>> ")" => n,
 };
 
+MultiPointText: Vec<(f64, f64)> = {
+    "EMPTY" => vec![],
+    "(" <n:Comma<Point>> ")" => n,
+};
 
 GeometryCollectionText: Vec<New> = {
     "EMPTY" => vec![],
