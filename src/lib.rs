@@ -35,7 +35,8 @@ pub use towkt::ToWkt;
 
 pub enum New {
     Point(Option<(f64, f64)>),
-    LineString(Option<Vec<(f64, f64)>>),
+    Curve(Vec<(f64, f64)>),
+    Surface(Vec<Vec<(f64, f64)>>),
 }
 
 

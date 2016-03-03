@@ -17,18 +17,29 @@ Comma<T>: Vec<T> = {
 
 pub WellKnownTextRepresentation: New = {
     PointTextRepresentation => New::Point(<>),
-    CurveTextRepresentation => New::LineString(<>),
+    CurveTextRepresentation => New::Curve(<>),
+    SurfaceTextRepresentation => New::Surface(<>),
 };
 
 PointTextRepresentation = "POINT" <PointText>;
 
-CurveTextRepresentation =   {
+CurveTextRepresentation = {
     LineStringTextRepresentation,
 };
 
 LineStringTextRepresentation = "LINESTRING" <LineStringTextBody>;
 
+SurfaceTextRepresentation = CurvePolygonTextRepresentation;
+
+CurvePolygonTextRepresentation = {
+    PolygonTextRepresentation,
+};
+
+PolygonTextRepresentation = "POLYGON" <PolygonTextBody>;
+
 LineStringTextBody = LineStringText;
+
+PolygonTextBody = PolygonText;
 
 PointText: Option<(f64, f64)> = {
     "EMPTY" => None,
@@ -37,7 +48,12 @@ PointText: Option<(f64, f64)> = {
 
 Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
 
-LineStringText: Option<Vec<(f64, f64)>> = {
-    "EMPTY" => None,
-    "(" <p:Comma<Point>> ")" => Some(p),
+LineStringText: Vec<(f64, f64)> = {
+    "EMPTY" => vec![],
+    "(" <p:Comma<Point>> ")" => p,
+};
+
+PolygonText: Vec<Vec<(f64, f64)>> = {
+    "EMPTY" => vec![],
+    "(" <n:Comma<LineStringText>> ")" => n,
 };
