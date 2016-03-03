@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![feature(test)]
+// #![feature(test)]
 
 use std::ascii::AsciiExt;
 use std::default::Default;
@@ -36,7 +36,7 @@ mod wkt;
 #[cfg(feature = "geo-interop")]
 pub use towkt::ToWkt;
 
-extern crate test;
+// extern crate test;
 
 
 /// Coordinate (x, y)
@@ -44,12 +44,14 @@ pub type Coord = (f64, f64);
 
 pub type PointType = Option<Coord>;
 pub type LineStringType = Vec<Coord>;
+pub type CircularStringType = Vec<Coord>;
 pub type PolygonType = Vec<LineStringType>;
 pub type MultiPointType = Vec<Coord>;
 
 pub enum New {
     Point(PointType),
     LineString(LineStringType),
+    CircularString(CircularStringType),
     Polygon(PolygonType),
     MultiPoint(MultiPointType),
     Curve(Vec<Coord>),
