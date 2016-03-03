@@ -8,8 +8,12 @@ repository = "https://github.com/georust/rust-wkt"
 build = "build.rs"
 
 [dependencies]
-geo = "0.0.4"
+geo = { version = "0.0.4", optional = true }
 lalrpop-util = "0.11.0"
 
 [build-dependencies]
 lalrpop = "0.11.0"
+
+[features]
+default = ["with-geo"]
+with-geo = ["geo"]

@@ -25,11 +25,13 @@ use types::MultiLineString;
 use types::MultiPolygon;
 
 mod tokenizer;
+#[cfg(feature = "with-geo")]
 mod towkt;
 pub mod types;
 
 mod wkt;
 
+#[cfg(feature = "with-geo")]
 pub use towkt::ToWkt;
 
 
@@ -37,6 +39,7 @@ pub enum New {
     Point(Option<(f64, f64)>),
     Curve(Vec<(f64, f64)>),
     Surface(Vec<Vec<(f64, f64)>>),
+    Collection(Vec<New>),
 }
 
 
