@@ -33,6 +33,12 @@ mod wkt;
 pub use towkt::ToWkt;
 
 
+pub enum New {
+    Point(Option<(f64, f64)>),
+    LineString(Option<Vec<(f64, f64)>>),
+}
+
+
 pub enum Geometry {
     Point(Point),
     LineString(LineString),
