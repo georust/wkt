@@ -41,11 +41,13 @@ pub type Coord = (f64, f64);
 pub type PointType = Option<Coord>;
 pub type LineStringType = Vec<Coord>;
 pub type PolygonType = Vec<LineStringType>;
+pub type MultiPointType = Vec<Coord>;
 
 pub enum New {
     Point(PointType),
     LineString(LineStringType),
     Polygon(PolygonType),
+    MultiPoint(MultiPointType),
     Curve(Vec<Coord>),
     Surface(Vec<Vec<Coord>>),
     Collection(Vec<New>),

@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 use ::New;
-use {PointType, LineStringType, PolygonType};
+use {PointType, LineStringType, PolygonType, MultiPointType};
 
 grammar;
 
@@ -70,7 +70,7 @@ PolygonText: PolygonType = {
     "(" <n:Comma<LineStringText>> ")" => n,
 };
 
-MultiPointText: Vec<(f64, f64)> = {
+MultiPointText: MultiPointType = {
     "EMPTY" => vec![],
     "(" <n:Comma<Point>> ")" => n,
 };
