@@ -74,7 +74,7 @@ PolyhedralSurfaceText: PolyhedralSurfaceType = {
 
 MultiPointText: MultiPointType = {
     "EMPTY" => vec![],
-    "(" <n:Comma<Point>> ")" => n,
+    "(" <n:Comma<PointText>> ")" => n,
 };
 
 ////// NOT DONE /////////
