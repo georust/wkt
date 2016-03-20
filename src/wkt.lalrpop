@@ -5,7 +5,7 @@
 
 use std::str::FromStr;
 use ::New;
-use {PointType, LineStringType, CircularStringType, PolygonType, MultiPointType, CompoundCurveType};
+use {PointType, LineStringType, CircularStringType, PolygonType, MultiPointType, CompoundCurveType, PolyhedralSurfaceType};
 
 // TODO: case insensitivity
 
@@ -30,7 +30,7 @@ pub GeometryTaggedText = {
     LineStringTaggedText,
     PolygonTaggedText,
     TriangleTaggedText,
-    // PolyhedralSurfaceTaggedText,
+    PolyhedralSurfaceTaggedText,
     // TinTaggedText,
     // MultiPointTaggedText,
     // MultiLinestringTaggedText,
@@ -45,6 +45,8 @@ LineStringTaggedText: New = "LINESTRING" <n:LineStringText> => New::LineString(n
 PolygonTaggedText: New = "POLYGON" <n:PolygonText> => New::Polygon(n);
 
 TriangleTaggedText: New = "TRIANGLE" <n:PolygonText> => New::Triangle(n);
+
+PolyhedralSurfaceTaggedText: New = "POLYHEDRALSURFACE" <n:PolyhedralSurfaceText> => New::PolyhedralSurface(n);
 
     // PolygonTaggedText
     // TriangleTaggedText
@@ -68,6 +70,11 @@ LineStringText: LineStringType = {
 PolygonText: PolygonType = {
     "EMPTY" => vec![],
     "(" <n:Comma<LineStringText>> ")" => n,
+};
+
+PolyhedralSurfaceText: PolyhedralSurfaceType = {
+    "EMPTY" => vec![],
+    "(" <n:Comma<PolygonText>> ")" => n,
 };
 
 ////// NOT DONE /////////
