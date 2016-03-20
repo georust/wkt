@@ -49,6 +49,7 @@ pub type PolyhedralSurfaceType = Vec<PolygonType>;
 pub type MultiPointType = Vec<PointType>;
 pub type MultiLineStringType = Vec<LineStringType>;
 pub type MultiPolygonType = Vec<PolygonType>;
+pub type GeometryCollectionType = Vec<New>;
 
 pub enum New {
     Point(PointType),
@@ -60,7 +61,7 @@ pub enum New {
     MultiPoint(MultiPointType),
     MultiLineString(MultiLineStringType),
     MultiPolygon(MultiPolygonType),
-    //Collection(Vec<New>),
+    GeometryCollection(Vec<New>),
 }
 
 

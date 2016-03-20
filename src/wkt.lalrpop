@@ -13,6 +13,7 @@ use {
     PolyhedralSurfaceType,
     MultiLineStringType,
     MultiPolygonType,
+    GeometryCollectionType,
 };
 
 // TODO: case insensitivity
@@ -43,26 +44,38 @@ pub GeometryTaggedText = {
     MultiPointTaggedText,
     MultiLineStringTaggedText,
     MultiPolygonTaggedText,
-    // GeometryCollectionTaggedText,
+    GeometryCollectionTaggedText,
 };
 
-PointTaggedText: New = "POINT" <n:PointText> => New::Point(n);
+PointTaggedText: New =
+    "POINT" <n:PointText> => New::Point(n);
 
-LineStringTaggedText: New = "LINESTRING" <n:LineStringText> => New::LineString(n);
+LineStringTaggedText: New =
+    "LINESTRING" <n:LineStringText> => New::LineString(n);
 
-PolygonTaggedText: New = "POLYGON" <n:PolygonText> => New::Polygon(n);
+PolygonTaggedText: New =
+    "POLYGON" <n:PolygonText> => New::Polygon(n);
 
-PolyhedralSurfaceTaggedText: New = "POLYHEDRALSURFACE" <n:PolyhedralSurfaceText> => New::PolyhedralSurface(n);
+PolyhedralSurfaceTaggedText: New =
+    "POLYHEDRALSURFACE" <n:PolyhedralSurfaceText> => New::PolyhedralSurface(n);
 
-TriangleTaggedText: New = "TRIANGLE" <n:PolygonText> => New::Triangle(n);
+TriangleTaggedText: New =
+    "TRIANGLE" <n:PolygonText> => New::Triangle(n);
 
-TinTaggedText: New = "TIN" <n:PolyhedralSurfaceText> => New::Tin(n);
+TinTaggedText: New =
+    "TIN" <n:PolyhedralSurfaceText> => New::Tin(n);
 
-MultiPointTaggedText: New = "MULTIPOINT" <n:MultiPointText> => New::MultiPoint(n);
+MultiPointTaggedText: New =
+    "MULTIPOINT" <n:MultiPointText> => New::MultiPoint(n);
 
-MultiLineStringTaggedText: New = "MULTILINESTRING" <n:MultiLineStringText> => New::MultiLineString(n);
+MultiLineStringTaggedText: New =
+    "MULTILINESTRING" <n:MultiLineStringText> => New::MultiLineString(n);
 
-MultiPolygonTaggedText: New = "MULTIPOLYGON" <n:MultiPolygonText> => New::MultiPolygon(n);
+MultiPolygonTaggedText: New =
+    "MULTIPOLYGON" <n:MultiPolygonText> => New::MultiPolygon(n);
+
+GeometryCollectionTaggedText: New =
+    "GEOMETRYCOLLECTION" <n:GeometryCollectionText> => New::GeometryCollection(n);
 
 PointText: PointType = {
     "EMPTY" => None,
@@ -97,6 +110,11 @@ MultiLineStringText: MultiLineStringType = {
 MultiPolygonText: MultiPolygonType = {
     "EMPTY" => vec![],
     "(" <n:Comma<PolygonText>> ")" => n,
+};
+
+GeometryCollectionText: GeometryCollectionType = {
+    "EMPTY" => vec![],
+    "(" <n:Comma<GeometryTaggedText>> ")" => n,
 };
 
 ////// NOT DONE /////////
