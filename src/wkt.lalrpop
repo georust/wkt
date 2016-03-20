@@ -29,7 +29,7 @@ pub GeometryTaggedText = {
     PointTaggedText,
     LineStringTaggedText,
     PolygonTaggedText,
-    // TriangleTaggedText,
+    TriangleTaggedText,
     // PolyhedralSurfaceTaggedText,
     // TinTaggedText,
     // MultiPointTaggedText,
@@ -43,6 +43,8 @@ PointTaggedText: New = "POINT" <n:PointText> => New::Point(n);
 LineStringTaggedText: New = "LINESTRING" <n:LineStringText> => New::LineString(n);
 
 PolygonTaggedText: New = "POLYGON" <n:PolygonText> => New::Polygon(n);
+
+TriangleTaggedText: New = "TRIANGLE" <n:PolygonText> => New::Triangle(n);
 
     // PolygonTaggedText
     // TriangleTaggedText

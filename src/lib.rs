@@ -53,6 +53,7 @@ pub enum New {
     Point(PointType),
     LineString(LineStringType),
     Polygon(PolygonType),
+    Triangle(PolygonType),
     //CircularString(CircularStringType),
     //CompoundCurve(CompoundCurveType),
     //MultiPoint(MultiPointType),
