@@ -7,6 +7,8 @@ use std::str::FromStr;
 use ::New;
 use {PointType, LineStringType, CircularStringType, PolygonType, MultiPointType, CompoundCurveType};
 
+// TODO: case insensitivity
+
 grammar;
 
 //FIXME: https://github.com/nikomatsakis/lalrpop/issues/97
@@ -14,68 +16,42 @@ grammar;
 //Float: f64 = r"[+-]?([0-9]+(.[0-9]*)?|.[0-9]+)([eE][+-]?[0-9]+)?" => f64::from_str(<>).unwrap();
 Float: f64 = r"[+-0-9eE.]+" => f64::from_str(<>).unwrap();
 
-Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
-
 Comma<T>: Vec<T> = {
     <h:(<T> ",")*> <t:T?> =>
         h.into_iter().chain(t).collect()
 };
 
-pub WellKnownTextRepresentation = {
-    PointTextRepresentation,
-    CurveTextRepresentation,
-    SurfaceTextRepresentation,
-    CollectionTextRepresentation,
-};
-
-//PointTaggedText = point <PointText>
-//LineStringTaggedText = linestring <LinestringText>
-//PolygonTaggedText = polygon <PolygonText>
-//PolyhedralSurfaceTaggedText = polyhedralsurface <PolyhedralSurfaceText>
-//TriangleTaggedText = triangle <PolygonText>
-//TinTaggedText tin <PolyhedralSurfaceText>
-//MultiPointTaggedText = multipoint <MultiPointText>
-//MultiLineStringTaggedText = multilinestring <MultiLineStringText>
-//MultiPolygonTaggedText = multipolygon <MultiPolygonText>
-//GeometryCollectionTaggedText = geometrycollection <GeometryCollectionText>
-
-PointTextRepresentation: New = "POINT" <n:PointText> => New::Point(n);
-
 ////// DONE /////////
 
-CurveTextRepresentation: New = {
-    <LineStringTextRepresentation> => New::LineString(<>),
-    <CircularStringTextRepresentation> => New::CircularString(<>),
-    <CompoundCurveTextRepresentation> => New::CompoundCurve(<>),
+Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
+
+pub GeometryTaggedText = {
+    PointTaggedText,
+    LineStringTaggedText,
+    PolygonTaggedText,
+    // TriangleTaggedText,
+    // PolyhedralSurfaceTaggedText,
+    // TinTaggedText,
+    // MultiPointTaggedText,
+    // MultiLinestringTaggedText,
+    // MultiPolygonTaggedText,
+    // GeometryCollectionTaggedText,
 };
 
-LineStringTextRepresentation = "LINESTRING" <LineStringTextBody>;
+PointTaggedText: New = "POINT" <n:PointText> => New::Point(n);
 
-CircularStringTextRepresentation = "CIRCULARSTRING" <CircularStringText>;
+LineStringTaggedText: New = "LINESTRING" <n:LineStringText> => New::LineString(n);
 
-CompoundCurveTextRepresentation = "COMPOUNDCURVE" <CompoundCurveText>;
+PolygonTaggedText: New = "POLYGON" <n:PolygonText> => New::Polygon(n);
 
-SurfaceTextRepresentation = CurvePolygonTextRepresentation;
-
-CurvePolygonTextRepresentation: New = {
-    <PolygonTextRepresentation> => New::Polygon(<>),
-};
-
-PolygonTextRepresentation = "POLYGON" <PolygonTextBody>;
-
-CollectionTextRepresentation: New = {
-    MultiPointTextRepresentation => New::Curve(<>),
-    GeometryCollectionTextRepresentation => New::Collection(<>),
-};
-
-MultiPointTextRepresentation = "MULTIPOINT" <MultiPointText>;
-
-GeometryCollectionTextRepresentation =
-    "GEOMETRYCOLLECTION" <GeometryCollectionText>;
-
-LineStringTextBody = LineStringText;
-
-PolygonTextBody = PolygonText;
+    // PolygonTaggedText
+    // TriangleTaggedText
+    // PolyhedralSurfaceTaggedText
+    // TinTaggedText
+    // MultiPointTaggedText
+    // MultiLinestringTaggedText
+    // MultiPolygonTaggedText
+    // GeometryCollectionTaggedText
 
 PointText: PointType = {
     "EMPTY" => None,
@@ -87,33 +63,89 @@ LineStringText: LineStringType = {
     "(" <n:Comma<Point>> ")" => n,
 };
 
-// FIXME: this should be CircularStringType
-CircularStringText: LineStringType = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<Point>> ")" => n,
-};
-
-CompoundCurveText: CompoundCurveType = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<SingleCurveText>> ")" => n,
-};
-
-SingleCurveText = {
-    LineStringTextBody,
-    CircularStringTextRepresentation,
-};
-
 PolygonText: PolygonType = {
     "EMPTY" => vec![],
     "(" <n:Comma<LineStringText>> ")" => n,
 };
 
-MultiPointText: MultiPointType = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<Point>> ")" => n,
-};
+////// NOT DONE /////////
 
-GeometryCollectionText: Vec<New> = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<WellKnownTextRepresentation>> ")" => n,
-};
+
+//
+// pub WellKnownTextRepresentation = {
+//     PointTextRepresentation,
+//     CurveTextRepresentation,
+//     SurfaceTextRepresentation,
+//     CollectionTextRepresentation,
+// };
+//
+//PointTaggedText = point <PointText>
+//LineStringTaggedText = linestring <LinestringText>
+//PolygonTaggedText = polygon <PolygonText>
+//PolyhedralSurfaceTaggedText = polyhedralsurface <PolyhedralSurfaceText>
+//TriangleTaggedText = triangle <PolygonText>
+//TinTaggedText tin <PolyhedralSurfaceText>
+//MultiPointTaggedText = multipoint <MultiPointText>
+//MultiLineStringTaggedText = multilinestring <MultiLineStringText>
+//MultiPolygonTaggedText = multipolygon <MultiPolygonText>
+//GeometryCollectionTaggedText = geometrycollection <GeometryCollectionText>
+
+
+// CurveTextRepresentation: New = {
+//     <LineStringTextRepresentation> => New::LineString(<>),
+//     <CircularStringTextRepresentation> => New::CircularString(<>),
+//     <CompoundCurveTextRepresentation> => New::CompoundCurve(<>),
+// };
+//
+//
+// CircularStringTextRepresentation = "CIRCULARSTRING" <CircularStringText>;
+//
+// CompoundCurveTextRepresentation = "COMPOUNDCURVE" <CompoundCurveText>;
+//
+// SurfaceTextRepresentation = CurvePolygonTextRepresentation;
+//
+// CurvePolygonTextRepresentation: New = {
+//     <PolygonTextRepresentation> => New::Polygon(<>),
+// };
+//
+//
+// CollectionTextRepresentation: New = {
+//     MultiPointTextRepresentation => New::Curve(<>),
+//     GeometryCollectionTextRepresentation => New::Collection(<>),
+// };
+//
+// MultiPointTextRepresentation = "MULTIPOINT" <MultiPointText>;
+//
+// GeometryCollectionTextRepresentation =
+//     "GEOMETRYCOLLECTION" <GeometryCollectionText>;
+//
+// LineStringTextBody = LineStringText;
+//
+// PolygonTextBody = PolygonText;
+//
+//
+// // FIXME: this should be CircularStringType
+// CircularStringText: LineStringType = {
+//     "EMPTY" => vec![],
+//     "(" <n:Comma<Point>> ")" => n,
+// };
+//
+// CompoundCurveText: CompoundCurveType = {
+//     "EMPTY" => vec![],
+//     "(" <n:Comma<SingleCurveText>> ")" => n,
+// };
+//
+// SingleCurveText = {
+//     LineStringTextBody,
+//     CircularStringTextRepresentation,
+// };
+//
+// MultiPointText: MultiPointType = {
+//     "EMPTY" => vec![],
+//     "(" <n:Comma<Point>> ")" => n,
+// };
+//
+// GeometryCollectionText: Vec<New> = {
+//     "EMPTY" => vec![],
+//     "(" <n:Comma<WellKnownTextRepresentation>> ")" => n,
+// };

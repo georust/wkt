@@ -52,13 +52,13 @@ pub type MultiPointType = Vec<Coord>;
 pub enum New {
     Point(PointType),
     LineString(LineStringType),
-    CircularString(CircularStringType),
-    CompoundCurve(CompoundCurveType),
     Polygon(PolygonType),
-    MultiPoint(MultiPointType),
-    Curve(Vec<Coord>),
-    Surface(Vec<Vec<Coord>>),
-    Collection(Vec<New>),
+    //CircularString(CircularStringType),
+    //CompoundCurve(CompoundCurveType),
+    //MultiPoint(MultiPointType),
+    //Curve(Vec<Coord>),
+    //Surface(Vec<Vec<Coord>>),
+    //Collection(Vec<New>),
 }
 
 
