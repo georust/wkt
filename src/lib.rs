@@ -58,11 +58,7 @@ pub enum New {
     PolyhedralSurface(PolyhedralSurfaceType),
     Triangle(PolygonType),
     Tin(PolyhedralSurfaceType),
-    //CircularString(CircularStringType),
-    //CompoundCurve(CompoundCurveType),
-    //MultiPoint(MultiPointType),
-    //Curve(Vec<Coord>),
-    //Surface(Vec<Vec<Coord>>),
+    MultiPoint(MultiPointType),
     //Collection(Vec<New>),
 }
 
