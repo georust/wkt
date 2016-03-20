@@ -5,7 +5,7 @@
 
 use std::str::FromStr;
 use ::New;
-use {PointType, LineStringType, CircularStringType, PolygonType, MultiPointType, CompoundCurveType, PolyhedralSurfaceType};
+use {PointType, LineStringType, PolygonType, MultiPointType, PolyhedralSurfaceType};
 
 // TODO: case insensitivity
 
