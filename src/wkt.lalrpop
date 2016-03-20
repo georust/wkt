@@ -44,18 +44,11 @@ LineStringTaggedText: New = "LINESTRING" <n:LineStringText> => New::LineString(n
 
 PolygonTaggedText: New = "POLYGON" <n:PolygonText> => New::Polygon(n);
 
-TriangleTaggedText: New = "TRIANGLE" <n:PolygonText> => New::Triangle(n);
-
 PolyhedralSurfaceTaggedText: New = "POLYHEDRALSURFACE" <n:PolyhedralSurfaceText> => New::PolyhedralSurface(n);
 
-    // PolygonTaggedText
-    // TriangleTaggedText
-    // PolyhedralSurfaceTaggedText
-    // TinTaggedText
-    // MultiPointTaggedText
-    // MultiLinestringTaggedText
-    // MultiPolygonTaggedText
-    // GeometryCollectionTaggedText
+TriangleTaggedText: New = "TRIANGLE" <n:PolygonText> => New::Triangle(n);
+
+TinTaggedText: New = "TIN" <n:PolyhedralSurfaceText> => New::Tin(n);
 
 PointText: PointType = {
     "EMPTY" => None,
