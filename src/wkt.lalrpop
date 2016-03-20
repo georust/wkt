@@ -11,7 +11,8 @@ use {
     PolygonType,
     MultiPointType,
     PolyhedralSurfaceType,
-    MultiLineStringType
+    MultiLineStringType,
+    MultiPolygonType,
 };
 
 // TODO: case insensitivity
@@ -41,7 +42,7 @@ pub GeometryTaggedText = {
     TinTaggedText,
     MultiPointTaggedText,
     MultiLineStringTaggedText,
-    // MultiPolygonTaggedText,
+    MultiPolygonTaggedText,
     // GeometryCollectionTaggedText,
 };
 
@@ -60,6 +61,8 @@ TinTaggedText: New = "TIN" <n:PolyhedralSurfaceText> => New::Tin(n);
 MultiPointTaggedText: New = "MULTIPOINT" <n:MultiPointText> => New::MultiPoint(n);
 
 MultiLineStringTaggedText: New = "MULTILINESTRING" <n:MultiLineStringText> => New::MultiLineString(n);
+
+MultiPolygonTaggedText: New = "MULTIPOLYGON" <n:MultiPolygonText> => New::MultiPolygon(n);
 
 PointText: PointType = {
     "EMPTY" => None,
@@ -89,6 +92,11 @@ MultiPointText: MultiPointType = {
 MultiLineStringText: MultiLineStringType = {
     "EMPTY" => vec![],
     "(" <n:Comma<LineStringText>> ")" => n,
+};
+
+MultiPolygonText: MultiPolygonType = {
+    "EMPTY" => vec![],
+    "(" <n:Comma<PolygonText>> ")" => n,
 };
 
 ////// NOT DONE /////////

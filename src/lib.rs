@@ -59,6 +59,7 @@ pub enum New {
     Tin(PolyhedralSurfaceType),
     MultiPoint(MultiPointType),
     MultiLineString(MultiLineStringType),
+    MultiPolygon(MultiPolygonType),
     //Collection(Vec<New>),
 }
 
