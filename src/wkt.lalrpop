@@ -32,7 +32,7 @@ pub GeometryTaggedText = {
     TriangleTaggedText,
     PolyhedralSurfaceTaggedText,
     TinTaggedText,
-    // MultiPointTaggedText,
+    MultiPointTaggedText,
     // MultiLinestringTaggedText,
     // MultiPolygonTaggedText,
     // GeometryCollectionTaggedText,
@@ -49,6 +49,8 @@ PolyhedralSurfaceTaggedText: New = "POLYHEDRALSURFACE" <n:PolyhedralSurfaceText>
 TriangleTaggedText: New = "TRIANGLE" <n:PolygonText> => New::Triangle(n);
 
 TinTaggedText: New = "TIN" <n:PolyhedralSurfaceText> => New::Tin(n);
+
+MultiPointTaggedText: New = "MULTIPOINT" <n:MultiPointText> => New::MultiPoint(n);
 
 PointText: PointType = {
     "EMPTY" => None,
@@ -70,6 +72,11 @@ PolyhedralSurfaceText: PolyhedralSurfaceType = {
     "(" <n:Comma<PolygonText>> ")" => n,
 };
 
+MultiPointText: MultiPointType = {
+    "EMPTY" => vec![],
+    "(" <n:Comma<Point>> ")" => n,
+};
+
 ////// NOT DONE /////////
 
 
@@ -80,17 +87,6 @@ PolyhedralSurfaceText: PolyhedralSurfaceType = {
 //     SurfaceTextRepresentation,
 //     CollectionTextRepresentation,
 // };
-//
-//PointTaggedText = point <PointText>
-//LineStringTaggedText = linestring <LinestringText>
-//PolygonTaggedText = polygon <PolygonText>
-//PolyhedralSurfaceTaggedText = polyhedralsurface <PolyhedralSurfaceText>
-//TriangleTaggedText = triangle <PolygonText>
-//TinTaggedText tin <PolyhedralSurfaceText>
-//MultiPointTaggedText = multipoint <MultiPointText>
-//MultiLineStringTaggedText = multilinestring <MultiLineStringText>
-//MultiPolygonTaggedText = multipolygon <MultiPolygonText>
-//GeometryCollectionTaggedText = geometrycollection <GeometryCollectionText>
 
 
 // CurveTextRepresentation: New = {
@@ -116,7 +112,6 @@ PolyhedralSurfaceText: PolyhedralSurfaceType = {
 //     GeometryCollectionTextRepresentation => New::Collection(<>),
 // };
 //
-// MultiPointTextRepresentation = "MULTIPOINT" <MultiPointText>;
 //
 // GeometryCollectionTextRepresentation =
 //     "GEOMETRYCOLLECTION" <GeometryCollectionText>;
@@ -142,10 +137,6 @@ PolyhedralSurfaceText: PolyhedralSurfaceType = {
 //     CircularStringTextRepresentation,
 // };
 //
-// MultiPointText: MultiPointType = {
-//     "EMPTY" => vec![],
-//     "(" <n:Comma<Point>> ")" => n,
-// };
 //
 // GeometryCollectionText: Vec<New> = {
 //     "EMPTY" => vec![],
