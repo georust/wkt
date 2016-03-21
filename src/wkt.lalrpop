@@ -32,6 +32,12 @@ Comma<T>: Vec<T> = {
         h.into_iter().chain(iter::once(t)).collect()
 };
 
+EmptySet = "EMPTY";
+
+LeftParen = "(";
+
+RightParen = ")";
+
 Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
 
 pub GeometryTaggedText = {
@@ -78,41 +84,41 @@ GeometryCollectionTaggedText: New =
     "GEOMETRYCOLLECTION" <n:GeometryCollectionText> => New::GeometryCollection(n);
 
 PointText: PointType = {
-    "EMPTY" => None,
-    "(" <n:Point> ")" => Some(n),
+    EmptySet => None,
+    LeftParen <n:Point> RightParen => Some(n),
 };
 
 LineStringText: LineStringType = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<Point>> ")" => n,
+    EmptySet => vec![],
+    LeftParen <n:Comma<Point>> RightParen => n,
 };
 
 PolygonText: PolygonType = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<LineStringText>> ")" => n,
+    EmptySet => vec![],
+    LeftParen <n:Comma<LineStringText>> RightParen => n,
 };
 
 PolyhedralSurfaceText: PolyhedralSurfaceType = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<PolygonText>> ")" => n,
+    EmptySet => vec![],
+    LeftParen <n:Comma<PolygonText>> RightParen => n,
 };
 
 MultiPointText: MultiPointType = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<PointText>> ")" => n,
+    EmptySet => vec![],
+    LeftParen <n:Comma<PointText>> RightParen => n,
 };
 
 MultiLineStringText: MultiLineStringType = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<LineStringText>> ")" => n,
+    EmptySet => vec![],
+    LeftParen <n:Comma<LineStringText>> RightParen => n,
 };
 
 MultiPolygonText: MultiPolygonType = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<PolygonText>> ")" => n,
+    EmptySet => vec![],
+    LeftParen <n:Comma<PolygonText>> RightParen => n,
 };
 
 GeometryCollectionText: GeometryCollectionType = {
-    "EMPTY" => vec![],
-    "(" <n:Comma<GeometryTaggedText>> ")" => n,
+    EmptySet => vec![],
+    LeftParen <n:Comma<GeometryTaggedText>> RightParen => n,
 };
