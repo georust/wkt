@@ -23,7 +23,7 @@ grammar;
 //FIXME: https://github.com/nikomatsakis/lalrpop/issues/97
 //FIXME: closely follow spec here
 //Float: f64 = r"[+-]?([0-9]+(.[0-9]*)?|.[0-9]+)([eE][+-]?[0-9]+)?" => f64::from_str(<>).unwrap();
-Float: f64 = r"[+-0-9eE.]+" => f64::from_str(<>).unwrap();
+Float: f64 = r"[+-0123456789eE.]+" => f64::from_str(<>).unwrap();
 
 Comma<T>: Vec<T> = {
     <h:(<T> ",")*> <t:T?> =>

@@ -189,7 +189,7 @@ mod tests {
 
     #[test]
     fn basic_geometrycollection() {
-        let wkt = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4)))").unwrap();
+        let wkt = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4))").unwrap();
         let items = match wkt.0 {
             Geometry::GeometryCollection(items) => items,
             _ => unreachable!(),
