@@ -1,7 +1,7 @@
 extern crate geo;
 
 use Wkt;
-use Geometry;
+use New;
 use types::Coord;
 use types::GeometryCollection;
 use types::LineString;
@@ -18,6 +18,9 @@ pub trait ToWkt {
     fn to_wkt(&self) -> Wkt;
 }
 
+
+/*
+FIXME
 
 fn g_point_to_w_coord(g_point: &geo::Point) -> Coord {
     let geo::Point(coord) = *g_point;
@@ -121,7 +124,7 @@ fn g_geocol_to_w_geocol(g_geocol: &geo::GeometryCollection) -> GeometryCollectio
 }
 
 
-fn g_geom_to_w_geom(g_geom: &geo::Geometry) -> Geometry {
+fn g_geom_to_w_geom(g_geom: &geo::Geometry) -> New {
     match g_geom {
         &geo::Geometry::Point(ref g_point) =>
             g_point_to_w_point(g_point).as_item(),
@@ -153,3 +156,4 @@ impl ToWkt for geo::Geometry {
         Wkt(w_geom)
     }
 }
+*/

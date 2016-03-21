@@ -73,7 +73,7 @@ pub enum Geometry {
     GeometryCollection(GeometryCollection),
 }
 
-pub struct Wkt(Geometry);
+pub struct Wkt(New);
 
 
 
