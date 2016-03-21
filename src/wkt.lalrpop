@@ -85,40 +85,40 @@ GeometryCollectionTaggedText: New =
 
 PointText: PointType = {
     EmptySet => None,
-    LeftParen <n:Point> RightParen => Some(n),
+    LeftParen <Point> RightParen => Some(<>),
 };
 
-LineStringText: LineStringType = {
+LineStringText = {
     EmptySet => vec![],
-    LeftParen <n:Comma<Point>> RightParen => n,
+    LeftParen <Comma<Point>> RightParen,
 };
 
-PolygonText: PolygonType = {
+PolygonText = {
     EmptySet => vec![],
-    LeftParen <n:Comma<LineStringText>> RightParen => n,
+    LeftParen <Comma<LineStringText>> RightParen,
 };
 
-PolyhedralSurfaceText: PolyhedralSurfaceType = {
+PolyhedralSurfaceText = {
     EmptySet => vec![],
-    LeftParen <n:Comma<PolygonText>> RightParen => n,
+    LeftParen <Comma<PolygonText>> RightParen,
 };
 
-MultiPointText: MultiPointType = {
+MultiPointText = {
     EmptySet => vec![],
-    LeftParen <n:Comma<PointText>> RightParen => n,
+    LeftParen <Comma<PointText>> RightParen,
 };
 
-MultiLineStringText: MultiLineStringType = {
+MultiLineStringText = {
     EmptySet => vec![],
-    LeftParen <n:Comma<LineStringText>> RightParen => n,
+    LeftParen <Comma<LineStringText>> RightParen,
 };
 
-MultiPolygonText: MultiPolygonType = {
+MultiPolygonText = {
     EmptySet => vec![],
-    LeftParen <n:Comma<PolygonText>> RightParen => n,
+    LeftParen <Comma<PolygonText>> RightParen,
 };
 
-GeometryCollectionText: GeometryCollectionType = {
+GeometryCollectionText = {
     EmptySet => vec![],
-    LeftParen <n:Comma<GeometryTaggedText>> RightParen => n,
+    LeftParen <Comma<GeometryTaggedText>> RightParen,
 };
