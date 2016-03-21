@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use tokenizer::PeekableTokens;
-use FromTokens;
 use types::point::Point;
 use Geometry;
 
@@ -24,13 +22,6 @@ pub struct MultiPoint(pub Vec<Point>);
 impl MultiPoint {
     pub fn as_item(self) -> Geometry {
         Geometry::MultiPoint(self)
-    }
-}
-
-impl FromTokens for MultiPoint {
-    fn from_tokens(tokens: &mut PeekableTokens) -> Result<Self, &'static str> {
-        let result = FromTokens::comma_many(<Point as FromTokens>::from_tokens_with_parens, tokens);
-        result.map(|vec| MultiPoint(vec))
     }
 }
 

@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use tokenizer::PeekableTokens;
-use FromTokens;
 use types::coord::Coord;
 use Geometry;
 
@@ -24,13 +22,6 @@ pub struct LineString(pub Vec<Coord>);
 impl LineString {
     pub fn as_item(self) -> Geometry {
         Geometry::LineString(self)
-    }
-}
-
-impl FromTokens for LineString {
-    fn from_tokens(tokens: &mut PeekableTokens) -> Result<Self, &'static str> {
-        let result = FromTokens::comma_many(<Coord as FromTokens>::from_tokens, tokens);
-        result.map(|vec| LineString(vec))
     }
 }
 

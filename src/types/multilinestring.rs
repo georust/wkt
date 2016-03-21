@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use tokenizer::PeekableTokens;
-use FromTokens;
 use types::linestring::LineString;
 use Geometry;
 
@@ -26,14 +24,6 @@ impl MultiLineString {
         Geometry::MultiLineString(self)
     }
 }
-
-impl FromTokens for MultiLineString {
-    fn from_tokens(tokens: &mut PeekableTokens) -> Result<Self, &'static str> {
-        let result = FromTokens::comma_many(<LineString as FromTokens>::from_tokens_with_parens, tokens);
-        result.map(|vec| MultiLineString(vec))
-    }
-}
-
 
 #[cfg(test)]
 mod tests {

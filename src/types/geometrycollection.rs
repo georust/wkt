@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use tokenizer::{PeekableTokens, Token};
-use FromTokens;
 use Geometry;
 
 #[derive(Default)]
@@ -24,35 +22,6 @@ impl GeometryCollection {
         Geometry::GeometryCollection(self)
     }
 }
-
-impl FromTokens for GeometryCollection {
-    fn from_tokens(tokens: &mut PeekableTokens) -> Result<Self, &'static str> {
-        let mut items = Vec::new();
-
-        let word = match tokens.next() {
-            Some(Token::Word(w)) => w,
-            _ => return Err("Expected a word in GEOMETRYCOLLECTION")
-        };
-
-        let item = try!(Geometry::from_word_and_tokens(&*word, tokens));
-        items.push(item);
-
-        while let Some(&Token::Comma) = tokens.peek() {
-            tokens.next();  // throw away comma
-
-            let word = match tokens.next() {
-                Some(Token::Word(w)) => w,
-                _ => return Err("Expected a word in GEOMETRYCOLLECTION")
-            };
-
-            let item = try!(Geometry::from_word_and_tokens(&*word, tokens));
-            items.push(item);
-        }
-
-        Ok(GeometryCollection(items))
-    }
-}
-
 
 
 #[cfg(test)]

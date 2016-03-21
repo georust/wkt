@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use tokenizer::PeekableTokens;
-use FromTokens;
 use types::coord::Coord;
 use Geometry;
 
@@ -27,12 +25,6 @@ impl Point {
     }
 }
 
-impl FromTokens for Point {
-    fn from_tokens(tokens: &mut PeekableTokens) -> Result<Self, &'static str> {
-        let result = <Coord as FromTokens>::from_tokens(tokens);
-        result.map(|coord| Point(Some(coord)))
-    }
-}
 
 
 #[cfg(test)]
