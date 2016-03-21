@@ -25,6 +25,7 @@ grammar;
 //Float: f64 = r"[+-]?([0-9]+(.[0-9]*)?|.[0-9]+)([eE][+-]?[0-9]+)?" => f64::from_str(<>).unwrap();
 Float: f64 = r"[+-0123456789eE.]+" => f64::from_str(<>).unwrap();
 
+// FIXME: whitespace around comma should be optional
 Comma<T>: Vec<T> = {
     <h:(<T> ",")*> <t:T?> =>
         h.into_iter().chain(t).collect()
