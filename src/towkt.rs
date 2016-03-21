@@ -1,16 +1,7 @@
 extern crate geo;
 
 use Wkt;
-use New;
-use types::Coord;
-use types::GeometryCollection;
-use types::LineString;
-use types::Point;
-use types::Polygon;
-use types::MultiPoint;
-use types::MultiLineString;
-use types::MultiPolygon;
-
+use Geometry;
 
 /// A trait for converting values to WKT
 pub trait ToWkt {
@@ -124,7 +115,7 @@ fn g_geocol_to_w_geocol(g_geocol: &geo::GeometryCollection) -> GeometryCollectio
 }
 
 
-fn g_geom_to_w_geom(g_geom: &geo::Geometry) -> New {
+fn g_geom_to_w_geom(g_geom: &geo::Geometry) -> Geometry {
     match g_geom {
         &geo::Geometry::Point(ref g_point) =>
             g_point_to_w_point(g_point).as_item(),

@@ -4,7 +4,7 @@
 // Sections: 7.2
 
 use std::str::FromStr;
-use ::New;
+use ::Geometry as New;
 use {
     PointType,
     LineStringType,
