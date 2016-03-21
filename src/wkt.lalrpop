@@ -30,8 +30,6 @@ Comma<T>: Vec<T> = {
         h.into_iter().chain(t).collect()
 };
 
-////// DONE /////////
-
 Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
 
 pub GeometryTaggedText = {
@@ -116,21 +114,3 @@ GeometryCollectionText: GeometryCollectionType = {
     "EMPTY" => vec![],
     "(" <n:Comma<GeometryTaggedText>> ")" => n,
 };
-
-////// NOT DONE /////////
-
-
-//
-// pub WellKnownTextRepresentation = {
-//     PointTextRepresentation,
-//     CurveTextRepresentation,
-//     SurfaceTextRepresentation,
-//     CollectionTextRepresentation,
-// };
-
-//     "GEOMETRYCOLLECTION" <GeometryCollectionText>;
-//
-// GeometryCollectionText: Vec<New> = {
-//     "EMPTY" => vec![],
-//     "(" <n:Comma<WellKnownTextRepresentation>> ")" => n,
-// };
