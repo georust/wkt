@@ -150,6 +150,6 @@ fn g_geom_to_w_geom(g_geom: &geo::Geometry) -> Geometry {
 impl ToWkt for geo::Geometry {
     fn to_wkt(&self) -> Wkt {
         let w_geom = g_geom_to_w_geom(&self);
-        Wkt{items: vec![w_geom]}
+        Wkt(w_geom)
     }
 }

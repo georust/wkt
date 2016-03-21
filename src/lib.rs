@@ -73,20 +73,7 @@ pub enum Geometry {
     GeometryCollection(GeometryCollection),
 }
 
-pub struct Wkt {
-    pub items: Vec<Geometry>
-}
-
-impl Wkt {
-    fn new() -> Self {
-        Wkt {items: vec![]}
-    }
-
-    fn add_item(&mut self, item: Geometry) {
-        self.items.push(item);
-    }
-}
-
+pub struct Wkt(Geometry);
 
 
 
@@ -94,7 +81,6 @@ impl Wkt {
 mod tests {
     use {Wkt, Geometry};
     use types::{MultiPolygon, Point};
-    use test::Bencher;
 
     #[test]
     fn empty_string() {
@@ -118,9 +104,5 @@ mod tests {
                 assert_eq!(polygons.len(), 0),
             _ => unreachable!(),
         };
-    }
-
-    #[bench]
-    fn tmp(_: &mut Bencher) {
     }
 }
