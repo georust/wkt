@@ -54,34 +54,34 @@ pub GeometryTaggedText = {
 };
 
 PointTaggedText: New =
-    "POINT" <n:PointText> => New::Point(n);
+    "POINT" <PointText> => New::Point(<>);
 
 LineStringTaggedText: New =
-    "LINESTRING" <n:LineStringText> => New::LineString(n);
+    "LINESTRING" <LineStringText> => New::LineString(<>);
 
 PolygonTaggedText: New =
-    "POLYGON" <n:PolygonText> => New::Polygon(n);
+    "POLYGON" <PolygonText> => New::Polygon(<>);
 
 PolyhedralSurfaceTaggedText: New =
-    "POLYHEDRALSURFACE" <n:PolyhedralSurfaceText> => New::PolyhedralSurface(n);
+    "POLYHEDRALSURFACE" <PolyhedralSurfaceText> => New::PolyhedralSurface(<>);
 
 TriangleTaggedText: New =
-    "TRIANGLE" <n:PolygonText> => New::Triangle(n);
+    "TRIANGLE" <PolygonText> => New::Triangle(<>);
 
 TinTaggedText: New =
-    "TIN" <n:PolyhedralSurfaceText> => New::Tin(n);
+    "TIN" <PolyhedralSurfaceText> => New::Tin(<>);
 
 MultiPointTaggedText: New =
-    "MULTIPOINT" <n:MultiPointText> => New::MultiPoint(n);
+    "MULTIPOINT" <MultiPointText> => New::MultiPoint(<>);
 
 MultiLineStringTaggedText: New =
-    "MULTILINESTRING" <n:MultiLineStringText> => New::MultiLineString(n);
+    "MULTILINESTRING" <MultiLineStringText> => New::MultiLineString(<>);
 
 MultiPolygonTaggedText: New =
-    "MULTIPOLYGON" <n:MultiPolygonText> => New::MultiPolygon(n);
+    "MULTIPOLYGON" <MultiPolygonText> => New::MultiPolygon(<>);
 
 GeometryCollectionTaggedText: New =
-    "GEOMETRYCOLLECTION" <n:GeometryCollectionText> => New::GeometryCollection(n);
+    "GEOMETRYCOLLECTION" <GeometryCollectionText> => New::GeometryCollection(<>);
 
 PointText: PointType = {
     EmptySet => None,
