@@ -4,6 +4,7 @@
 // Sections: 7.2
 
 use std::str::FromStr;
+use std::iter;
 use ::Geometry as New;
 use {
     PointType,
@@ -27,8 +28,8 @@ Float: f64 = r"[+-0123456789eE.]+" => f64::from_str(<>).unwrap();
 
 // FIXME: whitespace around comma should be optional
 Comma<T>: Vec<T> = {
-    <h:(<T> ",")*> <t:T?> =>
-        h.into_iter().chain(t).collect()
+    <h:(<T> ",")*> <t:T> =>
+        h.into_iter().chain(iter::once(t)).collect()
 };
 
 Point: (f64, f64) = <x:Float> <y:Float> => (x, y);
