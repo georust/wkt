@@ -61,7 +61,7 @@ pub enum New {
     MultiPoint(MultiPointType),
     MultiLineString(MultiLineStringType),
     MultiPolygon(MultiPolygonType),
-    GeometryCollection(Vec<New>),
+    GeometryCollection(GeometryCollectionType),
 }
 
 
