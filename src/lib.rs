@@ -79,13 +79,13 @@ mod tests {
 
     #[test]
     fn empty_items() {
-        let wkt = Wkt::from_str("POINT EMPTY").ok().unwrap();
+        let wkt = Wkt::from_str("POINT EMPTY").unwrap();
         match wkt.0 {
             Geometry::Point(None) => (),
             _ => unreachable!(),
         };
 
-        let wkt = Wkt::from_str("MULTIPOLYGON EMPTY").ok().unwrap();
+        let wkt = Wkt::from_str("MULTIPOLYGON EMPTY").unwrap();
         match wkt.0 {
             Geometry::MultiPolygon(polygons) =>
                 assert_eq!(polygons.len(), 0),
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn basic_polygon() {
-        let wkt = Wkt::from_str("POLYGON ((8 4, 4 0, 0 4, 8 4), (7 3, 4 1, 1 4, 7 3))").ok().unwrap();
+        let wkt = Wkt::from_str("POLYGON ((8 4, 4 0, 0 4, 8 4), (7 3, 4 1, 1 4, 7 3))").unwrap();
         let lines = match wkt.0 {
             Geometry::Polygon(lines) => lines,
             _ => unreachable!(),
@@ -105,28 +105,28 @@ mod tests {
 
     #[test]
     fn basic_point() {
-        let wkt = Wkt::from_str("POINT (10 -20)").ok().unwrap();
+        let wkt = Wkt::from_str("POINT (10 -20)").unwrap();
         let coord = match wkt.0 {
             Geometry::Point(Some(coord)) => coord,
             _ => unreachable!(),
         };
-        assert_eq!(10.0, coord.x);
-        assert_eq!(-20.0, coord.y);
-        assert_eq!(None, coord.z);
-        assert_eq!(None, coord.m);
+        assert_eq!(10.0, coord.0);
+        assert_eq!(-20.0, coord.1);
+        //assert_eq!(None, coord.z);
+        //assert_eq!(None, coord.m);
     }
 
     #[test]
     fn basic_point_whitespace() {
-        let wkt = Wkt::from_str(" \n\t\rPOINT \n\t\r( \n\r\t10 \n\t\r-20 \n\t\r) \n\t\r").ok().unwrap();
+        let wkt = Wkt::from_str(" \n\t\rPOINT \n\t\r( \n\r\t10 \n\t\r-20 \n\t\r) \n\t\r").unwrap();
         let coord = match wkt.0 {
             Geometry::Point(Some(coord)) => coord,
             _ => unreachable!(),
         };
-        assert_eq!(10.0, coord.x);
-        assert_eq!(-20.0, coord.y);
-        assert_eq!(None, coord.z);
-        assert_eq!(None, coord.m);
+        assert_eq!(10.0, coord.0);
+        assert_eq!(-20.0, coord.1);
+        //assert_eq!(None, coord.z);
+        //assert_eq!(None, coord.m);
     }
 
     #[test]
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn basic_multipolygon() {
-        let wkt = Wkt::from_str("MULTIPOLYGON (((8 4)), ((4 0)))").ok().unwrap();
+        let wkt = Wkt::from_str("MULTIPOLYGON (((8 4)), ((4 0)))").unwrap();
         let polygons = match wkt.0 {
             Geometry::MultiPolygon(polygons) => polygons,
             _ => unreachable!(),
@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn basic_multipoint() {
-        let wkt = Wkt::from_str("MULTIPOINT ((8 4), (4 0))").ok().unwrap();
+        let wkt = Wkt::from_str("MULTIPOINT ((8 4), (4 0))").unwrap();
         let points = match wkt.0 {
             Geometry::MultiPoint(points) => points,
             _ => unreachable!(),
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn basic_multilinestring() {
-        let wkt = Wkt::from_str("MULTILINESTRING ((8 4, -3 0), (4 0, 6 -10))").ok().unwrap();
+        let wkt = Wkt::from_str("MULTILINESTRING ((8 4, -3 0), (4 0, 6 -10))").unwrap();
         let lines = match wkt.0 {
             Geometry::MultiLineString(lines) => lines,
             _ => unreachable!(),
@@ -169,27 +169,27 @@ mod tests {
 
     #[test]
     fn basic_linestring() {
-        let wkt = Wkt::from_str("LINESTRING (10 -20, -0 -0.5)").ok().unwrap();
+        let wkt = Wkt::from_str("LINESTRING (10 -20, -0 -0.5)").unwrap();
         let coords = match wkt.0 {
             Geometry::LineString(coords) => coords,
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());
 
-        assert_eq!(10.0, coords[0].x);
-        assert_eq!(-20.0, coords[0].y);
-        assert_eq!(None, coords[0].z);
-        assert_eq!(None, coords[0].m);
+        assert_eq!(10.0, coords[0].0);
+        assert_eq!(-20.0, coords[0].1);
+        //assert_eq!(None, coords[0].z);
+        //assert_eq!(None, coords[0].m);
 
-        assert_eq!(0.0, coords[1].x);
-        assert_eq!(-0.5, coords[1].y);
-        assert_eq!(None, coords[1].z);
-        assert_eq!(None, coords[1].m);
+        assert_eq!(0.0, coords[1].0);
+        assert_eq!(-0.5, coords[1].1);
+        //assert_eq!(None, coords[1].z);
+        //assert_eq!(None, coords[1].m);
     }
 
     #[test]
     fn basic_geometrycollection() {
-        let wkt = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4)))").ok().unwrap();
+        let wkt = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4)))").unwrap();
         let items = match wkt.0 {
             Geometry::GeometryCollection(items) => items,
             _ => unreachable!(),
