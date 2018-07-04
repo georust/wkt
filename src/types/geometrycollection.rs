@@ -17,7 +17,7 @@ use tokenizer::{PeekableTokens, Token};
 use FromTokens;
 use Geometry;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct GeometryCollection(pub Vec<Geometry>);
 
 impl GeometryCollection {

@@ -18,7 +18,7 @@ use types::polygon::Polygon;
 use FromTokens;
 use Geometry;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MultiPolygon(pub Vec<Polygon>);
 
 impl MultiPolygon {

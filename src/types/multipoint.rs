@@ -18,7 +18,7 @@ use types::point::Point;
 use FromTokens;
 use Geometry;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MultiPoint(pub Vec<Point>);
 
 impl MultiPoint {

@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::ascii::AsciiExt;
+#[cfg(feature = "geo-types")]
+extern crate geo_types;
+
 use std::default::Default;
 use std::fmt;
 
@@ -35,6 +37,10 @@ pub mod types;
 #[cfg(feature = "geo-types")]
 pub use towkt::ToWkt;
 
+#[cfg(feature = "geo-types")]
+pub mod conversion;
+
+#[derive(Debug)]
 pub enum Geometry {
     Point(Point),
     LineString(LineString),
@@ -95,6 +101,7 @@ impl fmt::Display for Geometry {
     }
 }
 
+#[derive(Debug)]
 pub struct Wkt {
     pub items: Vec<Geometry>,
 }
