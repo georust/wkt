@@ -18,7 +18,7 @@ use types::linestring::LineString;
 use FromTokens;
 use Geometry;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MultiLineString(pub Vec<LineString>);
 
 impl MultiLineString {

@@ -16,7 +16,7 @@ use std::fmt;
 use tokenizer::{PeekableTokens, Token};
 use FromTokens;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Coord {
     pub x: f64,
     pub y: f64,
