@@ -12,6 +12,7 @@ keywords = ["geo", "geospatial", "wkt"]
 [dependencies]
 geo-types = {version = "0.7", optional = true}
 num-traits = "0.2"
+thiserror = "1.0.23"
 
 [dev-dependencies]
 criterion = { version = "0.2" }
@@ -22,3 +23,12 @@ default = ["geo-types"]
 [[bench]]
 name = "parse"
 harness = false
+
+[patch.crates-io]
+# This feature depends on an unmerged geo-types feature.
+# Once (and if) that geo-types feature is released, we can merge this and bump
+# the min version of geo-types required.
+# That's a breaking change for wkt, but we already have an unreleased breaking
+# change for WKT in the pipeline, so I'd recommend combinging them into one
+# breaking WKT release.
+geo-types = { git = "https://github.com/georust/geo", branch = "mkirk/pub-error" }
