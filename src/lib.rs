@@ -30,6 +30,7 @@ mod tokenizer;
 #[cfg(feature = "geo-types")]
 mod towkt;
 
+mod parser;
 pub mod types;
 
 #[cfg(feature = "geo-types")]

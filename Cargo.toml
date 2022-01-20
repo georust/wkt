@@ -14,6 +14,7 @@ geo-types = { version = "0.7.1", optional = true }
 num-traits = "0.2"
 serde = { version = "1.0", default-features = false, optional = true }
 thiserror = "1.0.23"
+nom = {version = "7.1.0", default-features = true, features = ["alloc"] }
 
 [dev-dependencies]
 criterion = { version = "0.2" }
