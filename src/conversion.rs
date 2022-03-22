@@ -278,7 +278,7 @@ where
             .map(Geometry::try_into)
             .collect::<Result<_, _>>()?;
 
-        Ok(geo_types::GeometryCollection::new_from(geo_geometries))
+        Ok(geo_types::GeometryCollection::new(geo_geometries))
     }
 }
 
@@ -871,7 +871,7 @@ mod tests {
         ]);
 
         let g_geometrycollection: geo_types::GeometryCollection<f64> =
-            geo_types::GeometryCollection::new_from(vec![
+            geo_types::GeometryCollection::new(vec![
                 geo_types::Geometry::Point(g_point),
                 geo_types::Geometry::MultiPoint(g_multipoint),
                 geo_types::Geometry::LineString(g_linestring),
