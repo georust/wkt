@@ -10,7 +10,7 @@ keywords = ["geo", "geospatial", "wkt"]
 edition = "2021"
 
 [dependencies]
-geo-types = { version = "0.7.3", optional = true }
+geo-types = { git = "https://github.com/nyurik/geo.git", branch = "dim-no-wkt", optional = true }
 num-traits = "0.2"
 serde = { version = "1.0", default-features = false, optional = true }
 thiserror = "1.0.23"
