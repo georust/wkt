@@ -1,8 +1,11 @@
 # Changes
 
 ## next release
-### Changed
+### Added
 * impl `std::fmt::Display` for `Wkt`.
+* impls of From for the different types in `geo_types` are added.
+### Changed
+* Trait ToWkt gets deprecated.
 
 ## 0.10.0 - 2022-02-24
 ### Changed
