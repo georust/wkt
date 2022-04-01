@@ -37,9 +37,10 @@
 //! use geo_types::Point;
 //!
 //! let point: Wkt<f64> = "POINT(10 20)".parse().unwrap();
-//! let g_point: geo_types::Point<f64> = (10., 20.).into();
-//! // We can attempt to directly convert the Wkt without having to access its items field
 //! let converted: Point<f64> = point.try_into().unwrap();
+//!
+//! let g_point: geo_types::Point<f64> = (10., 20.).into();
+//!
 //! assert_eq!(g_point, converted);
 //! ```
 //!
