@@ -1,8 +1,12 @@
 # Changes
 
 ## next release
-### Changed
+
+### Added
 * impl `std::fmt::Display` for `Wkt`.
+  * <https://github.com/georust/wkt/pull/88>
+* added `to_wkt_string` method to `ToWkt`
+  * <https://github.com/georust/wkt/pull/89>
 
 ## 0.10.0 - 2022-02-24
 ### Changed

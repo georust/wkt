@@ -10,10 +10,21 @@ use geo_types::CoordFloat;
 /// A trait for converting values to WKT
 pub trait ToWkt<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + std::fmt::Display,
 {
     /// Converts the value of `self` to an instance of WKT
     fn to_wkt(&self) -> Wkt<T>;
+
+    /// Serialize as a WKT string
+    ///
+    /// ```
+    /// use wkt::ToWkt;
+    /// let point: geo_types::Geometry<f64> = geo_types::point!(x: 1.0, y: 2.0).into();
+    /// assert_eq!("POINT(1 2)", &point.to_wkt_string());
+    /// ```
+    fn to_wkt_string(&self) -> String {
+        self.to_wkt().to_string()
+    }
 }
 
 fn g_point_to_w_coord<T>(g_point: &geo_types::Coordinate<T>) -> Coord<T>
@@ -215,7 +226,7 @@ where
 
 impl<T> ToWkt<T> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
         let w_geom = g_geom_to_w_geom(self);
