@@ -220,7 +220,7 @@ where
 
 impl<T> fmt::Display for Wkt<T>
 where
-    T: WktFloat + fmt::Debug + fmt::Display
+    T: WktFloat + fmt::Debug + fmt::Display,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         self.item.fmt(formatter)
