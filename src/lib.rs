@@ -85,9 +85,6 @@ extern crate geo_types;
 extern crate thiserror;
 
 #[cfg(feature = "geo-types")]
-pub use crate::towkt::ToWkt;
-
-#[cfg(feature = "geo-types")]
 pub mod conversion;
 
 #[cfg(feature = "serde")]
