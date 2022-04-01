@@ -22,22 +22,39 @@
 //!
 //! # Examples
 //!
+//! Parse a WKT string to a type:
+//!
 //! ```
-//! use std::str::FromStr;
 //! use wkt::Wkt;
-//! let point: Wkt<f64> = Wkt::from_str("POINT(10 20)").unwrap();
+//!
+//! let point: Wkt<f64> = "POINT(10 20)".parse().unwrap();
 //! ```
 //!
-//! ```ignore
-//! // Convert to a geo_types primitive from a Wkt struct
-//! use std::convert::TryInto;
+//! Convert to a geo_types primitive from a Wkt struct:
+//!
+//! ```
 //! use wkt::Wkt;
 //! use geo_types::Point;
-//! let point: Wkt<f64> = Wkt::from_str("POINT(10 20)").unwrap();
+//!
+//! let point: Wkt<f64> = "POINT(10 20)".parse().unwrap();
 //! let g_point: geo_types::Point<f64> = (10., 20.).into();
-// // We can attempt to directly convert the Wkt without having to access its items field
+//! // We can attempt to directly convert the Wkt without having to access its items field
 //! let converted: Point<f64> = point.try_into().unwrap();
 //! assert_eq!(g_point, converted);
+//! ```
+//!
+//! Take a geo_types structure and get its WKT representation:
+//!
+//! ```
+//! use wkt::Wkt;
+//!
+//! let g_point: geo_types::Point<f64> = (10., 20.).into();
+//! let wkt_point: Wkt<f64> = g_point.into();
+//!
+//! assert_eq!(wkt_point.to_string(), "POINT ()");
+//!
+//! // or use it in a format string
+//! assert_eq!(format!("{wkt_point}"), "POINT ()");
 //! ```
 //!
 //! ## Direct Access to the `item` Field
