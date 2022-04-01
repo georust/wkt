@@ -1,5 +1,9 @@
 # Changes
 
+## next release
+### Changed
+* impl `std::fmt::Display` for `Wkt`.
+
 ## 0.10.0 - 2022-02-24
 ### Changed
 * Now accepts `MULTIPOINT`s with fewer parentheses, as output by `ST_AsText` in postgis:
