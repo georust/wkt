@@ -218,6 +218,15 @@ where
     }
 }
 
+impl<T> fmt::Display for Wkt<T>
+where
+    T: WktFloat + fmt::Debug + fmt::Display,
+{
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        self.item.fmt(formatter)
+    }
+}
+
 trait FromTokens<T>: Sized + Default
 where
     T: WktFloat + FromStr + Default,
@@ -335,5 +344,12 @@ mod tests {
             format!("{:?}", g),
             "Point(Point(Some(Coord { x: 1.0, y: 2.0, z: None, m: None })))"
         );
+    }
+
+    #[test]
+    fn test_display_on_wkt() {
+        let wktls: Wkt<f64> = Wkt::from_str("LINESTRING(10 20, 20 30)").unwrap();
+
+        assert_eq!(wktls.to_string(), "LINESTRING(10 20,20 30)");
     }
 }
