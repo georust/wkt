@@ -7,6 +7,16 @@ use crate::{Wkt, WktFloat};
 
 use geo_types::CoordFloat;
 
+#[deprecated]
+/// A trait for converting values to WKT
+pub trait ToWkt<T>
+where
+    T: CoordFloat,
+{
+    /// Converts the value of `self` to an instance of WKT
+    fn to_wkt(&self) -> Wkt<T>;
+}
+
 fn g_point_to_w_coord<T>(g_point: geo_types::Coordinate<T>) -> Coord<T>
 where
     T: CoordFloat,
