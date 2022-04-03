@@ -52,10 +52,10 @@
 //! let g_point: geo_types::Point<f64> = (10., 20.).into();
 //! let wkt_point: Wkt<f64> = g_point.into();
 //!
-//! assert_eq!(wkt_point.to_string(), "POINT ()");
+//! assert_eq!(wkt_point.to_string(), "POINT(10 20)");
 //!
 //! // or use it in a format string
-//! assert_eq!(format!("{wkt_point}"), "POINT ()");
+//! assert_eq!(format!("{wkt_point}"), "POINT(10 20)");
 //! ```
 //!
 //! ## Direct Access to the `item` Field
