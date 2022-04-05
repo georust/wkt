@@ -670,7 +670,7 @@ mod tests {
     fn convert_empty_geometrycollection() {
         let w_geometrycollection = GeometryCollection(vec![]).as_item();
         let g_geometrycollection: geo_types::GeometryCollection<f64> =
-            geo_types::GeometryCollection(vec![]);
+            geo_types::GeometryCollection::default();
         assert_eq!(
             geo_types::Geometry::GeometryCollection(g_geometrycollection),
             w_geometrycollection.try_into().unwrap()
