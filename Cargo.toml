@@ -28,4 +28,4 @@ name = "parse"
 harness = false
 
 [patch.crates-io]
-geo-types = { git = "https://github.com/nyurik/geo", branch = "dim" }
+geo-types = { git = "https://github.com/georust/geo", branch = "mkirk/dim" }
