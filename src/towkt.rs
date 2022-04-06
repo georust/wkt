@@ -66,8 +66,7 @@ fn g_linestring_to_w_linestring<T>(g_linestring: &geo_types::LineString<T>) -> L
 where
     T: CoordFloat,
 {
-    let &geo_types::LineString(ref g_points) = g_linestring;
-    g_points_to_w_linestring(g_points)
+    g_points_to_w_linestring(&g_linestring.0)
 }
 
 fn g_points_to_w_linestring<T>(g_coords: &[geo_types::Coordinate<T>]) -> LineString<T>
@@ -84,8 +83,7 @@ where
 {
     let mut w_lines = vec![];
     for g_line in g_lines {
-        let &geo_types::LineString(ref g_points) = g_line;
-        w_lines.push(g_points_to_w_linestring(g_points));
+        w_lines.push(g_points_to_w_linestring(&g_line.0));
     }
     w_lines
 }
@@ -115,7 +113,7 @@ where
     let mut poly_lines = vec![];
 
     // Outer
-    let &geo_types::LineString(ref outer_points) = outer_line;
+    let outer_points = &outer_line.0;
     if !outer_points.is_empty() {
         poly_lines.push(g_points_to_w_linestring(outer_points));
     }
@@ -131,8 +129,7 @@ fn g_mpoint_to_w_mpoint<T>(g_mpoint: &geo_types::MultiPoint<T>) -> MultiPoint<T>
 where
     T: CoordFloat,
 {
-    let &geo_types::MultiPoint(ref g_points) = g_mpoint;
-    let w_points = g_points_to_w_points(g_points);
+    let w_points = g_points_to_w_points(&g_mpoint.0);
     MultiPoint(w_points)
 }
 
@@ -140,8 +137,7 @@ fn g_mline_to_w_mline<T>(g_mline: &geo_types::MultiLineString<T>) -> MultiLineSt
 where
     T: CoordFloat,
 {
-    let &geo_types::MultiLineString(ref g_lines) = g_mline;
-    let w_lines = g_lines_to_w_lines(g_lines);
+    let w_lines = g_lines_to_w_lines(&g_mline.0);
     MultiLineString(w_lines)
 }
 
@@ -160,8 +156,7 @@ fn g_mpolygon_to_w_mpolygon<T>(g_mpolygon: &geo_types::MultiPolygon<T>) -> Multi
 where
     T: CoordFloat,
 {
-    let &geo_types::MultiPolygon(ref g_polygons) = g_mpolygon;
-    let w_polygons = g_polygons_to_w_polygons(g_polygons);
+    let w_polygons = g_polygons_to_w_polygons(&g_mpolygon.0);
     MultiPolygon(w_polygons)
 }
 
@@ -169,9 +164,8 @@ fn g_geocol_to_w_geocol<T>(g_geocol: &geo_types::GeometryCollection<T>) -> Geome
 where
     T: CoordFloat,
 {
-    let &geo_types::GeometryCollection(ref g_geoms) = g_geocol;
     let mut w_geoms = vec![];
-    for g_geom in g_geoms {
+    for g_geom in g_geocol.iter() {
         let w_geom = g_geom_to_w_geom(g_geom);
         w_geoms.push(w_geom);
     }
