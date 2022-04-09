@@ -5,7 +5,7 @@
 ### Added
 * impl `std::fmt::Display` for `Wkt`.
   * <https://github.com/georust/wkt/pull/88>
-* added `to_wkt_string` method to `ToWkt`
+* added `wkt_string` and `write_wkt` methods to `ToWkt` trait
   * <https://github.com/georust/wkt/pull/89>
 
 ## 0.10.0 - 2022-02-24
