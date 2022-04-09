@@ -72,8 +72,6 @@ use crate::types::Point;
 use crate::types::Polygon;
 
 mod tokenizer;
-
-#[cfg(feature = "geo-types")]
 mod towkt;
 
 /// `WKT` primitive types and collections
@@ -84,11 +82,15 @@ extern crate geo_types;
 
 extern crate thiserror;
 
-#[cfg(feature = "geo-types")]
 pub use crate::towkt::ToWkt;
 
 #[cfg(feature = "geo-types")]
+#[deprecated(note = "renamed module to `wkt::geo_types_from_wkt`")]
 pub mod conversion;
+#[cfg(feature = "geo-types")]
+pub mod geo_types_from_wkt;
+#[cfg(feature = "geo-types")]
+mod geo_types_to_wkt;
 
 #[cfg(feature = "serde")]
 extern crate serde;
