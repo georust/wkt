@@ -15,8 +15,8 @@ where
     ///
     /// ```
     /// use wkt::ToWkt;
-    /// let point: geo_types::Geometry<f64> = geo_types::point!(x: 1.0, y: 2.0).into();
-    /// assert_eq!("POINT(1 2)", &point.wkt_string());
+    /// let point: geo_types::Point<f64> = geo_types::point!(x: 1.2, y: 3.4);
+    /// assert_eq!("POINT(1.2 3.4)", &point.wkt_string());
     /// ```
     fn wkt_string(&self) -> String {
         self.to_wkt().to_string()
@@ -27,7 +27,7 @@ where
     /// ```
     /// use wkt::ToWkt;
     /// use std::fs::File;
-    /// let point: geo_types::Geometry<f64> = geo_types::point!(x: 1.2, y: 3.4).into();
+    /// let point: geo_types::Point<f64> = geo_types::point!(x: 1.2, y: 3.4);
     ///
     /// // use a vec as a fake "file" for the purpose of example, but you could equally replace the
     /// // following with:

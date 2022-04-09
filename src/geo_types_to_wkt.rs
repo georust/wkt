@@ -6,13 +6,240 @@ use crate::types::{
 };
 use crate::{Geometry, ToWkt, Wkt};
 
+/// # Examples
+/// ```
+/// use geo_types::{point, Geometry};
+/// use wkt::ToWkt;
+///
+/// let geometry: Geometry<f64> = Geometry::Point(point!(x: 1., y: 2.));
+///
+/// assert_eq!(geometry.wkt_string(), "POINT(1 2)");
+/// ```
 impl<T> ToWkt<T> for geo_types::Geometry<T>
 where
     T: CoordFloat + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        let w_geom = g_geom_to_w_geom(self);
-        Wkt { item: w_geom }
+        match self {
+            geo_types::Geometry::Point(g) => g.to_wkt(),
+            geo_types::Geometry::Line(g) => g.to_wkt(),
+            geo_types::Geometry::LineString(g) => g.to_wkt(),
+            geo_types::Geometry::Polygon(g) => g.to_wkt(),
+            geo_types::Geometry::MultiPoint(g) => g.to_wkt(),
+            geo_types::Geometry::MultiLineString(g) => g.to_wkt(),
+            geo_types::Geometry::MultiPolygon(g) => g.to_wkt(),
+            geo_types::Geometry::GeometryCollection(g) => g.to_wkt(),
+            geo_types::Geometry::Rect(g) => g.to_wkt(),
+            geo_types::Geometry::Triangle(g) => g.to_wkt(),
+        }
+    }
+}
+
+/// # Examples
+/// ```
+/// use geo_types::{point, Point};
+/// use wkt::ToWkt;
+///
+/// let point: Point<f64> = point!(x: 1., y: 2.);
+///
+/// assert_eq!(point.wkt_string(), "POINT(1 2)");
+/// ```
+impl<T> ToWkt<T> for geo_types::Point<T>
+where
+    T: CoordFloat + std::fmt::Display,
+{
+    fn to_wkt(&self) -> Wkt<T> {
+        Wkt {
+            item: g_point_to_w_point(self).as_item(),
+        }
+    }
+}
+
+/// # Examples
+/// ```
+/// use geo_types::{coord, Line};
+/// use wkt::ToWkt;
+///
+/// let line = Line::<f64>::new(coord!(x: 1., y: 2.), coord!(x: 3., y: 4.));
+///
+/// assert_eq!(line.wkt_string(), "LINESTRING(1 2,3 4)");
+/// ```
+impl<T> ToWkt<T> for geo_types::Line<T>
+where
+    T: CoordFloat + std::fmt::Display,
+{
+    fn to_wkt(&self) -> Wkt<T> {
+        Wkt {
+            item: g_line_to_w_linestring(self).as_item(),
+        }
+    }
+}
+
+/// # Examples
+/// ```
+/// use geo_types::{line_string, LineString};
+/// use wkt::ToWkt;
+///
+/// let line_string: LineString<f64> = line_string![(x: 1., y: 2.), (x: 3., y: 4.), (x: 5., y: 6.)];
+///
+/// assert_eq!(line_string.wkt_string(), "LINESTRING(1 2,3 4,5 6)");
+/// ```
+impl<T> ToWkt<T> for geo_types::LineString<T>
+where
+    T: CoordFloat + std::fmt::Display,
+{
+    fn to_wkt(&self) -> Wkt<T> {
+        Wkt {
+            item: g_linestring_to_w_linestring(self).as_item(),
+        }
+    }
+}
+
+/// # Examples
+/// ```
+/// use geo_types::{polygon, Polygon};
+/// use wkt::ToWkt;
+///
+/// let polygon: Polygon<f64> = polygon![(x: 0., y: 0.), (x: 4., y: 0.), (x: 2., y: 4.), (x: 0., y: 0.)];
+///
+/// assert_eq!(polygon.wkt_string(), "POLYGON((0 0,4 0,2 4,0 0))");
+/// ```
+impl<T> ToWkt<T> for geo_types::Polygon<T>
+where
+    T: CoordFloat + std::fmt::Display,
+{
+    fn to_wkt(&self) -> Wkt<T> {
+        Wkt {
+            item: g_polygon_to_w_polygon(self).as_item(),
+        }
+    }
+}
+
+/// # Examples
+/// ```
+/// use geo_types::{point, MultiPoint};
+/// use wkt::ToWkt;
+///
+/// let multi_point: MultiPoint<f64> = MultiPoint::new(vec![point!(x: 0., y: 0.), point!(x: 4., y: 0.), point!(x: 2., y: 4.)]);
+///
+/// assert_eq!(multi_point.wkt_string(), "MULTIPOINT((0 0),(4 0),(2 4))");
+/// ```
+impl<T> ToWkt<T> for geo_types::MultiPoint<T>
+where
+    T: CoordFloat + std::fmt::Display,
+{
+    fn to_wkt(&self) -> Wkt<T> {
+        Wkt {
+            item: g_mpoint_to_w_mpoint(self).as_item(),
+        }
+    }
+}
+
+/// # Examples
+/// ```
+/// use geo_types::{line_string, LineString, MultiLineString};
+/// use wkt::ToWkt;
+///
+/// let line_string_1: LineString<f64> = line_string![(x: 1., y: 2.), (x: 3., y: 4.), (x: 5., y: 6.)];
+/// let line_string_2: LineString<f64> = line_string![(x: 7., y: 8.), (x: 9., y: 0.)];
+/// let multi_line_string: MultiLineString<f64> = MultiLineString::new(vec![line_string_1, line_string_2]);
+///
+/// assert_eq!(multi_line_string.wkt_string(), "MULTILINESTRING((1 2,3 4,5 6),(7 8,9 0))");
+/// ```
+impl<T> ToWkt<T> for geo_types::MultiLineString<T>
+where
+    T: CoordFloat + std::fmt::Display,
+{
+    fn to_wkt(&self) -> Wkt<T> {
+        Wkt {
+            item: g_mline_to_w_mline(self).as_item(),
+        }
+    }
+}
+
+/// # Examples
+/// ```
+/// use geo_types::{polygon, Polygon, MultiPolygon};
+/// use wkt::ToWkt;
+///
+/// // triangle
+/// let polygon_1: Polygon<f64> = polygon![(x: 0., y: 0.), (x: 4., y: 0.), (x: 2., y: 4.), (x: 0., y: 0.)];
+/// // square
+/// let polygon_2: Polygon<f64> = polygon![(x: 4., y: 4.), (x: 8., y: 4.), (x: 8., y: 8.), (x: 4., y: 8.), (x: 4., y: 4.)];
+/// let multi_polygon: MultiPolygon<f64> = MultiPolygon::new(vec![polygon_1, polygon_2]);
+///
+/// assert_eq!(multi_polygon.wkt_string(), "MULTIPOLYGON(((0 0,4 0,2 4,0 0)),((4 4,8 4,8 8,4 8,4 4)))");
+/// ```
+impl<T> ToWkt<T> for geo_types::MultiPolygon<T>
+where
+    T: CoordFloat + std::fmt::Display,
+{
+    fn to_wkt(&self) -> Wkt<T> {
+        Wkt {
+            item: g_mpolygon_to_w_mpolygon(self).as_item(),
+        }
+    }
+}
+
+/// # Examples
+/// ```
+/// use geo_types::{line_string, LineString, polygon, Polygon, GeometryCollection};
+/// use wkt::ToWkt;
+///
+/// let polygon: Polygon<f64> = polygon![(x: 0., y: 0.), (x: 4., y: 0.), (x: 2., y: 4.), (x: 0., y: 0.)];
+/// let line_string: LineString<f64> = line_string![(x: 1., y: 2.), (x: 3., y: 4.), (x: 5., y: 6.)];
+/// let geometry_collection: GeometryCollection<f64> = GeometryCollection::new_from(vec![polygon.into(), line_string.into()]);
+///
+/// assert_eq!(geometry_collection.wkt_string(), "GEOMETRYCOLLECTION(POLYGON((0 0,4 0,2 4,0 0)),LINESTRING(1 2,3 4,5 6))");
+/// ```
+impl<T> ToWkt<T> for geo_types::GeometryCollection<T>
+where
+    T: CoordFloat + std::fmt::Display,
+{
+    fn to_wkt(&self) -> Wkt<T> {
+        Wkt {
+            item: g_geocol_to_w_geocol(self).as_item(),
+        }
+    }
+}
+
+/// # Examples
+/// ```
+/// use geo_types::{coord, Rect};
+/// use wkt::ToWkt;
+///
+/// let rect: Rect<f64> = Rect::new(coord!(x: 4., y: 4.), coord!(x: 8., y: 8.));
+///
+/// assert_eq!(rect.wkt_string(), "POLYGON((4 4,4 8,8 8,8 4,4 4))");
+/// ```
+impl<T> ToWkt<T> for geo_types::Rect<T>
+where
+    T: CoordFloat + std::fmt::Display,
+{
+    fn to_wkt(&self) -> Wkt<T> {
+        Wkt {
+            item: g_rect_to_w_polygon(self).as_item(),
+        }
+    }
+}
+
+/// # Examples
+/// ```
+/// use geo_types::{coord, Triangle};
+/// use wkt::ToWkt;
+///
+/// let triangle: Triangle<f64> = Triangle::new(coord!(x: 0., y: 0.), coord!(x: 4., y: 0.), coord!(x: 2., y: 4.));
+///
+/// assert_eq!(triangle.wkt_string(), "POLYGON((0 0,4 0,2 4,0 0))");
+/// ```
+impl<T> ToWkt<T> for geo_types::Triangle<T>
+where
+    T: CoordFloat + std::fmt::Display,
+{
+    fn to_wkt(&self) -> Wkt<T> {
+        Wkt {
+            item: g_triangle_to_w_polygon(self).as_item(),
+        }
     }
 }
 
