@@ -13,7 +13,9 @@ where
 
     /// Serialize as a WKT string
     ///
-    /// ```
+    #[cfg_attr(feature = "geo-types", doc = "```")]
+    #[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+    /// // This example requires the geo-types feature (on by default).
     /// use wkt::ToWkt;
     /// let point: geo_types::Point<f64> = geo_types::point!(x: 1.2, y: 3.4);
     /// assert_eq!("POINT(1.2 3.4)", &point.wkt_string());
@@ -24,7 +26,9 @@ where
 
     /// Write a WKT string to a [`File`](std::fs::File), or anything else that implements [`Write`](std::io::Write).
     ///
-    /// ```
+    #[cfg_attr(feature = "geo-types", doc = "```")]
+    #[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+    /// // This example requires the geo-types feature (on by default).
     /// use wkt::ToWkt;
     /// use std::fs::File;
     /// let point: geo_types::Point<f64> = geo_types::point!(x: 1.2, y: 3.4);

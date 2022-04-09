@@ -28,15 +28,18 @@
 //! let point: Wkt<f64> = Wkt::from_str("POINT(10 20)").unwrap();
 //! ```
 //!
-//! ```ignore
+#![cfg_attr(feature = "geo-types", doc = "```")]
+#![cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
 //! // Convert to a geo_types primitive from a Wkt struct
+//! // This example requires the geo-types feature (on by default).
 //! use std::convert::TryInto;
+//! use std::str::FromStr;
 //! use wkt::Wkt;
-//! use geo_types::Point;
+//!
 //! let point: Wkt<f64> = Wkt::from_str("POINT(10 20)").unwrap();
 //! let g_point: geo_types::Point<f64> = (10., 20.).into();
-// // We can attempt to directly convert the Wkt without having to access its items field
-//! let converted: Point<f64> = point.try_into().unwrap();
+//! // We can attempt to directly convert the Wkt without having to access its items field
+//! let converted: geo_types::Point<f64> = point.try_into().unwrap();
 //! assert_eq!(g_point, converted);
 //! ```
 //!
