@@ -10,10 +10,45 @@ use geo_types::CoordFloat;
 /// A trait for converting values to WKT
 pub trait ToWkt<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + std::fmt::Display,
 {
-    /// Converts the value of `self` to an instance of WKT
+    /// Converts the value of `self` to an [`Wkt`] struct.
+    ///
+    /// Typically you won't need to call this, but by implementing it for your own type, your type
+    /// gains the other methods in this trait.
     fn to_wkt(&self) -> Wkt<T>;
+
+    /// Serialize as a WKT string
+    ///
+    /// ```
+    /// use wkt::ToWkt;
+    /// let point: geo_types::Geometry<f64> = geo_types::point!(x: 1.0, y: 2.0).into();
+    /// assert_eq!("POINT(1 2)", &point.wkt_string());
+    /// ```
+    fn wkt_string(&self) -> String {
+        self.to_wkt().to_string()
+    }
+
+    /// Write a WKT string to a [`File`](std::fs::File), or anything else that implements [`Write`](std::io::Write).
+    ///
+    /// ```
+    /// use wkt::ToWkt;
+    /// use std::fs::File;
+    /// let point: geo_types::Geometry<f64> = geo_types::point!(x: 1.2, y: 3.4).into();
+    ///
+    /// // use a vec as a fake "file" for the purpose of example, but you could equally replace the
+    /// // following with:
+    /// //     let mut file = File::create("myfile.wkt").unwrap();
+    /// let mut file = vec![] ;
+    ///
+    /// point.write_wkt(&mut file).unwrap();
+    /// let wkt_string = String::from_utf8(file).unwrap();
+    ///
+    /// assert_eq!(wkt_string, "POINT(1.2 3.4)");
+    /// ```
+    fn write_wkt(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
+        writer.write_all(self.wkt_string().as_bytes())
+    }
 }
 
 fn g_point_to_w_coord<T>(g_point: &geo_types::Coordinate<T>) -> Coord<T>
@@ -209,7 +244,7 @@ where
 
 impl<T> ToWkt<T> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
         let w_geom = g_geom_to_w_geom(self);
