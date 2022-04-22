@@ -26,3 +26,6 @@ default = ["geo-types"]
 [[bench]]
 name = "parse"
 harness = false
+
+[patch.crates-io]
+geo-types = { git = "https://github.com/georust/geo", branch = "mkirk/private-fields" }
