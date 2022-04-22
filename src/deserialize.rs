@@ -159,7 +159,7 @@ where
                 use geo_types::Geometry::*;
                 match geom {
                     Point(p) => Ok(Some(p)),
-                    MultiPoint(mp) if mp.0.is_empty() => Ok(None),
+                    MultiPoint(mp) if mp.points().is_empty() => Ok(None),
                     _ => geo_types::Point::try_from(geom)
                         .map(Some)
                         .map_err(D::Error::custom),
