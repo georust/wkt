@@ -7,6 +7,11 @@
   * <https://github.com/georust/wkt/pull/88>
 * added `wkt_string` and `write_wkt` methods to `ToWkt` trait
   * <https://github.com/georust/wkt/pull/89>
+* impl `ToWkt` on geo_type Geometry variants directly, so you can `point!(x: 1., y: 2.).wkt_string()`
+  * <https://github.com/georust/wkt/pull/90>
+* `ToWkt` is no longer tied to geo-types. You can implement it on your own
+  custom (non-geo_type) geometry types.
+  * <https://github.com/georust/wkt/pull/90>
 
 ## 0.10.0 - 2022-02-24
 ### Changed

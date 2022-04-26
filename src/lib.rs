@@ -28,15 +28,18 @@
 //! let point: Wkt<f64> = Wkt::from_str("POINT(10 20)").unwrap();
 //! ```
 //!
-//! ```ignore
+#![cfg_attr(feature = "geo-types", doc = "```")]
+#![cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
 //! // Convert to a geo_types primitive from a Wkt struct
+//! // This example requires the geo-types feature (on by default).
 //! use std::convert::TryInto;
+//! use std::str::FromStr;
 //! use wkt::Wkt;
-//! use geo_types::Point;
+//!
 //! let point: Wkt<f64> = Wkt::from_str("POINT(10 20)").unwrap();
 //! let g_point: geo_types::Point<f64> = (10., 20.).into();
-// // We can attempt to directly convert the Wkt without having to access its items field
-//! let converted: Point<f64> = point.try_into().unwrap();
+//! // We can attempt to directly convert the Wkt without having to access its items field
+//! let converted: geo_types::Point<f64> = point.try_into().unwrap();
 //! assert_eq!(g_point, converted);
 //! ```
 //!
@@ -72,8 +75,6 @@ use crate::types::Point;
 use crate::types::Polygon;
 
 mod tokenizer;
-
-#[cfg(feature = "geo-types")]
 mod towkt;
 
 /// `WKT` primitive types and collections
@@ -84,11 +85,15 @@ extern crate geo_types;
 
 extern crate thiserror;
 
-#[cfg(feature = "geo-types")]
 pub use crate::towkt::ToWkt;
 
 #[cfg(feature = "geo-types")]
+#[deprecated(note = "renamed module to `wkt::geo_types_from_wkt`")]
 pub mod conversion;
+#[cfg(feature = "geo-types")]
+pub mod geo_types_from_wkt;
+#[cfg(feature = "geo-types")]
+mod geo_types_to_wkt;
 
 #[cfg(feature = "serde")]
 extern crate serde;
