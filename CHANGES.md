@@ -5,13 +5,18 @@
 ### Added
 * impl `std::fmt::Display` for `Wkt`.
   * <https://github.com/georust/wkt/pull/88>
-* added `wkt_string` and `write_wkt` methods to `ToWkt` trait
-  * <https://github.com/georust/wkt/pull/89>
-* impl `ToWkt` on geo_type Geometry variants directly, so you can `point!(x: 1., y: 2.).wkt_string()`
-  * <https://github.com/georust/wkt/pull/90>
-* `ToWkt` is no longer tied to geo-types. You can implement it on your own
-  custom (non-geo_type) geometry types.
-  * <https://github.com/georust/wkt/pull/90>
+* Additions to ToWkt trait:
+  * added `wkt_string` and `write_wkt` methods to `ToWkt` trait
+    * <https://github.com/georust/wkt/pull/89>
+  * impl `ToWkt` on geo_type Geometry variants directly, so you can `point!(x: 1., y: 2.).wkt_string()`
+    * <https://github.com/georust/wkt/pull/90>
+  * `ToWkt` is no longer tied to geo-types. You can implement it on your own
+    custom (non-geo_type) geometry types.
+    * <https://github.com/georust/wkt/pull/90>
+* New `FromWkt` trait allows a way to convert from a string or reader directly
+  to geo-types, without exposing you to the intermediate `Wkt` structs.
+    * <https://github.com/georust/wkt/pull/95>
+
 
 ## 0.10.0 - 2022-02-24
 ### Changed
