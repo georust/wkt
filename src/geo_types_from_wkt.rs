@@ -1,11 +1,6 @@
 //! This module provides conversions between WKT primitives and [`geo_types`] primitives.
 //!
 //! See the [`std::convert::From`] and [`std::convert::TryFrom`] impls on individual [`crate::types`] and [`Wkt`] for details.
-//!
-//!
-//!
-//!
-//!
 // Copyright 2014-2018 The GeoRust Developers
 //
 // Licensed under the Apache License, Version 2.0 (the "License");

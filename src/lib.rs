@@ -27,7 +27,6 @@
 //! use wkt::Wkt;
 //! let point: Wkt<f64> = Wkt::from_str("POINT(10 20)").unwrap();
 //! ```
-//!
 #![cfg_attr(feature = "geo-types", doc = "```")]
 #![cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
 //! // Convert to a geo_types primitive from a Wkt struct
@@ -58,9 +57,6 @@
 //!     }
 //!     _ => unreachable!(),
 //! };
-//!
-//!
-//!
 use std::default::Default;
 use std::fmt;
 use std::str::FromStr;

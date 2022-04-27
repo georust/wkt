@@ -12,7 +12,6 @@ where
     fn to_wkt(&self) -> Wkt<T>;
 
     /// Serialize as a WKT string
-    ///
     #[cfg_attr(feature = "geo-types", doc = "```")]
     #[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
     /// // This example requires the geo-types feature (on by default).
@@ -25,7 +24,6 @@ where
     }
 
     /// Write a WKT string to a [`File`](std::fs::File), or anything else that implements [`Write`](std::io::Write).
-    ///
     #[cfg_attr(feature = "geo-types", doc = "```")]
     #[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
     /// // This example requires the geo-types feature (on by default).
