@@ -16,7 +16,8 @@
 * New `FromWkt` trait allows a way to convert from a string or reader directly
   to geo-types, without exposing you to the intermediate `Wkt` structs.
     * <https://github.com/georust/wkt/pull/95>
-
+* Implemented `geo_types::GeometryCollection::from(Wkt::from_str(wkt_str))`
+    * <https://github.com/georust/wkt/pull/95>
 
 ## 0.10.0 - 2022-02-24
 ### Changed

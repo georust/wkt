@@ -18,6 +18,7 @@
 use crate::types::*;
 use crate::{Geometry, TryFromWkt, Wkt, WktFloat};
 
+use std::any::type_name;
 use std::convert::{TryFrom, TryInto};
 use std::io::Read;
 use std::str::FromStr;
@@ -88,9 +89,53 @@ try_from_wkt_impl!(
     MultiPoint,
     MultiLineString,
     MultiPolygon,
+    // See impl below.
+    // GeometryCollection,
     Rect,
     Triangle
 );
+
+/// Fallibly convert this WKT primitive into this [`geo_types`] primitive
+impl<T: CoordFloat> TryFrom<Wkt<T>> for geo_types::GeometryCollection<T> {
+    type Error = Error;
+
+    fn try_from(wkt: Wkt<T>) -> Result<Self, Self::Error> {
+        match wkt.item {
+            Geometry::GeometryCollection(collection) => {
+                let geometries: Result<Vec<geo_types::Geometry<T>>, _> =
+                    collection.0.into_iter().map(TryFrom::try_from).collect();
+                Ok(geo_types::GeometryCollection(geometries?))
+            }
+            // geo_types doesn't implement `Geometry::try_from(geom_collec)` yet
+            // (see https://github.com/georust/geo/pull/821).
+            // So instead we synthesize the type of error it *would* return.
+            Geometry::Point(_) => Err(Error::MismatchedGeometry {
+                expected: type_name::<Self>(),
+                found: type_name::<geo_types::Point<T>>(),
+            }),
+            Geometry::LineString(_) => Err(Error::MismatchedGeometry {
+                expected: type_name::<Self>(),
+                found: type_name::<geo_types::LineString<T>>(),
+            }),
+            Geometry::Polygon(_) => Err(Error::MismatchedGeometry {
+                expected: type_name::<Self>(),
+                found: type_name::<geo_types::Polygon<T>>(),
+            }),
+            Geometry::MultiPoint(_) => Err(Error::MismatchedGeometry {
+                expected: type_name::<Self>(),
+                found: type_name::<geo_types::MultiPoint<T>>(),
+            }),
+            Geometry::MultiLineString(_) => Err(Error::MismatchedGeometry {
+                expected: type_name::<Self>(),
+                found: type_name::<geo_types::MultiLineString<T>>(),
+            }),
+            Geometry::MultiPolygon(_) => Err(Error::MismatchedGeometry {
+                expected: type_name::<Self>(),
+                found: type_name::<geo_types::MultiPolygon<T>>(),
+            }),
+        }
+    }
+}
 
 impl<T> From<Coord<T>> for geo_types::Coordinate<T>
 where
@@ -335,7 +380,6 @@ macro_rules! try_from_wkt_impl {
    }
 }
 
-// FIXME: What about GeometryCollection?
 try_from_wkt_impl![
     geo_types::Geometry<T>,
     geo_types::Point<T>,
@@ -345,6 +389,7 @@ try_from_wkt_impl![
     geo_types::MultiPoint<T>,
     geo_types::MultiLineString<T>,
     geo_types::MultiPolygon<T>,
+    geo_types::GeometryCollection<T>,
     geo_types::Triangle<T>,
     geo_types::Rect<T>,
 ];
@@ -922,6 +967,42 @@ mod tests {
     }
 
     #[test]
+    fn geom_collection_from_wkt_str() {
+        // geometry collections have some special handling vs. other geometries, so we test them separately.
+        let collection = geo_types::GeometryCollection::<f64>::try_from_wkt_str(
+            "GeometryCollection(POINT(1 2))",
+        )
+        .unwrap();
+        let point: geo_types::Point<_> = collection[0].clone().try_into().unwrap();
+        assert_eq!(point.y(), 2.0);
+    }
+
+    #[test]
+    fn geom_collection_from_invalid_wkt_str() {
+        // geometry collections have some special handling vs. other geometries, so we test them separately.
+        let err = geo_types::GeometryCollection::<f64>::try_from_wkt_str("GeomColl(POINT(1 2))")
+            .unwrap_err();
+        match err {
+            Error::InvalidWKT(err_text) => assert_eq!(err_text, "Invalid type encountered"),
+            e => panic!("Not the error we expected. Found: {}", e),
+        }
+    }
+
+    #[test]
+    fn geom_collection_from_other_wkt_str() {
+        // geometry collections have some special handling vs. other geometries, so we test them separately.
+        let not_a_collection = geo_types::GeometryCollection::<f64>::try_from_wkt_str("POINT(1 2)");
+        let err = not_a_collection.unwrap_err();
+        match err {
+            Error::MismatchedGeometry {
+                expected: "geo_types::geometry_collection::GeometryCollection<f64>",
+                found: "geo_types::point::Point<f64>",
+            } => {}
+            e => panic!("Not the error we expected. Found: {}", e),
+        }
+    }
+
+    #[test]
     fn from_invalid_wkt_str() {
         let a_point_too_many = geo_types::Point::<f64>::try_from_wkt_str("PINT(1 2)");
         let err = a_point_too_many.unwrap_err();
@@ -937,7 +1018,10 @@ mod tests {
             geo_types::LineString::<f64>::try_from_wkt_str("POINT(1 2)");
         let err = not_actually_a_line_string.unwrap_err();
         match err {
-            Error::MismatchedGeometry { .. } => {}
+            Error::MismatchedGeometry {
+                expected: "geo_types::line_string::LineString<f64>",
+                found: "geo_types::point::Point<f64>",
+            } => {}
             e => panic!("Not the error we expected. Found: {}", e),
         }
     }
