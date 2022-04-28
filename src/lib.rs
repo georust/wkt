@@ -27,7 +27,6 @@
 //! use wkt::Wkt;
 //! let point: Wkt<f64> = Wkt::from_str("POINT(10 20)").unwrap();
 //! ```
-//!
 #![cfg_attr(feature = "geo-types", doc = "```")]
 #![cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
 //! // Convert to a geo_types primitive from a Wkt struct
@@ -58,9 +57,6 @@
 //!     }
 //!     _ => unreachable!(),
 //! };
-//!
-//!
-//!
 use std::default::Default;
 use std::fmt;
 use std::str::FromStr;
@@ -74,8 +70,8 @@ use crate::types::MultiPolygon;
 use crate::types::Point;
 use crate::types::Polygon;
 
+mod to_wkt;
 mod tokenizer;
-mod towkt;
 
 /// `WKT` primitive types and collections
 pub mod types;
@@ -85,7 +81,7 @@ extern crate geo_types;
 
 extern crate thiserror;
 
-pub use crate::towkt::ToWkt;
+pub use crate::to_wkt::ToWkt;
 
 #[cfg(feature = "geo-types")]
 #[deprecated(note = "renamed module to `wkt::geo_types_from_wkt`")]
