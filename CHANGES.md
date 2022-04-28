@@ -1,6 +1,6 @@
 # Changes
 
-## next release
+## 0.10.1 - 2022-04-28
 
 ### Added
 * impl `std::fmt::Display` for `Wkt`.
