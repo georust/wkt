@@ -13,39 +13,53 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The `wkt` crate provides conversions to and from [`WKT`](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) primitive types.
-//! See the [`types`](crate::types) module for a list of available types.
+//! The `wkt` crate provides conversions to and from the [WKT (Well Known Text)](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry)
+//! geometry format.
 //!
-//! Conversions (using [`std::convert::From`] and [`std::convert::TryFrom`]) to and from [`geo_types`] primitives are enabled by default, but the feature is **optional**.
+//! Conversions are available via the [`TryFromWkt`] and [`ToWkt`] traits, with implementations for
+//! [`geo_types`] primitives enabled by default.
 //!
-//! Enable the `serde` feature if you need to deserialise data into custom structs containing `WKT` geometry fields.
+//! For advanced usage, see the [`types`](crate::types) module for a list of internally used types.
+//!
+//! Enable the `serde` feature if you need to deserialise data into custom structs containing `WKT`
+//! geometry fields.
 //!
 //! # Examples
 //!
-//! ```
-//! use std::str::FromStr;
-//! use wkt::Wkt;
-//! let point: Wkt<f64> = Wkt::from_str("POINT(10 20)").unwrap();
-//! ```
+//! ## Read `geo_types` from a WKT string
 #![cfg_attr(feature = "geo-types", doc = "```")]
 #![cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
-//! // Convert to a geo_types primitive from a Wkt struct
 //! // This example requires the geo-types feature (on by default).
-//! use std::convert::TryInto;
-//! use std::str::FromStr;
-//! use wkt::Wkt;
+//! use wkt::TryFromWkt;
+//! use geo_types::Point;
 //!
-//! let point: Wkt<f64> = Wkt::from_str("POINT(10 20)").unwrap();
-//! let g_point: geo_types::Point<f64> = (10., 20.).into();
-//! // We can attempt to directly convert the Wkt without having to access its items field
-//! let converted: geo_types::Point<f64> = point.try_into().unwrap();
-//! assert_eq!(g_point, converted);
+//! let point: Point<f64> = Point::try_from_wkt_str("POINT(10 20)").unwrap();
+//! assert_eq!(point.y(), 20.0);
 //! ```
 //!
-//! ## Direct Access to the `item` Field
-//! If you wish to work directly with one of the WKT [`types`] you can match on the `item` field
+//! ## Write `geo_types` to a WKT string
+#![cfg_attr(feature = "geo-types", doc = "```")]
+#![cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+//! // This example requires the geo-types feature (on by default).
+//! use wkt::ToWkt;
+//! use geo_types::Point;
+//!
+//! let point: Point<f64> = Point::new(1.0, 2.0);
+//! assert_eq!(point.wkt_string(), "POINT(1 2)");
 //! ```
-//! use std::convert::TryInto;
+//!
+//! ## Read or write your own geometry types
+//!
+//! Not using `geo-types` for your geometries? No problem!
+//!
+//! You can use [`Wkt::from_str`] to parse a WKT string into this crate's intermediate geometry
+//! structure. You can use that directly, or if have your own geometry types that you'd prefer to
+//! use, utilize that [`Wkt`] struct to implement the [`ToWkt`] or [`TryFromWkt`] traits for your
+//! own types.
+//!
+//! In doing so, you'll likely want to match on one of the WKT [`types`] (Point, Linestring, etc.)
+//! stored in its `item` field
+//! ```
 //! use std::str::FromStr;
 //! use wkt::Wkt;
 //! use wkt::Geometry;
@@ -53,7 +67,8 @@
 //! let wktls: Wkt<f64> = Wkt::from_str("LINESTRING(10 20, 20 30)").unwrap();
 //! let ls = match wktls.item {
 //!     Geometry::LineString(line_string) => {
-//!         // you now have access to the types::LineString
+//!         // you now have access to the `wkt::types::LineString`.
+//!         assert_eq!(line_string.0[0].x, 10.0);
 //!     }
 //!     _ => unreachable!(),
 //! };
@@ -95,6 +110,9 @@ mod geo_types_to_wkt;
 extern crate serde;
 #[cfg(feature = "serde")]
 pub mod deserialize;
+mod from_wkt;
+pub use from_wkt::TryFromWkt;
+
 #[cfg(all(feature = "serde", feature = "geo-types"))]
 pub use deserialize::{deserialize_geometry, deserialize_point};
 
