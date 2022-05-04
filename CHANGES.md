@@ -1,5 +1,12 @@
 # Changes
 
+## UNRELEASED
+
+### Added
+
+* `deserialize_wkt` serde integration for all the geo-types (and any other implementor of TryFromWkt)
+  * <https://github.com/georust/wkt/pull/99>
+
 ## 0.10.1 - 2022-04-28
 
 ### Added

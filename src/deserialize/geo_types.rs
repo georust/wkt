@@ -1,31 +1,19 @@
-/// Deserializes directly from WKT format into a [`geo_types::Geometry`].
-/// ```
-/// # extern crate wkt;
-/// # extern crate geo_types;
-/// # extern crate serde_json;
-/// use geo_types::Geometry;
-///
-/// #[derive(serde::Deserialize)]
-/// struct MyType {
-///     #[serde(deserialize_with = "wkt::deserialize_geometry")]
-///     pub geometry: Geometry<f64>,
-/// }
-///
-/// let json = r#"{ "geometry": "POINT (3.14 42)" }"#;
-/// let my_type: MyType = serde_json::from_str(json).unwrap();
-/// assert!(matches!(my_type.geometry, Geometry::Point(_)));
-/// ```
+use crate::{Geometry, Wkt, WktFloat};
+use serde::de::{Deserialize, Deserializer, Error};
+use std::{default::Default, str::FromStr};
+
+#[deprecated(since = "0.10.2", note = "instead use `wkt::deserialize_wkt`")]
+/// Deserializes from WKT format into a [`geo_types::Geometry`].
 pub fn deserialize_geometry<'de, D, T>(deserializer: D) -> Result<geo_types::Geometry<T>, D::Error>
 where
     D: Deserializer<'de>,
     T: FromStr + Default + WktFloat,
 {
-    use serde::Deserialize;
     Geometry::deserialize(deserializer)
         .and_then(|g: Geometry<T>| g.try_into().map_err(D::Error::custom))
 }
 
-/// Deserializes directly from WKT format into an `Option<geo_types::Point>`.
+/// Deserializes from WKT format into an `Option<geo_types::Point>`.
 ///
 /// # Examples
 ///
@@ -35,10 +23,11 @@ where
 /// # extern crate geo_types;
 /// # extern crate serde_json;
 /// use geo_types::Point;
+/// use wkt::deserialize::geo_types::deserialize_point;
 ///
 /// #[derive(serde::Deserialize)]
 /// struct MyType {
-///     #[serde(deserialize_with = "wkt::deserialize_point")]
+///     #[serde(deserialize_with = "deserialize_point")]
 ///     pub geometry: Option<Point<f64>>,
 /// }
 ///
@@ -57,7 +46,6 @@ where
     D: Deserializer<'de>,
     T: FromStr + Default + WktFloat,
 {
-    use serde::Deserialize;
     Wkt::deserialize(deserializer).and_then(|wkt: Wkt<T>| {
         geo_types::Geometry::try_from(wkt)
             .map_err(D::Error::custom)
@@ -73,5 +61,3 @@ where
             })
     })
 }
-
-
