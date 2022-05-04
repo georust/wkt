@@ -13,6 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// The unstable `doc_auto_cfg` feature annotates documentation with any required cfg/features
+// needed for optional items. We set the `docsrs` config when building for docs.rs. To use it
+// in a local docs build, run: `cargo +nightly rustdoc --all-features -- --cfg docsrs`
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
 //! The `wkt` crate provides conversions to and from the [WKT (Well Known Text)](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry)
 //! geometry format.
 //!
