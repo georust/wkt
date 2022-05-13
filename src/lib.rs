@@ -107,11 +107,9 @@ pub mod geo_types_from_wkt;
 mod geo_types_to_wkt;
 
 #[cfg(feature = "serde")]
-extern crate serde;
-#[cfg(feature = "serde")]
 pub mod deserialize;
 #[cfg(feature = "serde")]
-pub use deserialize::deserialize_wkt;
+pub use deserialize::{deserialize_optional_wkt, deserialize_wkt};
 
 mod from_wkt;
 pub use from_wkt::TryFromWkt;
