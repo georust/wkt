@@ -1,5 +1,12 @@
 # Changes
 
+## UNRELEASED
+
+* docs.rs documentation now shows all optional features.
+  * <https://github.com/georust/wkt/pull/98>
+* docs.rs documentation items are annotated with their feature requirements.
+  * <https://github.com/georust/wkt/pull/98>
+
 ## 0.10.1 - 2022-04-28
 
 ### Added
