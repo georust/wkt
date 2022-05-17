@@ -1025,4 +1025,33 @@ mod tests {
             e => panic!("Not the error we expected. Found: {}", e),
         }
     }
+
+    #[test]
+    fn integer_geometry() {
+        use crate::to_wkt::ToWkt;
+        let point: geo_types::Point<i32> =
+            geo_types::Point::try_from_wkt_str("POINT(1 2)").unwrap();
+        assert_eq!(point, geo_types::Point::new(1, 2));
+
+        let wkt_string = point.wkt_string();
+        assert_eq!("POINT(1 2)", &wkt_string);
+    }
+
+    #[test]
+    fn truncated_integer_geometries() {
+        let wkt_str = "POINT(1.1 1.9)";
+
+        let int_point: geo_types::Point<i32> = geo_types::Point::try_from_wkt_str(wkt_str).unwrap();
+        assert_eq!(int_point, geo_types::Point::new(1, 1));
+
+        let float_point: geo_types::Point<f32> =
+            geo_types::Point::try_from_wkt_str(wkt_str).unwrap();
+        assert_eq!(float_point, geo_types::Point::new(1.1, 1.9));
+
+        let rounded_point = geo_types::Point::<i32>::new(
+            float_point.x().round() as i32,
+            float_point.y().round() as i32,
+        );
+        assert_eq!(rounded_point, geo_types::Point::new(1, 2));
+    }
 }
