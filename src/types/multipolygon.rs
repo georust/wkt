@@ -14,16 +14,16 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::polygon::Polygon;
-use crate::{FromTokens, Geometry, WktFloat};
+use crate::{FromTokens, Geometry, WktFloat, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default)]
-pub struct MultiPolygon<T: WktFloat>(pub Vec<Polygon<T>>);
+pub struct MultiPolygon<T: WktNum>(pub Vec<Polygon<T>>);
 
 impl<T> MultiPolygon<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     pub fn as_item(self) -> Geometry<T> {
         Geometry::MultiPolygon(self)
@@ -32,7 +32,7 @@ where
 
 impl<T> fmt::Display for MultiPolygon<T>
 where
-    T: WktFloat + fmt::Display,
+    T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         if self.0.is_empty() {

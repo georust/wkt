@@ -1,7 +1,9 @@
 # Changes
 
 ## UNRELEASED
-
+* add support for serializing integer geometries, so you can now:
+  `geo_types::Point::new(1i32, 2i32).wkt_string()`
+  Note that deserializing integer geometries is not yet supported.
 * docs.rs documentation now shows all optional features.
   * <https://github.com/georust/wkt/pull/98>
 * docs.rs documentation items are annotated with their feature requirements.

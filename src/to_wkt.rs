@@ -1,9 +1,9 @@
-use crate::{Wkt, WktFloat};
+use crate::{Wkt, WktNum};
 
 /// A trait for converting values to WKT
 pub trait ToWkt<T>
 where
-    T: WktFloat + std::fmt::Display,
+    T: WktNum + std::fmt::Display,
 {
     /// Converts the value of `self` to an [`Wkt`] struct.
     ///
