@@ -83,19 +83,7 @@ where
                 let number = self.read_until_whitespace(if c == '+' { None } else { Some(c) });
                 match number.parse::<T>() {
                     Ok(parsed_num) => Some(Token::Number(parsed_num)),
-                    Err(_e) => {
-                        match number.parse::<f64>() {
-                            Ok(parsed_float) => {
-                                let t_num = num_traits::cast(parsed_float).unwrap();
-                                Some(Token::Number(t_num))
-                            }
-                            Err(_e) => {
-                                // Probably we should return an error here, rather than None,
-                                // changing signature of this method to Result<Option<Token>, E>
-                                None
-                            }
-                        }
-                    }
+                    Err(_) => None,
                 }
             }
             c => Some(Token::Word(self.read_until_whitespace(Some(c)))),
