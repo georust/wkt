@@ -1,6 +1,6 @@
 //! This module provides deserialisation to WKT primitives using [`serde`]
 
-use crate::{Geometry, Wkt, WktFloat};
+use crate::{Geometry, Wkt, WktNum};
 use serde::de::{Deserializer, Error, Visitor};
 use std::{
     default::Default,
@@ -23,7 +23,7 @@ impl<T> Default for WktVisitor<T> {
 
 impl<'de, T> Visitor<'de> for WktVisitor<T>
 where
-    T: FromStr + Default + Debug + WktFloat,
+    T: FromStr + Default + Debug + WktNum,
 {
     type Value = Wkt<T>;
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -39,7 +39,7 @@ where
 
 impl<'de, T> serde::Deserialize<'de> for Wkt<T>
 where
-    T: FromStr + Default + Debug + WktFloat,
+    T: FromStr + Default + Debug + WktNum,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -63,7 +63,7 @@ impl<T> Default for GeometryVisitor<T> {
 
 impl<'de, T> Visitor<'de> for GeometryVisitor<T>
 where
-    T: FromStr + Default + WktFloat,
+    T: FromStr + Default + WktNum,
 {
     type Value = Geometry<T>;
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -80,7 +80,7 @@ where
 
 impl<'de, T> serde::Deserialize<'de> for Geometry<T>
 where
-    T: FromStr + Default + WktFloat,
+    T: FromStr + Default + WktNum,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -111,7 +111,7 @@ where
 pub fn deserialize_geometry<'de, D, T>(deserializer: D) -> Result<geo_types::Geometry<T>, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr + Default + WktFloat,
+    T: FromStr + Default + WktNum,
 {
     use serde::Deserialize;
     Geometry::deserialize(deserializer)
@@ -149,7 +149,7 @@ pub fn deserialize_point<'de, D, T>(
 ) -> Result<Option<geo_types::Point<T>>, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr + Default + WktFloat,
+    T: FromStr + Default + WktNum,
 {
     use serde::Deserialize;
     Wkt::deserialize(deserializer).and_then(|wkt: Wkt<T>| {

@@ -123,8 +123,8 @@ pub use deserialize::{deserialize_geometry, deserialize_point};
 
 use num_traits::{Float, Num, NumCast};
 
-pub trait WktNum: Num + NumCast + Copy + fmt::Debug {}
-impl<T> WktNum for T where T: Num + NumCast + Copy + fmt::Debug {}
+pub trait WktNum: Num + NumCast + PartialOrd + Copy + fmt::Debug {}
+impl<T> WktNum for T where T: Num + NumCast + PartialOrd + Copy + fmt::Debug {}
 
 pub trait WktFloat: WktNum + Float {}
 impl<T> WktFloat for T where T: WktNum + Float {}
@@ -146,7 +146,7 @@ where
 
 impl<T> Geometry<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_word_and_tokens(
         word: &str,
@@ -216,7 +216,7 @@ where
 
 impl<T> Wkt<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: Tokens<T>) -> Result<Self, &'static str> {
         let mut tokens = tokens.peekable();
@@ -238,7 +238,7 @@ where
 
 impl<T> FromStr for Wkt<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     type Err = &'static str;
 
@@ -258,7 +258,7 @@ where
 
 trait FromTokens<T>: Sized + Default
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str>;
 
