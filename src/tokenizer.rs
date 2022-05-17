@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::WktFloat;
+use crate::WktNum;
+use std::any::type_name;
 use std::iter::Peekable;
 use std::marker::PhantomData;
 use std::str;
@@ -20,7 +21,7 @@ use std::str;
 #[derive(Debug, PartialEq)]
 pub enum Token<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     Comma,
     Number(T),
@@ -49,7 +50,7 @@ pub struct Tokens<'a, T> {
 
 impl<'a, T> Tokens<'a, T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     pub fn from_str(input: &'a str) -> Self {
         Tokens {
@@ -61,11 +62,11 @@ where
 
 impl<'a, T> Iterator for Tokens<'a, T>
 where
-    T: WktFloat + str::FromStr,
+    T: WktNum + str::FromStr,
 {
-    type Item = Token<T>;
+    type Item = Result<Token<T>, &'static str>;
 
-    fn next(&mut self) -> Option<Token<T>> {
+    fn next(&mut self) -> Option<Self::Item> {
         // TODO: should this return Result?
         let mut next_char = self.chars.next()?;
 
@@ -74,20 +75,30 @@ where
             next_char = self.chars.next()?
         }
 
-        match next_char {
-            '\0' => None,
-            '(' => Some(Token::ParenOpen),
-            ')' => Some(Token::ParenClose),
-            ',' => Some(Token::Comma),
+        let token = match next_char {
+            '\0' => return None,
+            '(' => Token::ParenOpen,
+            ')' => Token::ParenClose,
+            ',' => Token::Comma,
             c if is_numberlike(c) => {
                 let number = self.read_until_whitespace(if c == '+' { None } else { Some(c) });
                 match number.parse::<T>() {
-                    Ok(parsed_num) => Some(Token::Number(parsed_num)),
-                    Err(_) => None,
+                    Ok(parsed_num) => Token::Number(parsed_num),
+                    Err(_) => {
+                        log::warn!(
+                            "Failed to parse input: '{}' as {}",
+                            &number,
+                            type_name::<T>()
+                        );
+                        return Some(Err(
+                            "Unable to parse input number as the desired output type",
+                        ));
+                    }
                 }
             }
-            c => Some(Token::Word(self.read_until_whitespace(Some(c)))),
-        }
+            c => Token::Word(self.read_until_whitespace(Some(c))),
+        };
+        Some(Ok(token))
     }
 }
 
@@ -122,21 +133,24 @@ where
 #[test]
 fn test_tokenizer_empty() {
     let test_str = "";
-    let tokens: Vec<Token<f64>> = Tokens::from_str(test_str).collect();
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap();
     assert_eq!(tokens, vec![]);
 }
 
 #[test]
 fn test_tokenizer_1word() {
     let test_str = "hello";
-    let tokens: Vec<Token<f64>> = Tokens::from_str(test_str).collect();
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap();
     assert_eq!(tokens, vec![Token::Word("hello".to_string())]);
 }
 
 #[test]
 fn test_tokenizer_2words() {
     let test_str = "hello world";
-    let tokens: Vec<Token<f64>> = Tokens::from_str(test_str).collect();
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap();
     assert_eq!(
         tokens,
         vec![
@@ -149,35 +163,43 @@ fn test_tokenizer_2words() {
 #[test]
 fn test_tokenizer_1number() {
     let test_str = "4.2";
-    let tokens: Vec<Token<f64>> = Tokens::from_str(test_str).collect();
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap();
     assert_eq!(tokens, vec![Token::Number(4.2)]);
 }
 
 #[test]
 fn test_tokenizer_1number_plus() {
     let test_str = "+4.2";
-    let tokens: Vec<Token<f64>> = Tokens::from_str(test_str).collect();
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap();
     assert_eq!(tokens, vec![Token::Number(4.2)]);
 }
 
 #[test]
 fn test_tokenizer_invalid_number() {
     let test_str = "4.2p";
-    let tokens: Vec<Token<f64>> = Tokens::from_str(test_str).collect();
-    assert_eq!(tokens, vec![]);
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap_err();
+    assert_eq!(
+        tokens,
+        "Unable to parse input number as the desired output type"
+    );
 }
 
 #[test]
 fn test_tokenizer_not_a_number() {
     let test_str = "¾"; // A number according to char.is_numeric()
-    let tokens: Vec<Token<f64>> = Tokens::from_str(test_str).collect();
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap();
     assert_eq!(tokens, vec![Token::Word("¾".to_owned())]);
 }
 
 #[test]
 fn test_tokenizer_2numbers() {
     let test_str = ".4 -2";
-    let tokens: Vec<Token<f64>> = Tokens::from_str(test_str).collect();
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap();
     assert_eq!(tokens, vec![Token::Number(0.4), Token::Number(-2.0)]);
 }
 
@@ -185,7 +207,12 @@ fn test_tokenizer_2numbers() {
 fn test_no_stack_overflow() {
     fn check(c: &str, count: usize, expected: usize) {
         let test_str = c.repeat(count);
-        assert_eq!(expected, Tokens::<f64>::from_str(&test_str).count());
+        assert_eq!(
+            expected,
+            Tokens::<f64>::from_str(&test_str)
+                .filter(Result::is_ok)
+                .count()
+        );
     }
 
     let count = 100_000;
@@ -201,7 +228,8 @@ fn test_no_stack_overflow() {
 #[test]
 fn test_tokenizer_point() {
     let test_str = "POINT (10 -20)";
-    let tokens: Vec<Token<f64>> = Tokens::from_str(test_str).collect();
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap();
     assert_eq!(
         tokens,
         vec![

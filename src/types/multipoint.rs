@@ -14,7 +14,7 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
-use crate::{FromTokens, Geometry, WktFloat, WktNum};
+use crate::{FromTokens, Geometry, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
@@ -53,7 +53,7 @@ where
 
 impl<T> FromTokens<T> for MultiPoint<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
         let result = FromTokens::comma_many(

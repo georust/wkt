@@ -3,6 +3,15 @@
 ## UNRELEASED
 
 ### Added
+
+* serialize integer geometries *to* WKT, so you can now:
+  `geo_types::Point::<i32>::new(1, 2).wkt_string()`
+  * <https://github.com/georust/wkt/pull/101>
+* deserialize integer geometries *from* WKT, so you can now:
+  `geo_types::Point::<i32>::try_from_wkt_str("POINT(1 2)")`
+  Note that trying to parse numbers with a decimal point as integer geometries will error
+  `geo_types::Point::<i32>::try_from_wkt_str("POINT(1.1 2.9)").unwrap_err()`
+  * <https://github.com/georust/wkt/pull/103>
 * docs.rs documentation now shows all optional features.
   * <https://github.com/georust/wkt/pull/98>
 * docs.rs documentation items are annotated with their feature requirements.

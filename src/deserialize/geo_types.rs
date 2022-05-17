@@ -1,4 +1,4 @@
-use crate::{Geometry, Wkt, WktFloat};
+use crate::{Geometry, Wkt, WktNum};
 use serde::de::{Deserialize, Deserializer, Error};
 use std::{default::Default, str::FromStr};
 
@@ -7,7 +7,7 @@ use std::{default::Default, str::FromStr};
 pub fn deserialize_geometry<'de, D, T>(deserializer: D) -> Result<geo_types::Geometry<T>, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr + Default + WktFloat,
+    T: FromStr + Default + WktNum,
 {
     Geometry::deserialize(deserializer)
         .and_then(|g: Geometry<T>| g.try_into().map_err(D::Error::custom))
@@ -44,7 +44,7 @@ pub fn deserialize_point<'de, D, T>(
 ) -> Result<Option<geo_types::Point<T>>, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr + Default + WktFloat,
+    T: FromStr + Default + WktNum,
 {
     Wkt::deserialize(deserializer).and_then(|wkt: Wkt<T>| {
         geo_types::Geometry::try_from(wkt)

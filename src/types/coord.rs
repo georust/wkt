@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::tokenizer::{PeekableTokens, Token};
-use crate::{FromTokens, WktFloat, WktNum};
+use crate::{FromTokens, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
@@ -46,14 +46,14 @@ where
 
 impl<T> FromTokens<T> for Coord<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
-        let x = match tokens.next() {
+        let x = match tokens.next().transpose()? {
             Some(Token::Number(n)) => n,
             _ => return Err("Expected a number for the X coordinate"),
         };
-        let y = match tokens.next() {
+        let y = match tokens.next().transpose()? {
             Some(Token::Number(n)) => n,
             _ => return Err("Expected a number for the Y coordinate"),
         };

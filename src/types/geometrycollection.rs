@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::tokenizer::{PeekableTokens, Token};
-use crate::{FromTokens, Geometry, WktFloat, WktNum};
+use crate::{FromTokens, Geometry, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
@@ -51,12 +51,12 @@ where
 
 impl<T> FromTokens<T> for GeometryCollection<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
         let mut items = Vec::new();
 
-        let word = match tokens.next() {
+        let word = match tokens.next().transpose()? {
             Some(Token::Word(w)) => w,
             _ => return Err("Expected a word in GEOMETRYCOLLECTION"),
         };
@@ -64,10 +64,10 @@ where
         let item = Geometry::from_word_and_tokens(&*word, tokens)?;
         items.push(item);
 
-        while let Some(&Token::Comma) = tokens.peek() {
+        while let Some(&Ok(Token::Comma)) = tokens.peek() {
             tokens.next(); // throw away comma
 
-            let word = match tokens.next() {
+            let word = match tokens.next().transpose()? {
                 Some(Token::Word(w)) => w,
                 _ => return Err("Expected a word in GEOMETRYCOLLECTION"),
             };
