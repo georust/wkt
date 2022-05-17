@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::WktFloat;
+use crate::WktNum;
 use std::iter::Peekable;
 use std::marker::PhantomData;
 use std::str;
@@ -20,7 +20,7 @@ use std::str;
 #[derive(Debug, PartialEq)]
 pub enum Token<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     Comma,
     Number(T),
@@ -49,7 +49,7 @@ pub struct Tokens<'a, T> {
 
 impl<'a, T> Tokens<'a, T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     pub fn from_str(input: &'a str) -> Self {
         Tokens {
@@ -61,7 +61,7 @@ where
 
 impl<'a, T> Iterator for Tokens<'a, T>
 where
-    T: WktFloat + str::FromStr,
+    T: WktNum + str::FromStr,
 {
     type Item = Token<T>;
 

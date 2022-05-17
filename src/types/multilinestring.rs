@@ -14,16 +14,16 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
-use crate::{FromTokens, Geometry, WktFloat};
+use crate::{FromTokens, Geometry, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default)]
-pub struct MultiLineString<T: WktFloat>(pub Vec<LineString<T>>);
+pub struct MultiLineString<T: WktNum>(pub Vec<LineString<T>>);
 
 impl<T> MultiLineString<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     pub fn as_item(self) -> Geometry<T> {
         Geometry::MultiLineString(self)
@@ -32,7 +32,7 @@ where
 
 impl<T> fmt::Display for MultiLineString<T>
 where
-    T: WktFloat + fmt::Display,
+    T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         if self.0.is_empty() {
@@ -57,7 +57,7 @@ where
 
 impl<T> FromTokens<T> for MultiLineString<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
         let result = FromTokens::comma_many(

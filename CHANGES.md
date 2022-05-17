@@ -2,6 +2,8 @@
 
 ## UNRELEASED
 
+* Build and serialize integer WKT, previously only floating point were
+  supported. This allows, for example, `geo_types::Point<i32>.to_wkt_str()`.
 * docs.rs documentation now shows all optional features.
   * <https://github.com/georust/wkt/pull/98>
 * docs.rs documentation items are annotated with their feature requirements.

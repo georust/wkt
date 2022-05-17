@@ -118,17 +118,22 @@ pub mod deserialize;
 mod from_wkt;
 pub use from_wkt::TryFromWkt;
 
+use num_traits::{Float, Num, NumCast};
+
 #[cfg(all(feature = "serde", feature = "geo-types"))]
 pub use deserialize::{deserialize_geometry, deserialize_point};
 
-pub trait WktFloat: num_traits::Float + std::fmt::Debug {}
-impl<T> WktFloat for T where T: num_traits::Float + std::fmt::Debug {}
+pub trait WktNum: Num + NumCast + PartialOrd + Copy + fmt::Debug {}
+impl<T> WktNum for T where T: Num + NumCast + PartialOrd + Copy + fmt::Debug {}
+
+pub trait WktFloat: WktNum + Float {}
+impl<T> WktFloat for T where T: WktNum + Float {}
 
 #[derive(Clone, Debug)]
 /// All supported WKT geometry [`types`]
 pub enum Geometry<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     Point(Point<T>),
     LineString(LineString<T>),
@@ -141,7 +146,7 @@ where
 
 impl<T> Geometry<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_word_and_tokens(
         word: &str,
@@ -183,7 +188,7 @@ where
 
 impl<T> fmt::Display for Geometry<T>
 where
-    T: WktFloat + fmt::Display,
+    T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match self {
@@ -204,14 +209,14 @@ where
 /// This type can be fallibly converted to a [`geo_types`] primitive using [`std::convert::TryFrom`].
 pub struct Wkt<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     pub item: Geometry<T>,
 }
 
 impl<T> Wkt<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: Tokens<T>) -> Result<Self, &'static str> {
         let mut tokens = tokens.peekable();
@@ -233,7 +238,7 @@ where
 
 impl<T> FromStr for Wkt<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     type Err = &'static str;
 
@@ -244,7 +249,7 @@ where
 
 impl<T> fmt::Display for Wkt<T>
 where
-    T: WktFloat + fmt::Debug + fmt::Display,
+    T: WktNum + fmt::Debug + fmt::Display,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         self.item.fmt(formatter)
@@ -253,7 +258,7 @@ where
 
 trait FromTokens<T>: Sized + Default
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str>;
 
