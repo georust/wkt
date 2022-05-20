@@ -14,16 +14,16 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
-use crate::{FromTokens, Geometry, WktFloat};
+use crate::{FromTokens, Geometry, WktFloat, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default)]
-pub struct Point<T: WktFloat>(pub Option<Coord<T>>);
+pub struct Point<T: WktNum>(pub Option<Coord<T>>);
 
 impl<T> Point<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     pub fn as_item(self) -> Geometry<T> {
         Geometry::Point(self)
@@ -32,7 +32,7 @@ where
 
 impl<T> fmt::Display for Point<T>
 where
-    T: WktFloat + fmt::Display,
+    T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match self.0 {

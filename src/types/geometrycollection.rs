@@ -13,16 +13,16 @@
 // limitations under the License.
 
 use crate::tokenizer::{PeekableTokens, Token};
-use crate::{FromTokens, Geometry, WktFloat};
+use crate::{FromTokens, Geometry, WktFloat, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default)]
-pub struct GeometryCollection<T: WktFloat>(pub Vec<Geometry<T>>);
+pub struct GeometryCollection<T: WktNum>(pub Vec<Geometry<T>>);
 
 impl<T> GeometryCollection<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     pub fn as_item(self) -> Geometry<T> {
         Geometry::GeometryCollection(self)
@@ -31,7 +31,7 @@ where
 
 impl<T> fmt::Display for GeometryCollection<T>
 where
-    T: WktFloat + fmt::Display,
+    T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         if self.0.is_empty() {

@@ -14,16 +14,16 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
-use crate::{FromTokens, Geometry, WktFloat};
+use crate::{FromTokens, Geometry, WktFloat, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default)]
-pub struct MultiPoint<T: WktFloat>(pub Vec<Point<T>>);
+pub struct MultiPoint<T: WktNum>(pub Vec<Point<T>>);
 
 impl<T> MultiPoint<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     pub fn as_item(self) -> Geometry<T> {
         Geometry::MultiPoint(self)
@@ -32,7 +32,7 @@ where
 
 impl<T> fmt::Display for MultiPoint<T>
 where
-    T: WktFloat + fmt::Display,
+    T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         if self.0.is_empty() {

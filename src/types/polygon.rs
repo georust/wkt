@@ -14,16 +14,16 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
-use crate::{FromTokens, Geometry, WktFloat};
+use crate::{FromTokens, Geometry, WktFloat, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default)]
-pub struct Polygon<T: WktFloat>(pub Vec<LineString<T>>);
+pub struct Polygon<T: WktNum>(pub Vec<LineString<T>>);
 
 impl<T> Polygon<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     pub fn as_item(self) -> Geometry<T> {
         Geometry::Polygon(self)
@@ -32,7 +32,7 @@ where
 
 impl<T> fmt::Display for Polygon<T>
 where
-    T: WktFloat + fmt::Display,
+    T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         if self.0.is_empty() {

@@ -121,14 +121,19 @@ pub use from_wkt::TryFromWkt;
 #[cfg(all(feature = "serde", feature = "geo-types"))]
 pub use deserialize::{deserialize_geometry, deserialize_point};
 
-pub trait WktFloat: num_traits::Float + std::fmt::Debug {}
-impl<T> WktFloat for T where T: num_traits::Float + std::fmt::Debug {}
+use num_traits::{Float, Num, NumCast};
+
+pub trait WktNum: Num + NumCast + Copy + fmt::Debug {}
+impl<T> WktNum for T where T: Num + NumCast + Copy + fmt::Debug {}
+
+pub trait WktFloat: WktNum + Float {}
+impl<T> WktFloat for T where T: WktNum + Float {}
 
 #[derive(Clone, Debug)]
 /// All supported WKT geometry [`types`]
 pub enum Geometry<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     Point(Point<T>),
     LineString(LineString<T>),
@@ -183,7 +188,7 @@ where
 
 impl<T> fmt::Display for Geometry<T>
 where
-    T: WktFloat + fmt::Display,
+    T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match self {
@@ -204,7 +209,7 @@ where
 /// This type can be fallibly converted to a [`geo_types`] primitive using [`std::convert::TryFrom`].
 pub struct Wkt<T>
 where
-    T: WktFloat,
+    T: WktNum,
 {
     pub item: Geometry<T>,
 }
@@ -244,7 +249,7 @@ where
 
 impl<T> fmt::Display for Wkt<T>
 where
-    T: WktFloat + fmt::Debug + fmt::Display,
+    T: WktNum + fmt::Debug + fmt::Display,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         self.item.fmt(formatter)
