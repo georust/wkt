@@ -16,15 +16,35 @@ use std::{
 #[cfg(feature = "geo-types")]
 pub mod geo_types;
 
-/// Deserializes any type which implements TryFromWkt from a WKT string.
-#[cfg_attr(feature = "geo-types", doc = "```")]
+/// Deserializes a WKT String into any type which implements `TryFromWkt`.
+///
+/// This is useful when you have a struct which has a structured geometry field, (like a [`geo`] or
+/// [`geo-types`] geometry) stored as WKT.
+///
+/// #[cfg_attr(feature = "geo-types", doc = "```")]
 #[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
 /// // This example relies on enabling this crates `serde` and `geo-types` features
 /// extern crate geo_types;
 /// extern crate serde;
 /// extern crate serde_json;
 ///
-/// // If all your records will have the same geometry type, you can deserialize directly to it.
+/// // If the WKT could be one of several types, deserialize to a `Geometry` enum.
+/// let json = r#"[
+///   { "geometry": "POINT (3.14 42)", "name": "bob's house" },
+///   { "geometry": "LINESTRING (0 0, 1 1, 3.14 42)", "name": "bob's route home" }
+/// ]"#;
+///
+/// #[derive(serde::Deserialize)]
+/// struct MyGeomRecord {
+///     #[serde(deserialize_with = "wkt::deserialize_wkt")]
+///     pub geometry: geo_types::Geometry<f64>,
+///     pub name: String,
+/// }
+/// let my_type: Vec<MyGeomRecord> = serde_json::from_str(json).unwrap();
+/// assert!(matches!(my_type[0].geometry, geo_types::Geometry::Point(_)));
+/// assert!(matches!(my_type[1].geometry, geo_types::Geometry::LineString(_)));
+///
+/// // If all your records have the same geometry type, deserialize directly to that type.
 /// // For example, if I know all the geometry fields will be a POINT, I can do something like:
 /// let json = r#"[
 ///   { "geometry": "POINT (3.14 42)", "name": "bob's house" },
@@ -41,22 +61,7 @@ pub mod geo_types;
 /// let my_type: Vec<MyPointRecord> = serde_json::from_str(json).unwrap();
 /// assert_eq!(my_type[0].geometry.x(), 3.14);
 /// assert_eq!(my_type[1].geometry.y(), 23.0);
-///
-/// // If the WKT could be one of several types, deserialize to a `Geometry`.
-/// let json = r#"[
-///   { "geometry": "POINT (3.14 42)", "name": "bob's house" },
-///   { "geometry": "LINESTRING (0 0, 1 1, 3.14 42)", "name": "bob's route home" }
-/// ]"#;
-///
-/// #[derive(serde::Deserialize)]
-/// struct MyGeomRecord {
-///     #[serde(deserialize_with = "wkt::deserialize_wkt")]
-///     pub geometry: geo_types::Geometry<f64>,
-///     pub name: String,
-/// }
-/// let my_type: Vec<MyGeomRecord> = serde_json::from_str(json).unwrap();
-/// assert!(matches!(my_type[0].geometry, geo_types::Geometry::Point(_)));
-/// assert!(matches!(my_type[1].geometry, geo_types::Geometry::LineString(_)));
+
 /// ```
 pub fn deserialize_wkt<'de, D, G, T>(deserializer: D) -> Result<G, D::Error>
 where
