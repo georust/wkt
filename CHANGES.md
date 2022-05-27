@@ -1,13 +1,19 @@
 # Changes
 
+<<<<<<< HEAD
 ## UNRELEASED
-* add support for serializing integer geometries, so you can now:
-  `geo_types::Point::new(1i32, 2i32).wkt_string()`
-  Note that deserializing integer geometries is not yet supported.
+
+### Added
 * docs.rs documentation now shows all optional features.
   * <https://github.com/georust/wkt/pull/98>
 * docs.rs documentation items are annotated with their feature requirements.
   * <https://github.com/georust/wkt/pull/98>
+* `deserialize_wkt` serde integration for all the geo-types (and any other implementer of TryFromWkt)
+  * <https://github.com/georust/wkt/pull/99>
+* add support for serializing integer geometries, so you can now:
+  `geo_types::Point::new(1i32, 2i32).wkt_string()`
+  Note that deserializing integer geometries is not yet supported.
+  * <https://github.com/georust/wkt/pull/101>
 
 ## 0.10.1 - 2022-04-28
 

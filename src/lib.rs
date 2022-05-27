@@ -26,8 +26,8 @@
 //!
 //! For advanced usage, see the [`types`](crate::types) module for a list of internally used types.
 //!
-//! Enable the `serde` feature if you need to deserialise data into custom structs containing `WKT`
-//! geometry fields.
+//! This crate has optional `serde` integration for deserializing fields containing WKT. See
+//! [`deserialize`] for an example.
 //!
 //! # Examples
 //!
@@ -115,11 +115,22 @@ mod geo_types_to_wkt;
 extern crate serde;
 #[cfg(feature = "serde")]
 pub mod deserialize;
+#[cfg(feature = "serde")]
+pub use deserialize::deserialize_wkt;
+
 mod from_wkt;
 pub use from_wkt::TryFromWkt;
 
 #[cfg(all(feature = "serde", feature = "geo-types"))]
-pub use deserialize::{deserialize_geometry, deserialize_point};
+#[allow(deprecated)]
+pub use deserialize::geo_types::deserialize_geometry;
+
+#[cfg(all(feature = "serde", feature = "geo-types"))]
+#[deprecated(
+    since = "0.10.2",
+    note = "instead: use wkt::deserialize::geo_types::deserialize_point"
+)]
+pub use deserialize::geo_types::deserialize_point;
 
 use num_traits::{Float, Num, NumCast};
 

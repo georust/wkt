@@ -1,6 +1,10 @@
-//! This module provides deserialisation to WKT primitives using [`serde`]
+//! This module deserialises to WKT using [`serde`].
+//!
+//! You can deserialise to [`geo_types`] or any other implementor of [`TryFromWkt`], using
+//! [`deserialize_wkt`]. Or you can store this crates internal primitives [`Wkt`]
+//! or [`Geometry`] in your struct fields.
 
-use crate::{Geometry, Wkt, WktFloat};
+use crate::{Geometry, TryFromWkt, Wkt, WktFloat};
 use serde::de::{Deserializer, Error, Visitor};
 use std::{
     default::Default,
@@ -8,6 +12,98 @@ use std::{
     marker::PhantomData,
     str::FromStr,
 };
+
+#[cfg(feature = "geo-types")]
+pub mod geo_types;
+
+/// Deserializes a WKT String into any type which implements `TryFromWkt`.
+///
+/// This is useful when you have a struct which has a structured geometry field, (like a [`geo`] or
+/// [`geo-types`] geometry) stored as WKT.
+///
+/// #[cfg_attr(feature = "geo-types", doc = "```")]
+#[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+/// // This example relies on enabling this crates `serde` and `geo-types` features
+/// extern crate geo_types;
+/// extern crate serde;
+/// extern crate serde_json;
+///
+/// // If the WKT could be one of several types, deserialize to a `Geometry` enum.
+/// let json = r#"[
+///   { "geometry": "POINT (3.14 42)", "name": "bob's house" },
+///   { "geometry": "LINESTRING (0 0, 1 1, 3.14 42)", "name": "bob's route home" }
+/// ]"#;
+///
+/// #[derive(serde::Deserialize)]
+/// struct MyGeomRecord {
+///     #[serde(deserialize_with = "wkt::deserialize_wkt")]
+///     pub geometry: geo_types::Geometry<f64>,
+///     pub name: String,
+/// }
+/// let my_type: Vec<MyGeomRecord> = serde_json::from_str(json).unwrap();
+/// assert!(matches!(my_type[0].geometry, geo_types::Geometry::Point(_)));
+/// assert!(matches!(my_type[1].geometry, geo_types::Geometry::LineString(_)));
+///
+/// // If all your records have the same geometry type, deserialize directly to that type.
+/// // For example, if I know all the geometry fields will be a POINT, I can do something like:
+/// let json = r#"[
+///   { "geometry": "POINT (3.14 42)", "name": "bob's house" },
+///   { "geometry": "POINT (8.02 23)", "name": "alice's house" }
+/// ]"#;
+///
+/// #[derive(serde::Deserialize)]
+/// struct MyPointRecord {
+///     #[serde(deserialize_with = "wkt::deserialize_wkt")]
+///     pub geometry: geo_types::Point<f64>,
+///     pub name: String,
+/// }
+///
+/// let my_type: Vec<MyPointRecord> = serde_json::from_str(json).unwrap();
+/// assert_eq!(my_type[0].geometry.x(), 3.14);
+/// assert_eq!(my_type[1].geometry.y(), 23.0);
+
+/// ```
+pub fn deserialize_wkt<'de, D, G, T>(deserializer: D) -> Result<G, D::Error>
+where
+    D: Deserializer<'de>,
+    T: FromStr + Default + WktFloat,
+    G: crate::TryFromWkt<T>,
+    <G as TryFromWkt<T>>::Error: std::fmt::Display,
+{
+    deserializer.deserialize_str(TryFromWktVisitor::default())
+}
+
+struct TryFromWktVisitor<T, G: TryFromWkt<T>> {
+    _marker_t: PhantomData<T>,
+    _marker_g: PhantomData<G>,
+}
+
+impl<T, G: TryFromWkt<T>> Default for TryFromWktVisitor<T, G> {
+    fn default() -> Self {
+        Self {
+            _marker_t: PhantomData::default(),
+            _marker_g: PhantomData::default(),
+        }
+    }
+}
+
+impl<'de, T, G> Visitor<'de> for TryFromWktVisitor<T, G>
+where
+    T: FromStr + Default + WktFloat,
+    G: TryFromWkt<T>,
+    <G as TryFromWkt<T>>::Error: std::fmt::Display,
+{
+    type Value = G;
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "a valid WKT format")
+    }
+    fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
+        G::try_from_wkt_str(s).map_err(|e| serde::de::Error::custom(e))
+    }
+}
 
 struct WktVisitor<T> {
     _marker: PhantomData<T>,
@@ -88,84 +184,6 @@ where
     {
         deserializer.deserialize_str(GeometryVisitor::default())
     }
-}
-
-/// Deserializes directly from WKT format into a [`geo_types::Geometry`].
-/// ```
-/// # extern crate wkt;
-/// # extern crate geo_types;
-/// # extern crate serde_json;
-/// use geo_types::Geometry;
-///
-/// #[derive(serde::Deserialize)]
-/// struct MyType {
-///     #[serde(deserialize_with = "wkt::deserialize_geometry")]
-///     pub geometry: Geometry<f64>,
-/// }
-///
-/// let json = r#"{ "geometry": "POINT (3.14 42)" }"#;
-/// let my_type: MyType = serde_json::from_str(json).unwrap();
-/// assert!(matches!(my_type.geometry, Geometry::Point(_)));
-/// ```
-#[cfg(feature = "geo-types")]
-pub fn deserialize_geometry<'de, D, T>(deserializer: D) -> Result<geo_types::Geometry<T>, D::Error>
-where
-    D: Deserializer<'de>,
-    T: FromStr + Default + WktFloat,
-{
-    use serde::Deserialize;
-    Geometry::deserialize(deserializer)
-        .and_then(|g: Geometry<T>| g.try_into().map_err(D::Error::custom))
-}
-
-/// Deserializes directly from WKT format into an `Option<geo_types::Point>`.
-///
-/// # Examples
-///
-///
-/// ```
-/// # extern crate wkt;
-/// # extern crate geo_types;
-/// # extern crate serde_json;
-/// use geo_types::Point;
-///
-/// #[derive(serde::Deserialize)]
-/// struct MyType {
-///     #[serde(deserialize_with = "wkt::deserialize_point")]
-///     pub geometry: Option<Point<f64>>,
-/// }
-///
-/// let json = r#"{ "geometry": "POINT (3.14 42)" }"#;
-/// let my_type: MyType = serde_json::from_str(json).unwrap();
-/// assert!(matches!(my_type.geometry, Some(Point(_))));
-///
-/// let json = r#"{ "geometry": "POINT EMPTY" }"#;
-/// let my_type: MyType = serde_json::from_str(json).unwrap();
-/// assert!(matches!(my_type.geometry, None));
-/// ```
-#[cfg(feature = "geo-types")]
-pub fn deserialize_point<'de, D, T>(
-    deserializer: D,
-) -> Result<Option<geo_types::Point<T>>, D::Error>
-where
-    D: Deserializer<'de>,
-    T: FromStr + Default + WktFloat,
-{
-    use serde::Deserialize;
-    Wkt::deserialize(deserializer).and_then(|wkt: Wkt<T>| {
-        geo_types::Geometry::try_from(wkt)
-            .map_err(D::Error::custom)
-            .and_then(|geom| {
-                use geo_types::Geometry::*;
-                match geom {
-                    Point(p) => Ok(Some(p)),
-                    MultiPoint(mp) if mp.0.is_empty() => Ok(None),
-                    _ => geo_types::Point::try_from(geom)
-                        .map(Some)
-                        .map_err(D::Error::custom),
-                }
-            })
-    })
 }
 
 #[cfg(test)]
