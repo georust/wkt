@@ -1,6 +1,5 @@
 # Changes
 
-<<<<<<< HEAD
 ## UNRELEASED
 
 ### Added
