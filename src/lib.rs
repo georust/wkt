@@ -81,6 +81,8 @@ use std::default::Default;
 use std::fmt;
 use std::str::FromStr;
 
+use num_traits::{Float, Num, NumCast};
+
 use crate::tokenizer::{PeekableTokens, Token, Tokens};
 use crate::types::GeometryCollection;
 use crate::types::LineString;
@@ -132,10 +134,8 @@ pub use deserialize::geo_types::deserialize_geometry;
 )]
 pub use deserialize::geo_types::deserialize_point;
 
-use num_traits::{Float, Num, NumCast};
-
-pub trait WktNum: Num + NumCast + Copy + fmt::Debug {}
-impl<T> WktNum for T where T: Num + NumCast + Copy + fmt::Debug {}
+pub trait WktNum: Num + NumCast + PartialOrd + Copy + fmt::Debug {}
+impl<T> WktNum for T where T: Num + NumCast + PartialOrd + Copy + fmt::Debug {}
 
 pub trait WktFloat: WktNum + Float {}
 impl<T> WktFloat for T where T: WktNum + Float {}
@@ -157,7 +157,7 @@ where
 
 impl<T> Geometry<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_word_and_tokens(
         word: &str,
@@ -227,11 +227,11 @@ where
 
 impl<T> Wkt<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: Tokens<T>) -> Result<Self, &'static str> {
         let mut tokens = tokens.peekable();
-        let word = match tokens.next() {
+        let word = match tokens.next().transpose()? {
             Some(Token::Word(word)) => {
                 if !word.is_ascii() {
                     return Err("Encountered non-ascii word");
@@ -240,16 +240,13 @@ where
             }
             _ => return Err("Invalid WKT format"),
         };
-        match Geometry::from_word_and_tokens(&word, &mut tokens) {
-            Ok(item) => Ok(Wkt { item }),
-            Err(s) => Err(s),
-        }
+        Geometry::from_word_and_tokens(&word, &mut tokens).map(|item| Wkt { item })
     }
 }
 
 impl<T> FromStr for Wkt<T>
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     type Err = &'static str;
 
@@ -269,12 +266,12 @@ where
 
 trait FromTokens<T>: Sized + Default
 where
-    T: WktFloat + FromStr + Default,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str>;
 
     fn from_tokens_with_parens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
-        match tokens.next() {
+        match tokens.next().transpose()? {
             Some(Token::ParenOpen) => (),
             Some(Token::Word(ref s)) if s.eq_ignore_ascii_case("EMPTY") => {
                 return Ok(Default::default())
@@ -282,7 +279,7 @@ where
             _ => return Err("Missing open parenthesis for type"),
         };
         let result = FromTokens::from_tokens(tokens);
-        match tokens.next() {
+        match tokens.next().transpose()? {
             Some(Token::ParenClose) => (),
             _ => return Err("Missing closing parenthesis for type"),
         };
@@ -293,7 +290,7 @@ where
         tokens: &mut PeekableTokens<T>,
     ) -> Result<Self, &'static str> {
         match tokens.peek() {
-            Some(Token::ParenOpen) => Self::from_tokens_with_parens(tokens),
+            Some(Ok(Token::ParenOpen)) => Self::from_tokens_with_parens(tokens),
             _ => Self::from_tokens(tokens),
         }
     }
@@ -307,7 +304,7 @@ where
         let item = f(tokens)?;
         items.push(item);
 
-        while let Some(&Token::Comma) = tokens.peek() {
+        while let Some(&Ok(Token::Comma)) = tokens.peek() {
             tokens.next(); // throw away comma
 
             let item = f(tokens)?;
@@ -356,11 +353,11 @@ mod tests {
 
     #[test]
     fn invalid_number() {
-        if let Err(msg) = <Wkt<f64>>::from_str("POINT (10 20.1A)") {
-            assert_eq!("Expected a number for the Y coordinate", msg);
-        } else {
-            panic!("Should not have parsed");
-        }
+        let msg = <Wkt<f64>>::from_str("POINT (10 20.1A)").unwrap_err();
+        assert_eq!(
+            "Unable to parse input number as the desired output type",
+            msg
+        );
     }
 
     #[test]

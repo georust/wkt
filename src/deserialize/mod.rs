@@ -4,7 +4,7 @@
 //! [`deserialize_wkt`]. Or you can store this crates internal primitives [`Wkt`]
 //! or [`Geometry`] in your struct fields.
 
-use crate::{Geometry, TryFromWkt, Wkt, WktFloat};
+use crate::{Geometry, TryFromWkt, Wkt, WktNum};
 use serde::de::{Deserializer, Error, Visitor};
 use std::{
     default::Default,
@@ -66,7 +66,7 @@ pub mod geo_types;
 pub fn deserialize_wkt<'de, D, G, T>(deserializer: D) -> Result<G, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr + Default + WktFloat,
+    T: FromStr + Default + WktNum,
     G: crate::TryFromWkt<T>,
     <G as TryFromWkt<T>>::Error: std::fmt::Display,
 {
@@ -89,7 +89,7 @@ impl<T, G: TryFromWkt<T>> Default for TryFromWktVisitor<T, G> {
 
 impl<'de, T, G> Visitor<'de> for TryFromWktVisitor<T, G>
 where
-    T: FromStr + Default + WktFloat,
+    T: FromStr + Default + WktNum,
     G: TryFromWkt<T>,
     <G as TryFromWkt<T>>::Error: std::fmt::Display,
 {
@@ -119,7 +119,7 @@ impl<T> Default for WktVisitor<T> {
 
 impl<'de, T> Visitor<'de> for WktVisitor<T>
 where
-    T: FromStr + Default + Debug + WktFloat,
+    T: FromStr + Default + Debug + WktNum,
 {
     type Value = Wkt<T>;
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -135,7 +135,7 @@ where
 
 impl<'de, T> serde::Deserialize<'de> for Wkt<T>
 where
-    T: FromStr + Default + Debug + WktFloat,
+    T: FromStr + Default + Debug + WktNum,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -159,7 +159,7 @@ impl<T> Default for GeometryVisitor<T> {
 
 impl<'de, T> Visitor<'de> for GeometryVisitor<T>
 where
-    T: FromStr + Default + WktFloat,
+    T: FromStr + Default + WktNum,
 {
     type Value = Geometry<T>;
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -176,7 +176,7 @@ where
 
 impl<'de, T> serde::Deserialize<'de> for Geometry<T>
 where
-    T: FromStr + Default + WktFloat,
+    T: FromStr + Default + WktNum,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -224,7 +224,7 @@ mod tests {
             let wkt = deserializer.deserialize_any(WktVisitor::<f64>::default());
             assert_eq!(
                 wkt.unwrap_err(),
-                Error::custom("Expected a number for the Y coordinate")
+                Error::custom("Unable to parse input number as the desired output type")
             );
         }
     }

@@ -16,14 +16,14 @@
 // limitations under the License.
 
 use crate::types::*;
-use crate::{Geometry, TryFromWkt, Wkt, WktFloat};
+use crate::{Geometry, TryFromWkt, Wkt};
 
 use std::any::type_name;
 use std::convert::{TryFrom, TryInto};
 use std::io::Read;
 use std::str::FromStr;
 
-use geo_types::{coord, CoordFloat};
+use geo_types::{coord, CoordNum};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -38,7 +38,7 @@ pub enum Error {
     },
     #[error("Wrong number of Geometries: {0}")]
     WrongNumberOfGeometries(usize),
-    #[error("Invalid WKT")]
+    #[error("Invalid WKT: {0}")]
     InvalidWKT(&'static str),
     #[error("External error: {0}")]
     External(Box<dyn std::error::Error>),
@@ -46,7 +46,7 @@ pub enum Error {
 
 impl<T> TryFrom<Wkt<T>> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     type Error = Error;
     /// Try to convert from a WKT member to a [`geo-types`] primitive or collection
@@ -59,7 +59,7 @@ macro_rules! try_from_wkt_impl {
     ($($type: ident),+) => {
         $(
             /// Fallibly convert this WKT primitive into this [`geo_types`] primitive
-            impl<T: CoordFloat> TryFrom<Wkt<T>> for geo_types::$type<T> {
+            impl<T: CoordNum> TryFrom<Wkt<T>> for geo_types::$type<T> {
                 type Error = Error;
 
                 fn try_from(wkt: Wkt<T>) -> Result<Self, Self::Error> {
@@ -96,7 +96,7 @@ try_from_wkt_impl!(
 );
 
 /// Fallibly convert this WKT primitive into this [`geo_types`] primitive
-impl<T: CoordFloat> TryFrom<Wkt<T>> for geo_types::GeometryCollection<T> {
+impl<T: CoordNum> TryFrom<Wkt<T>> for geo_types::GeometryCollection<T> {
     type Error = Error;
 
     fn try_from(wkt: Wkt<T>) -> Result<Self, Self::Error> {
@@ -139,7 +139,7 @@ impl<T: CoordFloat> TryFrom<Wkt<T>> for geo_types::GeometryCollection<T> {
 
 impl<T> From<Coord<T>> for geo_types::Coordinate<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     /// Convert from a WKT Coordinate to a [`geo_types::Coordinate`]
     fn from(coord: Coord<T>) -> geo_types::Coordinate<T> {
@@ -149,7 +149,7 @@ where
 
 impl<T> TryFrom<Point<T>> for geo_types::Point<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     type Error = Error;
 
@@ -165,14 +165,14 @@ where
 #[deprecated(since = "0.9.0", note = "use `geometry.try_into()` instead")]
 pub fn try_into_geometry<T>(geometry: &Geometry<T>) -> Result<geo_types::Geometry<T>, Error>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     geometry.clone().try_into()
 }
 
 impl<'a, T> From<&'a LineString<T>> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     fn from(line_string: &'a LineString<T>) -> Self {
         Self::LineString(line_string.clone().into())
@@ -181,7 +181,7 @@ where
 
 impl<T> From<LineString<T>> for geo_types::LineString<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     /// Convert from a WKT `LINESTRING` to a [`geo_types::LineString`]
     fn from(line_string: LineString<T>) -> Self {
@@ -197,7 +197,7 @@ where
 
 impl<'a, T> From<&'a MultiLineString<T>> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     fn from(multi_line_string: &'a MultiLineString<T>) -> geo_types::Geometry<T> {
         Self::MultiLineString(multi_line_string.clone().into())
@@ -206,7 +206,7 @@ where
 
 impl<T> From<MultiLineString<T>> for geo_types::MultiLineString<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     /// Convert from a WKT `MULTILINESTRING` to a [`geo_types::MultiLineString`]
     fn from(multi_line_string: MultiLineString<T>) -> geo_types::MultiLineString<T> {
@@ -222,7 +222,7 @@ where
 
 impl<'a, T> From<&'a Polygon<T>> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     fn from(polygon: &'a Polygon<T>) -> geo_types::Geometry<T> {
         Self::Polygon(polygon.clone().into())
@@ -231,7 +231,7 @@ where
 
 impl<T> From<Polygon<T>> for geo_types::Polygon<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     /// Convert from a WKT `POLYGON` to a [`geo_types::Polygon`]
     fn from(polygon: Polygon<T>) -> Self {
@@ -245,7 +245,7 @@ where
 
 impl<'a, T> TryFrom<&'a MultiPoint<T>> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     type Error = Error;
 
@@ -256,7 +256,7 @@ where
 
 impl<T> TryFrom<MultiPoint<T>> for geo_types::MultiPoint<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     type Error = Error;
     /// Fallibly convert from a WKT `MULTIPOINT` to a [`geo_types::MultiPoint`]
@@ -273,7 +273,7 @@ where
 
 impl<'a, T> From<&'a MultiPolygon<T>> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     fn from(multi_polygon: &'a MultiPolygon<T>) -> Self {
         Self::MultiPolygon(multi_polygon.clone().into())
@@ -282,7 +282,7 @@ where
 
 impl<T> From<MultiPolygon<T>> for geo_types::MultiPolygon<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     /// Convert from a WKT `MULTIPOLYGON` to a [`geo_types::MultiPolygon`]
     fn from(multi_polygon: MultiPolygon<T>) -> Self {
@@ -301,7 +301,7 @@ pub fn try_into_geometry_collection<T>(
     geometry_collection: &GeometryCollection<T>,
 ) -> Result<geo_types::Geometry<T>, Error>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     Ok(geo_types::Geometry::GeometryCollection(
         geometry_collection.clone().try_into()?,
@@ -310,7 +310,7 @@ where
 
 impl<T> TryFrom<GeometryCollection<T>> for geo_types::GeometryCollection<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     type Error = Error;
 
@@ -327,7 +327,7 @@ where
 
 impl<T> TryFrom<Geometry<T>> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordNum,
 {
     type Error = Error;
 
@@ -362,7 +362,7 @@ where
 macro_rules! try_from_wkt_impl {
    ($($type: ty),*$(,)?)  => {
        $(
-            impl<T: WktFloat + FromStr + Default> TryFromWkt<T> for $type {
+            impl<T: CoordNum + FromStr + Default> TryFromWkt<T> for $type {
                 type Error = Error;
                 fn try_from_wkt_str(wkt_str: &str) -> Result<Self, Self::Error> {
                     let wkt = Wkt::from_str(wkt_str).map_err(|e| Error::InvalidWKT(e))?;
@@ -1024,5 +1024,30 @@ mod tests {
             } => {}
             e => panic!("Not the error we expected. Found: {}", e),
         }
+    }
+
+    #[test]
+    fn integer_geometry() {
+        use crate::to_wkt::ToWkt;
+        let point: geo_types::Point<i32> =
+            geo_types::Point::try_from_wkt_str("POINT(1 2)").unwrap();
+        assert_eq!(point, geo_types::Point::new(1, 2));
+
+        let wkt_string = point.wkt_string();
+        assert_eq!("POINT(1 2)", &wkt_string);
+    }
+
+    #[test]
+    fn integer_geometries_from_float() {
+        let wkt_str = "POINT(1.1 1.9)";
+
+        let _sanity_check = geo_types::Point::<f32>::try_from_wkt_str(wkt_str).unwrap();
+
+        let result = geo_types::Point::<i32>::try_from_wkt_str(wkt_str);
+        let err = result.unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "Invalid WKT: Unable to parse input number as the desired output type"
+        );
     }
 }
