@@ -1,6 +1,6 @@
 # Changes
 
-## UNRELEASED
+## 0.11.0 - 2022-06-16
 
 ### Added
 
