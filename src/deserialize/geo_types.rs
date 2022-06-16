@@ -2,7 +2,7 @@ use crate::{Geometry, Wkt, WktNum};
 use serde::de::{Deserialize, Deserializer, Error};
 use std::{default::Default, str::FromStr};
 
-#[deprecated(since = "0.10.2", note = "instead use `wkt::deserialize_wkt`")]
+#[deprecated(since = "0.11.0", note = "instead use `wkt::deserialize_wkt`")]
 /// Deserializes from WKT format into a [`geo_types::Geometry`].
 pub fn deserialize_geometry<'de, D, T>(deserializer: D) -> Result<geo_types::Geometry<T>, D::Error>
 where
