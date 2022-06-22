@@ -129,7 +129,7 @@ pub use deserialize::geo_types::deserialize_geometry;
 
 #[cfg(all(feature = "serde", feature = "geo-types"))]
 #[deprecated(
-    since = "0.11.0",
+    since = "0.10.2",
     note = "instead: use wkt::deserialize::geo_types::deserialize_point"
 )]
 pub use deserialize::geo_types::deserialize_point;

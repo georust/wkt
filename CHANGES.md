@@ -1,6 +1,10 @@
 # Changes
 
-## 0.11.0 - 2022-06-16
+## 0.10.3 - 2022-06-22
+
+* Fixed a typo in the release notes to reference the correct version
+
+## 0.10.2 - 2022-06-22
 
 ### Added
 
