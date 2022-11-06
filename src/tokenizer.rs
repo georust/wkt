@@ -18,7 +18,7 @@ use std::iter::Peekable;
 use std::marker::PhantomData;
 use std::str;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Token<T>
 where
     T: WktNum,
