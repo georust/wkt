@@ -1,5 +1,9 @@
 # Changes
 
+## Unreleased
+
+* Changed license field to [SPDX 2.1 license expression](https://spdx.dev/spdx-specification-21-web-version/#h.jxpfx0ykyb60)
+
 ## 0.10.3 - 2022-06-22
 
 * Fixed a typo in the release notes to reference the correct version
