@@ -61,7 +61,7 @@ where
             _ => return Err("Expected a word in GEOMETRYCOLLECTION"),
         };
 
-        let item = Geometry::from_word_and_tokens(&*word, tokens)?;
+        let item = Geometry::from_word_and_tokens(&word, tokens)?;
         items.push(item);
 
         while let Some(&Ok(Token::Comma)) = tokens.peek() {
@@ -72,7 +72,7 @@ where
                 _ => return Err("Expected a word in GEOMETRYCOLLECTION"),
             };
 
-            let item = Geometry::from_word_and_tokens(&*word, tokens)?;
+            let item = Geometry::from_word_and_tokens(&word, tokens)?;
             items.push(item);
         }
 
