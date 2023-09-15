@@ -80,8 +80,8 @@ struct TryFromWktVisitor<T, G: TryFromWkt<T>> {
 impl<T, G: TryFromWkt<T>> Default for TryFromWktVisitor<T, G> {
     fn default() -> Self {
         Self {
-            _marker_t: PhantomData::default(),
-            _marker_g: PhantomData::default(),
+            _marker_t: PhantomData,
+            _marker_g: PhantomData,
         }
     }
 }
@@ -111,7 +111,7 @@ struct WktVisitor<T> {
 impl<T> Default for WktVisitor<T> {
     fn default() -> Self {
         WktVisitor {
-            _marker: PhantomData::default(),
+            _marker: PhantomData,
         }
     }
 }
@@ -151,7 +151,7 @@ struct GeometryVisitor<T> {
 impl<T> Default for GeometryVisitor<T> {
     fn default() -> Self {
         GeometryVisitor {
-            _marker: PhantomData::default(),
+            _marker: PhantomData,
         }
     }
 }
