@@ -243,7 +243,7 @@ where
     }
 }
 
-fn g_point_to_w_coord<T>(g_point: &geo_types::Coordinate<T>) -> Coord<T>
+fn g_point_to_w_coord<T>(g_point: &geo_types::Coord<T>) -> Coord<T>
 where
     T: CoordNum,
 {
@@ -263,7 +263,7 @@ where
     Point(Some(coord))
 }
 
-fn g_points_to_w_coords<T>(g_points: &[geo_types::Coordinate<T>]) -> Vec<Coord<T>>
+fn g_points_to_w_coords<T>(g_points: &[geo_types::Coord<T>]) -> Vec<Coord<T>>
 where
     T: CoordNum,
 {
@@ -297,7 +297,7 @@ where
     g_points_to_w_linestring(g_points)
 }
 
-fn g_points_to_w_linestring<T>(g_coords: &[geo_types::Coordinate<T>]) -> LineString<T>
+fn g_points_to_w_linestring<T>(g_coords: &[geo_types::Coord<T>]) -> LineString<T>
 where
     T: CoordNum,
 {
