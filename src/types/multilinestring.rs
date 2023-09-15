@@ -14,19 +14,19 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
-use crate::{FromTokens, Geometry, WktNum};
+use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct MultiLineString<T: WktNum>(pub Vec<LineString<T>>);
 
-impl<T> MultiLineString<T>
+impl<T> From<MultiLineString<T>> for Wkt<T>
 where
     T: WktNum,
 {
-    pub fn as_item(self) -> Geometry<T> {
-        Geometry::MultiLineString(self)
+    fn from(value: MultiLineString<T>) -> Self {
+        Wkt::MultiLineString(value)
     }
 }
 
@@ -72,7 +72,7 @@ where
 mod tests {
     use super::{LineString, MultiLineString};
     use crate::types::Coord;
-    use crate::{Geometry, Wkt};
+    use crate::Wkt;
     use std::str::FromStr;
 
     #[test]
@@ -80,8 +80,8 @@ mod tests {
         let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING ((8 4, -3 0), (4 0, 6 -10))")
             .ok()
             .unwrap();
-        let lines = match wkt.item {
-            Geometry::MultiLineString(MultiLineString(lines)) => lines,
+        let lines = match wkt {
+            Wkt::MultiLineString(MultiLineString(lines)) => lines,
             _ => unreachable!(),
         };
         assert_eq!(2, lines.len());

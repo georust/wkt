@@ -13,19 +13,19 @@
 // limitations under the License.
 
 use crate::tokenizer::{PeekableTokens, Token};
-use crate::{FromTokens, Geometry, WktNum};
+use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct GeometryCollection<T: WktNum>(pub Vec<Geometry<T>>);
+pub struct GeometryCollection<T: WktNum>(pub Vec<Wkt<T>>);
 
-impl<T> GeometryCollection<T>
+impl<T> From<GeometryCollection<T>> for Wkt<T>
 where
     T: WktNum,
 {
-    pub fn as_item(self) -> Geometry<T> {
-        Geometry::GeometryCollection(self)
+    fn from(value: GeometryCollection<T>) -> Self {
+        Wkt::GeometryCollection(value)
     }
 }
 
@@ -61,7 +61,7 @@ where
             _ => return Err("Expected a word in GEOMETRYCOLLECTION"),
         };
 
-        let item = Geometry::from_word_and_tokens(&word, tokens)?;
+        let item = Wkt::from_word_and_tokens(&word, tokens)?;
         items.push(item);
 
         while let Some(&Ok(Token::Comma)) = tokens.peek() {
@@ -72,7 +72,7 @@ where
                 _ => return Err("Expected a word in GEOMETRYCOLLECTION"),
             };
 
-            let item = Geometry::from_word_and_tokens(&word, tokens)?;
+            let item = Wkt::from_word_and_tokens(&word, tokens)?;
             items.push(item);
         }
 
@@ -84,7 +84,7 @@ where
 mod tests {
     use super::GeometryCollection;
     use crate::types::*;
-    use crate::{Geometry, Wkt};
+    use crate::Wkt;
     use std::str::FromStr;
 
     #[test]
@@ -92,8 +92,8 @@ mod tests {
         let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4)))")
             .ok()
             .unwrap();
-        let items = match wkt.item {
-            Geometry::GeometryCollection(GeometryCollection(items)) => items,
+        let items = match wkt {
+            Wkt::GeometryCollection(GeometryCollection(items)) => items,
             _ => unreachable!(),
         };
         assert_eq!(1, items.len());
@@ -104,8 +104,8 @@ mod tests {
         let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4),LINESTRING(4 6,7 10)))")
             .ok()
             .unwrap();
-        let items = match wkt.item {
-            Geometry::GeometryCollection(GeometryCollection(items)) => items,
+        let items = match wkt {
+            Wkt::GeometryCollection(GeometryCollection(items)) => items,
             _ => unreachable!(),
         };
         assert_eq!(2, items.len());
@@ -123,14 +123,14 @@ mod tests {
 
     #[test]
     fn write_geometry_collection() {
-        let point = Geometry::Point(Point(Some(Coord {
+        let point = Wkt::Point(Point(Some(Coord {
             x: 10.,
             y: 20.,
             z: None,
             m: None,
         })));
 
-        let multipoint = Geometry::MultiPoint(MultiPoint(vec![
+        let multipoint = Wkt::MultiPoint(MultiPoint(vec![
             Point(Some(Coord {
                 x: 10.1,
                 y: 20.2,
@@ -145,7 +145,7 @@ mod tests {
             })),
         ]));
 
-        let linestring = Geometry::LineString(LineString(vec![
+        let linestring = Wkt::LineString(LineString(vec![
             Coord {
                 x: 10.,
                 y: 20.,
@@ -160,7 +160,7 @@ mod tests {
             },
         ]));
 
-        let polygon = Geometry::Polygon(Polygon(vec![LineString(vec![
+        let polygon = Wkt::Polygon(Polygon(vec![LineString(vec![
             Coord {
                 x: 0.,
                 y: 0.,
@@ -187,7 +187,7 @@ mod tests {
             },
         ])]));
 
-        let multilinestring = Geometry::MultiLineString(MultiLineString(vec![
+        let multilinestring = Wkt::MultiLineString(MultiLineString(vec![
             LineString(vec![
                 Coord {
                     x: 10.1,
@@ -218,7 +218,7 @@ mod tests {
             ]),
         ]));
 
-        let multipolygon = Geometry::MultiPolygon(MultiPolygon(vec![
+        let multipolygon = Wkt::MultiPolygon(MultiPolygon(vec![
             Polygon(vec![LineString(vec![
                 Coord {
                     x: 0.,

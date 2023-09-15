@@ -1,10 +1,10 @@
 //! This module deserialises to WKT using [`serde`].
 //!
 //! You can deserialise to [`geo_types`] or any other implementor of [`TryFromWkt`], using
-//! [`deserialize_wkt`]. Or you can store this crates internal primitives [`Wkt`]
-//! or [`Geometry`] in your struct fields.
+//! [`deserialize_wkt`]. Or you can store this crates internal primitives [`wkt`]
+//! or [`Wkt`] in your struct fields.
 
-use crate::{Geometry, TryFromWkt, Wkt, WktNum};
+use crate::{TryFromWkt, Wkt, WktNum};
 use serde::de::{Deserializer, Error, Visitor};
 use std::{
     default::Default,
@@ -160,7 +160,7 @@ impl<'de, T> Visitor<'de> for GeometryVisitor<T>
 where
     T: FromStr + Default + WktNum,
 {
-    type Value = Geometry<T>;
+    type Value = Wkt<T>;
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "a valid WKT format")
     }
@@ -169,19 +169,7 @@ where
         E: Error,
     {
         let wkt = Wkt::from_str(s).map_err(|e| serde::de::Error::custom(e))?;
-        Ok(wkt.item)
-    }
-}
-
-impl<'de, T> serde::Deserialize<'de> for Geometry<T>
-where
-    T: FromStr + Default + WktNum,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_str(GeometryVisitor::default())
+        Ok(wkt)
     }
 }
 
@@ -190,7 +178,7 @@ mod tests {
     use super::*;
     use crate::{
         types::{Coord, Point},
-        Geometry,
+        Wkt,
     };
     use serde::de::{
         value::{Error, StrDeserializer},
@@ -207,8 +195,8 @@ mod tests {
                 .deserialize_any(WktVisitor::<f64>::default())
                 .unwrap();
             assert!(matches!(
-                wkt.item,
-                Geometry::Point(Point(Some(Coord {
+                wkt,
+                Wkt::Point(Point(Some(Coord {
                     x: _, // floating-point types cannot be used in patterns
                     y: _, // floating-point types cannot be used in patterns
                     z: None,
@@ -239,7 +227,7 @@ mod tests {
                 .unwrap();
             assert!(matches!(
                 geometry,
-                Geometry::Point(Point(Some(Coord {
+                Wkt::Point(Point(Some(Coord {
                     x: _, // floating-point types cannot be used in patterns
                     y: _, // floating-point types cannot be used in patterns
                     z: None,

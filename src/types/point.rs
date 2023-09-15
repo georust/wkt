@@ -14,19 +14,19 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
-use crate::{FromTokens, Geometry, WktNum};
+use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Point<T: WktNum>(pub Option<Coord<T>>);
 
-impl<T> Point<T>
+impl<T> From<Point<T>> for Wkt<T>
 where
     T: WktNum,
 {
-    pub fn as_item(self) -> Geometry<T> {
-        Geometry::Point(self)
+    fn from(value: Point<T>) -> Self {
+        Wkt::Point(value)
     }
 }
 
@@ -68,14 +68,14 @@ where
 #[cfg(test)]
 mod tests {
     use super::{Coord, Point};
-    use crate::{Geometry, Wkt};
+    use crate::Wkt;
     use std::str::FromStr;
 
     #[test]
     fn basic_point() {
         let wkt = Wkt::from_str("POINT (10 -20)").ok().unwrap();
-        let coord = match wkt.item {
-            Geometry::Point(Point(Some(coord))) => coord,
+        let coord = match wkt {
+            Wkt::Point(Point(Some(coord))) => coord,
             _ => unreachable!(),
         };
         assert_eq!(10.0, coord.x);
@@ -89,8 +89,8 @@ mod tests {
         let wkt: Wkt<f64> = Wkt::from_str(" \n\t\rPOINT \n\t\r( \n\r\t10 \n\t\r-20 \n\t\r) \n\t\r")
             .ok()
             .unwrap();
-        let coord = match wkt.item {
-            Geometry::Point(Point(Some(coord))) => coord,
+        let coord = match wkt {
+            Wkt::Point(Point(Some(coord))) => coord,
             _ => unreachable!(),
         };
         assert_eq!(10.0, coord.x);

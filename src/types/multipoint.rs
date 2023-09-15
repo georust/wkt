@@ -14,19 +14,19 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
-use crate::{FromTokens, Geometry, WktNum};
+use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct MultiPoint<T: WktNum>(pub Vec<Point<T>>);
 
-impl<T> MultiPoint<T>
+impl<T> From<MultiPoint<T>> for Wkt<T>
 where
     T: WktNum,
 {
-    pub fn as_item(self) -> Geometry<T> {
-        Geometry::MultiPoint(self)
+    fn from(value: MultiPoint<T>) -> Self {
+        Wkt::MultiPoint(value)
     }
 }
 
@@ -68,14 +68,14 @@ where
 mod tests {
     use super::{MultiPoint, Point};
     use crate::types::Coord;
-    use crate::{Geometry, Wkt};
+    use crate::Wkt;
     use std::str::FromStr;
 
     #[test]
     fn basic_multipoint() {
         let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT ((8 4), (4 0))").ok().unwrap();
-        let points = match wkt.item {
-            Geometry::MultiPoint(MultiPoint(points)) => points,
+        let points = match wkt {
+            Wkt::MultiPoint(MultiPoint(points)) => points,
             _ => unreachable!(),
         };
         assert_eq!(2, points.len());
@@ -84,8 +84,8 @@ mod tests {
     #[test]
     fn postgis_style_multipoint() {
         let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT (8 4, 4 0)").unwrap();
-        let points = match wkt.item {
-            Geometry::MultiPoint(MultiPoint(points)) => points,
+        let points = match wkt {
+            Wkt::MultiPoint(MultiPoint(points)) => points,
             _ => unreachable!(),
         };
         assert_eq!(2, points.len());
@@ -94,8 +94,8 @@ mod tests {
     #[test]
     fn mixed_parens_multipoint() {
         let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT (8 4, (4 0))").unwrap();
-        let points = match wkt.item {
-            Geometry::MultiPoint(MultiPoint(points)) => points,
+        let points = match wkt {
+            Wkt::MultiPoint(MultiPoint(points)) => points,
             _ => unreachable!(),
         };
         assert_eq!(2, points.len());
@@ -104,8 +104,8 @@ mod tests {
     #[test]
     fn empty_multipoint() {
         let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT EMPTY").unwrap();
-        let points = match wkt.item {
-            Geometry::MultiPoint(MultiPoint(points)) => points,
+        let points = match wkt {
+            Wkt::MultiPoint(MultiPoint(points)) => points,
             _ => unreachable!(),
         };
         assert_eq!(0, points.len());

@@ -14,19 +14,19 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
-use crate::{FromTokens, Geometry, WktNum};
+use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Polygon<T: WktNum>(pub Vec<LineString<T>>);
 
-impl<T> Polygon<T>
+impl<T> From<Polygon<T>> for Wkt<T>
 where
     T: WktNum,
 {
-    pub fn as_item(self) -> Geometry<T> {
-        Geometry::Polygon(self)
+    fn from(value: Polygon<T>) -> Self {
+        Wkt::Polygon(value)
     }
 }
 
@@ -72,7 +72,7 @@ where
 mod tests {
     use super::{LineString, Polygon};
     use crate::types::Coord;
-    use crate::{Geometry, Wkt};
+    use crate::Wkt;
     use std::str::FromStr;
 
     #[test]
@@ -80,8 +80,8 @@ mod tests {
         let wkt: Wkt<f64> = Wkt::from_str("POLYGON ((8 4, 4 0, 0 4, 8 4), (7 3, 4 1, 1 4, 7 3))")
             .ok()
             .unwrap();
-        let lines = match wkt.item {
-            Geometry::Polygon(Polygon(lines)) => lines,
+        let lines = match wkt {
+            Wkt::Polygon(Polygon(lines)) => lines,
             _ => unreachable!(),
         };
         assert_eq!(2, lines.len());

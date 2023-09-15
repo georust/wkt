@@ -67,11 +67,10 @@
 //! ```
 //! use std::str::FromStr;
 //! use wkt::Wkt;
-//! use wkt::Geometry;
 //!
 //! let wktls: Wkt<f64> = Wkt::from_str("LINESTRING(10 20, 20 30)").unwrap();
-//! let ls = match wktls.item {
-//!     Geometry::LineString(line_string) => {
+//! let ls = match wktls {
+//!     Wkt::LineString(line_string) => {
 //!         // you now have access to the `wkt::types::LineString`.
 //!         assert_eq!(line_string.0[0].x, 10.0);
 //!     }
@@ -142,7 +141,7 @@ impl<T> WktFloat for T where T: WktNum + Float {}
 
 #[derive(Clone, Debug, PartialEq)]
 /// All supported WKT geometry [`types`]
-pub enum Geometry<T>
+pub enum Wkt<T>
 where
     T: WktNum,
 {
@@ -155,7 +154,7 @@ where
     GeometryCollection(GeometryCollection<T>),
 }
 
-impl<T> Geometry<T>
+impl<T> Wkt<T>
 where
     T: WktNum + FromStr + Default,
 {
@@ -166,7 +165,7 @@ where
         match word {
             w if w.eq_ignore_ascii_case("POINT") => {
                 let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
-                x.map(|y| y.as_item())
+                x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("POINTZ") => {
                 let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
@@ -175,7 +174,7 @@ where
                         return Err("POINTZ must have a z-coordinate.");
                     }
                 }
-                Ok(x.as_item())
+                Ok(x.into())
             }
             w if w.eq_ignore_ascii_case("POINTM") => {
                 let mut x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
@@ -186,7 +185,7 @@ where
                         coord.m = coord.z.take();
                     }
                 }
-                Ok(x.as_item())
+                Ok(x.into())
             }
             w if w.eq_ignore_ascii_case("POINTZM") => {
                 let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
@@ -195,63 +194,52 @@ where
                         return Err("POINTZM must have both a z- and m-coordinate");
                     }
                 }
-                Ok(x.as_item())
+                Ok(x.into())
             }
             w if w.eq_ignore_ascii_case("LINESTRING") || w.eq_ignore_ascii_case("LINEARRING") => {
                 let x = <LineString<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
-                x.map(|y| y.as_item())
+                x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("POLYGON") => {
                 let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
-                x.map(|y| y.as_item())
+                x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTIPOINT") => {
                 let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
-                x.map(|y| y.as_item())
+                x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTILINESTRING") => {
                 let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
-                x.map(|y| y.as_item())
+                x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTIPOLYGON") => {
                 let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
-                x.map(|y| y.as_item())
+                x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTION") => {
                 let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
-                x.map(|y| y.as_item())
+                x.map(|y| y.into())
             }
             _ => Err("Invalid type encountered"),
         }
     }
 }
 
-impl<T> fmt::Display for Geometry<T>
+impl<T> fmt::Display for Wkt<T>
 where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match self {
-            Geometry::Point(point) => point.fmt(f),
-            Geometry::LineString(linestring) => linestring.fmt(f),
-            Geometry::Polygon(polygon) => polygon.fmt(f),
-            Geometry::MultiPoint(multipoint) => multipoint.fmt(f),
-            Geometry::MultiLineString(multilinstring) => multilinstring.fmt(f),
-            Geometry::MultiPolygon(multipolygon) => multipolygon.fmt(f),
-            Geometry::GeometryCollection(geometrycollection) => geometrycollection.fmt(f),
+            Wkt::Point(point) => point.fmt(f),
+            Wkt::LineString(linestring) => linestring.fmt(f),
+            Wkt::Polygon(polygon) => polygon.fmt(f),
+            Wkt::MultiPoint(multipoint) => multipoint.fmt(f),
+            Wkt::MultiLineString(multilinstring) => multilinstring.fmt(f),
+            Wkt::MultiPolygon(multipolygon) => multipolygon.fmt(f),
+            Wkt::GeometryCollection(geometrycollection) => geometrycollection.fmt(f),
         }
     }
-}
-
-#[derive(Clone, Debug)]
-/// Container for WKT primitives and collections
-///
-/// This type can be fallibly converted to a [`geo_types`] primitive using [`std::convert::TryFrom`].
-pub struct Wkt<T>
-where
-    T: WktNum,
-{
-    pub item: Geometry<T>,
 }
 
 impl<T> Wkt<T>
@@ -269,7 +257,7 @@ where
             }
             _ => return Err("Invalid WKT format"),
         };
-        Geometry::from_word_and_tokens(&word, &mut tokens).map(|item| Wkt { item })
+        Wkt::from_word_and_tokens(&word, &mut tokens)
     }
 }
 
@@ -281,15 +269,6 @@ where
 
     fn from_str(wkt_str: &str) -> Result<Self, Self::Err> {
         Wkt::from_tokens(Tokens::from_str(wkt_str))
-    }
-}
-
-impl<T> fmt::Display for Wkt<T>
-where
-    T: WktNum + fmt::Debug + fmt::Display,
-{
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        self.item.fmt(formatter)
     }
 }
 
@@ -347,7 +326,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::types::{Coord, MultiPolygon, Point};
-    use crate::{Geometry, Wkt};
+    use crate::Wkt;
     use std::str::FromStr;
 
     #[test]
@@ -359,14 +338,14 @@ mod tests {
     #[test]
     fn empty_items() {
         let wkt: Wkt<f64> = Wkt::from_str("POINT EMPTY").ok().unwrap();
-        match wkt.item {
-            Geometry::Point(Point(None)) => (),
+        match wkt {
+            Wkt::Point(Point(None)) => (),
             _ => unreachable!(),
         };
 
         let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON EMPTY").ok().unwrap();
-        match wkt.item {
-            Geometry::MultiPolygon(MultiPolygon(polygons)) => assert_eq!(polygons.len(), 0),
+        match wkt {
+            Wkt::MultiPolygon(MultiPolygon(polygons)) => assert_eq!(polygons.len(), 0),
             _ => unreachable!(),
         };
     }
@@ -374,8 +353,8 @@ mod tests {
     #[test]
     fn lowercase_point() {
         let wkt: Wkt<f64> = Wkt::from_str("point EMPTY").ok().unwrap();
-        match wkt.item {
-            Geometry::Point(Point(None)) => (),
+        match wkt {
+            Wkt::Point(Point(None)) => (),
             _ => unreachable!(),
         };
     }
@@ -393,8 +372,8 @@ mod tests {
     fn test_points() {
         // point(x, y)
         let wkt = <Wkt<f64>>::from_str("POINT (10 20.1)").ok().unwrap();
-        match wkt.item {
-            Geometry::Point(Point(Some(coord))) => {
+        match wkt {
+            Wkt::Point(Point(Some(coord))) => {
                 assert_eq!(coord.x, 10.0);
                 assert_eq!(coord.y, 20.1);
                 assert_eq!(coord.z, None);
@@ -405,8 +384,8 @@ mod tests {
 
         // point(x, y, z)
         let wkt = <Wkt<f64>>::from_str("POINTZ (10 20.1 5)").ok().unwrap();
-        match wkt.item {
-            Geometry::Point(Point(Some(coord))) => {
+        match wkt {
+            Wkt::Point(Point(Some(coord))) => {
                 assert_eq!(coord.x, 10.0);
                 assert_eq!(coord.y, 20.1);
                 assert_eq!(coord.z, Some(5.0));
@@ -417,8 +396,8 @@ mod tests {
 
         // point(x, y, m)
         let wkt = <Wkt<f64>>::from_str("POINTM (10 20.1 80)").ok().unwrap();
-        match wkt.item {
-            Geometry::Point(Point(Some(coord))) => {
+        match wkt {
+            Wkt::Point(Point(Some(coord))) => {
                 assert_eq!(coord.x, 10.0);
                 assert_eq!(coord.y, 20.1);
                 assert_eq!(coord.z, None);
@@ -429,8 +408,8 @@ mod tests {
 
         // point(x, y, z, m)
         let wkt = <Wkt<f64>>::from_str("POINTZM (10 20.1 5 80)").ok().unwrap();
-        match wkt.item {
-            Geometry::Point(Point(Some(coord))) => {
+        match wkt {
+            Wkt::Point(Point(Some(coord))) => {
                 assert_eq!(coord.x, 10.0);
                 assert_eq!(coord.y, 20.1);
                 assert_eq!(coord.z, Some(5.0));
@@ -443,15 +422,15 @@ mod tests {
     #[test]
     fn support_jts_linearring() {
         let wkt: Wkt<f64> = Wkt::from_str("linearring (10 20, 30 40)").ok().unwrap();
-        match wkt.item {
-            Geometry::LineString(_ls) => (),
+        match wkt {
+            Wkt::LineString(_ls) => (),
             _ => panic!("expected to be parsed as a LINESTRING"),
         };
     }
 
     #[test]
     fn test_debug() {
-        let g = Geometry::Point(Point(Some(Coord {
+        let g = Wkt::Point(Point(Some(Coord {
             x: 1.0,
             y: 2.0,
             m: None,
