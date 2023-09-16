@@ -93,6 +93,7 @@ use crate::types::Polygon;
 
 mod to_wkt;
 mod tokenizer;
+mod wkt_macro;
 
 /// `WKT` primitive types and collections
 pub mod types;
@@ -120,6 +121,7 @@ pub mod deserialize;
 pub use deserialize::deserialize_wkt;
 
 mod from_wkt;
+
 pub use from_wkt::TryFromWkt;
 
 #[cfg(all(feature = "serde", feature = "geo-types"))]
