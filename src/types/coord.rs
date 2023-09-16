@@ -17,7 +17,7 @@ use crate::{FromTokens, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Coord<T>
 where
     T: WktNum,

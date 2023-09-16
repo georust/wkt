@@ -137,12 +137,12 @@ impl<T: CoordNum> TryFrom<Wkt<T>> for geo_types::GeometryCollection<T> {
     }
 }
 
-impl<T> From<Coord<T>> for geo_types::Coordinate<T>
+impl<T> From<Coord<T>> for geo_types::Coord<T>
 where
     T: CoordNum,
 {
     /// Convert from a WKT Coordinate to a [`geo_types::Coordinate`]
-    fn from(coord: Coord<T>) -> geo_types::Coordinate<T> {
+    fn from(coord: Coord<T>) -> geo_types::Coord<T> {
         coord! { x: coord.x, y: coord.y }
     }
 }
@@ -188,7 +188,7 @@ where
         let coords = line_string
             .0
             .into_iter()
-            .map(geo_types::Coordinate::from)
+            .map(geo_types::Coord::from)
             .collect();
 
         geo_types::LineString(coords)

@@ -243,7 +243,7 @@ where
     }
 }
 
-fn g_point_to_w_coord<T>(g_point: &geo_types::Coordinate<T>) -> Coord<T>
+fn g_point_to_w_coord<T>(g_point: &geo_types::Coord<T>) -> Coord<T>
 where
     T: CoordNum,
 {
@@ -263,7 +263,7 @@ where
     Point(Some(coord))
 }
 
-fn g_points_to_w_coords<T>(g_points: &[geo_types::Coordinate<T>]) -> Vec<Coord<T>>
+fn g_points_to_w_coords<T>(g_points: &[geo_types::Coord<T>]) -> Vec<Coord<T>>
 where
     T: CoordNum,
 {
@@ -293,11 +293,11 @@ fn g_linestring_to_w_linestring<T>(g_linestring: &geo_types::LineString<T>) -> L
 where
     T: CoordNum,
 {
-    let &geo_types::LineString(ref g_points) = g_linestring;
+    let geo_types::LineString(g_points) = g_linestring;
     g_points_to_w_linestring(g_points)
 }
 
-fn g_points_to_w_linestring<T>(g_coords: &[geo_types::Coordinate<T>]) -> LineString<T>
+fn g_points_to_w_linestring<T>(g_coords: &[geo_types::Coord<T>]) -> LineString<T>
 where
     T: CoordNum,
 {
@@ -311,7 +311,7 @@ where
 {
     let mut w_lines = vec![];
     for g_line in g_lines {
-        let &geo_types::LineString(ref g_points) = g_line;
+        let geo_types::LineString(g_points) = g_line;
         w_lines.push(g_points_to_w_linestring(g_points));
     }
     w_lines
@@ -342,14 +342,14 @@ where
     let mut poly_lines = vec![];
 
     // Outer
-    let &geo_types::LineString(ref outer_points) = outer_line;
+    let geo_types::LineString(outer_points) = outer_line;
     if !outer_points.is_empty() {
         poly_lines.push(g_points_to_w_linestring(outer_points));
     }
 
     // Inner
     let inner = g_lines_to_w_lines(inner_lines);
-    poly_lines.extend(inner.into_iter());
+    poly_lines.extend(inner);
 
     Polygon(poly_lines)
 }
@@ -358,7 +358,7 @@ fn g_mpoint_to_w_mpoint<T>(g_mpoint: &geo_types::MultiPoint<T>) -> MultiPoint<T>
 where
     T: CoordNum,
 {
-    let &geo_types::MultiPoint(ref g_points) = g_mpoint;
+    let geo_types::MultiPoint(g_points) = g_mpoint;
     let w_points = g_points_to_w_points(g_points);
     MultiPoint(w_points)
 }
@@ -367,7 +367,7 @@ fn g_mline_to_w_mline<T>(g_mline: &geo_types::MultiLineString<T>) -> MultiLineSt
 where
     T: CoordNum,
 {
-    let &geo_types::MultiLineString(ref g_lines) = g_mline;
+    let geo_types::MultiLineString(g_lines) = g_mline;
     let w_lines = g_lines_to_w_lines(g_lines);
     MultiLineString(w_lines)
 }
@@ -387,7 +387,7 @@ fn g_mpolygon_to_w_mpolygon<T>(g_mpolygon: &geo_types::MultiPolygon<T>) -> Multi
 where
     T: CoordNum,
 {
-    let &geo_types::MultiPolygon(ref g_polygons) = g_mpolygon;
+    let geo_types::MultiPolygon(g_polygons) = g_mpolygon;
     let w_polygons = g_polygons_to_w_polygons(g_polygons);
     MultiPolygon(w_polygons)
 }
@@ -396,7 +396,7 @@ fn g_geocol_to_w_geocol<T>(g_geocol: &geo_types::GeometryCollection<T>) -> Geome
 where
     T: CoordNum,
 {
-    let &geo_types::GeometryCollection(ref g_geoms) = g_geocol;
+    let geo_types::GeometryCollection(g_geoms) = g_geocol;
     let mut w_geoms = vec![];
     for g_geom in g_geoms {
         let w_geom = g_geom_to_w_geom(g_geom);

@@ -18,7 +18,7 @@ use crate::{FromTokens, Geometry, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct MultiPolygon<T: WktNum>(pub Vec<Polygon<T>>);
 
 impl<T> MultiPolygon<T>

@@ -134,13 +134,13 @@ pub use deserialize::geo_types::deserialize_geometry;
 )]
 pub use deserialize::geo_types::deserialize_point;
 
-pub trait WktNum: Num + NumCast + PartialOrd + Copy + fmt::Debug {}
-impl<T> WktNum for T where T: Num + NumCast + PartialOrd + Copy + fmt::Debug {}
+pub trait WktNum: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {}
+impl<T> WktNum for T where T: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {}
 
 pub trait WktFloat: WktNum + Float {}
 impl<T> WktFloat for T where T: WktNum + Float {}
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 /// All supported WKT geometry [`types`]
 pub enum Geometry<T>
 where

@@ -3,6 +3,9 @@
 ## Unreleased
 
 * Changed license field to [SPDX 2.1 license expression](https://spdx.dev/spdx-specification-21-web-version/#h.jxpfx0ykyb60)
+* Bump min version of geo-types, and update geo_types::Coordinate to non-deprecated geo_types::Coord
+* BREAKING: WktNum must implement PartialEq
+* Implement PartialEq for Wkt
 
 ## 0.10.3 - 2022-06-22
 

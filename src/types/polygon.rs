@@ -18,7 +18,7 @@ use crate::{FromTokens, Geometry, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Polygon<T: WktNum>(pub Vec<LineString<T>>);
 
 impl<T> Polygon<T>
