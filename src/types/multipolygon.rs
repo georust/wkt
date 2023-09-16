@@ -14,19 +14,19 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::polygon::Polygon;
-use crate::{FromTokens, Geometry, WktNum};
+use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct MultiPolygon<T: WktNum>(pub Vec<Polygon<T>>);
 
-impl<T> MultiPolygon<T>
+impl<T> From<MultiPolygon<T>> for Wkt<T>
 where
     T: WktNum,
 {
-    pub fn as_item(self) -> Geometry<T> {
-        Geometry::MultiPolygon(self)
+    fn from(value: MultiPolygon<T>) -> Self {
+        Wkt::MultiPolygon(value)
     }
 }
 
@@ -77,7 +77,7 @@ where
 mod tests {
     use super::{MultiPolygon, Polygon};
     use crate::types::{Coord, LineString};
-    use crate::{Geometry, Wkt};
+    use crate::Wkt;
     use std::str::FromStr;
 
     #[test]
@@ -85,8 +85,8 @@ mod tests {
         let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON (((8 4)), ((4 0)))")
             .ok()
             .unwrap();
-        let polygons = match wkt.item {
-            Geometry::MultiPolygon(MultiPolygon(polygons)) => polygons,
+        let polygons = match wkt {
+            Wkt::MultiPolygon(MultiPolygon(polygons)) => polygons,
             _ => unreachable!(),
         };
         assert_eq!(2, polygons.len());

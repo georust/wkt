@@ -1,4 +1,4 @@
-use crate::{Geometry, Wkt, WktNum};
+use crate::{Wkt, WktNum};
 use serde::de::{Deserialize, Deserializer, Error};
 use std::{default::Default, str::FromStr};
 
@@ -9,8 +9,7 @@ where
     D: Deserializer<'de>,
     T: FromStr + Default + WktNum,
 {
-    Geometry::deserialize(deserializer)
-        .and_then(|g: Geometry<T>| g.try_into().map_err(D::Error::custom))
+    Wkt::deserialize(deserializer).and_then(|g: Wkt<T>| g.try_into().map_err(D::Error::custom))
 }
 
 /// Deserializes from WKT format into an `Option<geo_types::Point>`.
