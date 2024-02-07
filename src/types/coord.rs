@@ -57,12 +57,25 @@ where
             Some(Token::Number(n)) => n,
             _ => return Err("Expected a number for the Y coordinate"),
         };
-        Ok(Coord {
-            x,
-            y,
-            z: None,
-            m: None,
-        })
+
+        let mut z = None;
+        let mut m = None;
+
+        if let Some(Ok(Token::Number(_))) = tokens.peek() {
+            z = match tokens.next().transpose()? {
+                Some(Token::Number(n)) => Some(n),
+                _ => None,
+            };
+
+            if let Some(Ok(Token::Number(_))) = tokens.peek() {
+                m = match tokens.next().transpose()? {
+                    Some(Token::Number(n)) => Some(n),
+                    _ => None,
+                };
+            }
+        }
+
+        Ok(Coord { x, y, z, m })
     }
 }
 
