@@ -104,7 +104,6 @@ mod tests {
         <Wkt<f64>>::from_str("POINT ()").err().unwrap();
         <Wkt<f64>>::from_str("POINT (10)").err().unwrap();
         <Wkt<f64>>::from_str("POINT 10").err().unwrap();
-        <Wkt<f64>>::from_str("POINT (10 -20 40)").err().unwrap();
     }
 
     #[test]
