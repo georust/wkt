@@ -168,6 +168,35 @@ where
                 let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
                 x.map(|y| y.as_item())
             }
+            w if w.eq_ignore_ascii_case("POINTZ") => {
+                let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
+                if let Some(coord) = &x.0 {
+                    if coord.z.is_none() {
+                        return Err("POINTZ must have a z-coordinate.");
+                    }
+                }
+                Ok(x.as_item())
+            }
+            w if w.eq_ignore_ascii_case("POINTM") => {
+                let mut x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
+                if let Some(coord) = &mut x.0 {
+                    if coord.z.is_none() {
+                        return Err("POINTM must have an m-coordinate.");
+                    } else {
+                        coord.m = coord.z.take();
+                    }
+                }
+                Ok(x.as_item())
+            }
+            w if w.eq_ignore_ascii_case("POINTZM") => {
+                let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
+                if let Some(coord) = &x.0 {
+                    if coord.z.is_none() || coord.m.is_none() {
+                        return Err("POINTZM must have both a z- and m-coordinate");
+                    }
+                }
+                Ok(x.as_item())
+            }
             w if w.eq_ignore_ascii_case("LINESTRING") || w.eq_ignore_ascii_case("LINEARRING") => {
                 let x = <LineString<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
                 x.map(|y| y.as_item())
@@ -358,6 +387,57 @@ mod tests {
             "Unable to parse input number as the desired output type",
             msg
         );
+    }
+
+    #[test]
+    fn test_points() {
+        // point(x, y)
+        let wkt = <Wkt<f64>>::from_str("POINT (10 20.1)").ok().unwrap();
+        match wkt.item {
+            Geometry::Point(Point(Some(coord))) => {
+                assert_eq!(coord.x, 10.0);
+                assert_eq!(coord.y, 20.1);
+                assert_eq!(coord.z, None);
+                assert_eq!(coord.m, None);
+            }
+            _ => panic!("excepted to be parsed as a POINT"),
+        }
+
+        // point(x, y, z)
+        let wkt = <Wkt<f64>>::from_str("POINTZ (10 20.1 5)").ok().unwrap();
+        match wkt.item {
+            Geometry::Point(Point(Some(coord))) => {
+                assert_eq!(coord.x, 10.0);
+                assert_eq!(coord.y, 20.1);
+                assert_eq!(coord.z, Some(5.0));
+                assert_eq!(coord.m, None);
+            }
+            _ => panic!("excepted to be parsed as a POINT"),
+        }
+
+        // point(x, y, m)
+        let wkt = <Wkt<f64>>::from_str("POINTM (10 20.1 80)").ok().unwrap();
+        match wkt.item {
+            Geometry::Point(Point(Some(coord))) => {
+                assert_eq!(coord.x, 10.0);
+                assert_eq!(coord.y, 20.1);
+                assert_eq!(coord.z, None);
+                assert_eq!(coord.m, Some(80.0));
+            }
+            _ => panic!("excepted to be parsed as a POINT"),
+        }
+
+        // point(x, y, z, m)
+        let wkt = <Wkt<f64>>::from_str("POINTZM (10 20.1 5 80)").ok().unwrap();
+        match wkt.item {
+            Geometry::Point(Point(Some(coord))) => {
+                assert_eq!(coord.x, 10.0);
+                assert_eq!(coord.y, 20.1);
+                assert_eq!(coord.z, Some(5.0));
+                assert_eq!(coord.m, Some(80.0));
+            }
+            _ => panic!("excepted to be parsed as a POINT"),
+        }
     }
 
     #[test]
