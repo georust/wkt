@@ -88,6 +88,72 @@ mod tests {
     }
 
     #[test]
+    fn basic_linestring_z() {
+        let wkt = Wkt::from_str("LINESTRING Z (-117 33 2, -116 34 4)")
+            .ok()
+            .unwrap();
+        let coords = match wkt.item {
+            Geometry::LineString(LineString(coords)) => coords,
+            _ => unreachable!(),
+        };
+        assert_eq!(2, coords.len());
+
+        assert_eq!(-117.0, coords[0].x);
+        assert_eq!(33.0, coords[0].y);
+        assert_eq!(Some(2.0), coords[0].z);
+        assert_eq!(None, coords[0].m);
+
+        assert_eq!(-116.0, coords[1].x);
+        assert_eq!(34.0, coords[1].y);
+        assert_eq!(Some(4.0), coords[1].z);
+        assert_eq!(None, coords[1].m);
+    }
+
+    #[test]
+    fn basic_linestring_m() {
+        let wkt = Wkt::from_str("LINESTRING M (-117 33 2, -116 34 4)")
+            .ok()
+            .unwrap();
+        let coords = match wkt.item {
+            Geometry::LineString(LineString(coords)) => coords,
+            _ => unreachable!(),
+        };
+        assert_eq!(2, coords.len());
+
+        assert_eq!(-117.0, coords[0].x);
+        assert_eq!(33.0, coords[0].y);
+        assert_eq!(None, coords[0].z);
+        assert_eq!(Some(2.0), coords[0].m);
+
+        assert_eq!(-116.0, coords[1].x);
+        assert_eq!(34.0, coords[1].y);
+        assert_eq!(None, coords[1].z);
+        assert_eq!(Some(4.0), coords[1].m);
+    }
+
+    #[test]
+    fn basic_linestring_zm() {
+        let wkt = Wkt::from_str("LINESTRING ZM (-117 33 2 3, -116 34 4 5)")
+            .ok()
+            .unwrap();
+        let coords = match wkt.item {
+            Geometry::LineString(LineString(coords)) => coords,
+            _ => unreachable!(),
+        };
+        assert_eq!(2, coords.len());
+
+        assert_eq!(-117.0, coords[0].x);
+        assert_eq!(33.0, coords[0].y);
+        assert_eq!(Some(2.0), coords[0].z);
+        assert_eq!(Some(3.0), coords[0].m);
+
+        assert_eq!(-116.0, coords[1].x);
+        assert_eq!(34.0, coords[1].y);
+        assert_eq!(Some(4.0), coords[1].z);
+        assert_eq!(Some(5.0), coords[1].m);
+    }
+
+    #[test]
     fn write_empty_linestring() {
         let linestring: LineString<f64> = LineString(vec![]);
 
