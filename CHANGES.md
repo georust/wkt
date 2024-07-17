@@ -8,6 +8,7 @@
 * Implement PartialEq for Wkt
 * BREAKING: Simplify Wkt data structure by replacing it with it's only field (formerly known as `item: Geometry`)
 * BREAKING: Replace geometry_variant.as_item() with Wkt::from(geometry_variant)
+* Add support for `POINT Z`, `POINT M`, and `POINT ZM`
 
 ## 0.10.3 - 2022-06-22
 

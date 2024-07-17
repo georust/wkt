@@ -164,37 +164,55 @@ where
     ) -> Result<Self, &'static str> {
         match word {
             w if w.eq_ignore_ascii_case("POINT") => {
-                let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("POINTZ") => {
-                let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
-                if let Some(coord) = &x.0 {
-                    if coord.z.is_none() {
-                        return Err("POINTZ must have a z-coordinate.");
+                match tokens.peek() {
+                    Some(Ok(Token::ParenOpen)) => {
+                        let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
+                        x.map(|y| y.into())
                     }
-                }
-                Ok(x.into())
-            }
-            w if w.eq_ignore_ascii_case("POINTM") => {
-                let mut x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
-                if let Some(coord) = &mut x.0 {
-                    if coord.z.is_none() {
-                        return Err("POINTM must have an m-coordinate.");
-                    } else {
-                        coord.m = coord.z.take();
+                    Some(Ok(Token::Word(w))) if w.eq_ignore_ascii_case("EMPTY") => {
+                        tokens.next();
+                        Ok(Point(None).into())
                     }
-                }
-                Ok(x.into())
-            }
-            w if w.eq_ignore_ascii_case("POINTZM") => {
-                let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
-                if let Some(coord) = &x.0 {
-                    if coord.z.is_none() || coord.m.is_none() {
-                        return Err("POINTZM must have both a z- and m-coordinate");
+                    Some(Ok(Token::Word(w))) if w.eq_ignore_ascii_case("Z") => {
+                        tokens.next();
+                        let x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
+                        if let Some(coord) = &x.0 {
+                            if coord.z.is_none() {
+                                return Err("POINT Z must have a z-coordinate.");
+                            }
+                            if coord.m.is_some() {
+                                return Err("POINT Z must not have a m-coordinate.");
+                            }
+                        }
+                        Ok(x.into())
                     }
+                    Some(Ok(Token::Word(w))) if w.eq_ignore_ascii_case("M") => {
+                        tokens.next();
+                        let mut x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
+                        if let Some(coord) = &mut x.0 {
+                            // Coord parser always puts first coord in `z` position, so swap it to `m`
+                            std::mem::swap(&mut coord.z, &mut coord.m);
+                            if coord.z.is_some() {
+                                return Err("POINT M must not have a z-coordinate.");
+                            }
+                            if coord.m.is_none() {
+                                return Err("POINT M must have a m-coordinate.");
+                            }
+                        }
+                        Ok(x.into())
+                    }
+                    Some(Ok(Token::Word(w))) if w.eq_ignore_ascii_case("ZM") => {
+                        tokens.next();
+                        let mut x = <Point<T> as FromTokens<T>>::from_tokens_with_parens(tokens)?;
+                        if let Some(coord) = &mut x.0 {
+                            if coord.z.is_none() || coord.m.is_none() {
+                                return Err("POINT ZM must have both a z- and m-coordinate");
+                            }
+                        }
+                        Ok(x.into())
+                    }
+                    _ => Err("Unexpected token after POINT"),
                 }
-                Ok(x.into())
             }
             w if w.eq_ignore_ascii_case("LINESTRING") || w.eq_ignore_ascii_case("LINEARRING") => {
                 let x = <LineString<T> as FromTokens<T>>::from_tokens_with_parens(tokens);
@@ -351,7 +369,7 @@ mod tests {
     }
 
     #[test]
-    fn lowercase_point() {
+    fn lowercase_empty_point() {
         let wkt: Wkt<f64> = Wkt::from_str("point EMPTY").ok().unwrap();
         match wkt {
             Wkt::Point(Point(None)) => (),
@@ -369,7 +387,7 @@ mod tests {
     }
 
     #[test]
-    fn test_points() {
+    fn test_xy_point() {
         // point(x, y)
         let wkt = <Wkt<f64>>::from_str("POINT (10 20.1)").ok().unwrap();
         match wkt {
@@ -381,9 +399,12 @@ mod tests {
             }
             _ => panic!("excepted to be parsed as a POINT"),
         }
+    }
 
+    #[test]
+    fn test_xyz_point() {
         // point(x, y, z)
-        let wkt = <Wkt<f64>>::from_str("POINTZ (10 20.1 5)").ok().unwrap();
+        let wkt = <Wkt<f64>>::from_str("POINT Z (10 20.1 5)").ok().unwrap();
         match wkt {
             Wkt::Point(Point(Some(coord))) => {
                 assert_eq!(coord.x, 10.0);
@@ -393,9 +414,12 @@ mod tests {
             }
             _ => panic!("excepted to be parsed as a POINT"),
         }
+    }
 
+    #[test]
+    fn test_xym_point() {
         // point(x, y, m)
-        let wkt = <Wkt<f64>>::from_str("POINTM (10 20.1 80)").ok().unwrap();
+        let wkt = <Wkt<f64>>::from_str("POINT M (10 20.1 80)").ok().unwrap();
         match wkt {
             Wkt::Point(Point(Some(coord))) => {
                 assert_eq!(coord.x, 10.0);
@@ -405,9 +429,14 @@ mod tests {
             }
             _ => panic!("excepted to be parsed as a POINT"),
         }
+    }
 
+    #[test]
+    fn test_xyzm_point() {
         // point(x, y, z, m)
-        let wkt = <Wkt<f64>>::from_str("POINTZM (10 20.1 5 80)").ok().unwrap();
+        let wkt = <Wkt<f64>>::from_str("POINT ZM (10 20.1 5 80)")
+            .ok()
+            .unwrap();
         match wkt {
             Wkt::Point(Point(Some(coord))) => {
                 assert_eq!(coord.x, 10.0);
