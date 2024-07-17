@@ -284,6 +284,7 @@ fn infer_geom_dimension<T: WktNum + FromStr + Default>(
                     tokens.next().unwrap().unwrap();
                     Ok(Dimension::XYZM)
                 }
+                "EMPTY" => Ok(Dimension::XY),
                 _ => Err("Unexpected word before open paren"),
             },
             // Not a word, e.g. an open paren
