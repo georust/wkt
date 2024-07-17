@@ -14,19 +14,19 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
-use crate::{FromTokens, Geometry, WktNum};
+use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LineString<T: WktNum>(pub Vec<Coord<T>>);
 
-impl<T> LineString<T>
+impl<T> From<LineString<T>> for Wkt<T>
 where
     T: WktNum,
 {
-    pub fn as_item(self) -> Geometry<T> {
-        Geometry::LineString(self)
+    fn from(value: LineString<T>) -> Self {
+        Wkt::LineString(value)
     }
 }
 
@@ -63,14 +63,14 @@ where
 #[cfg(test)]
 mod tests {
     use super::{Coord, LineString};
-    use crate::{Geometry, Wkt};
+    use crate::Wkt;
     use std::str::FromStr;
 
     #[test]
     fn basic_linestring() {
         let wkt = Wkt::from_str("LINESTRING (10 -20, -0 -0.5)").ok().unwrap();
-        let coords = match wkt.item {
-            Geometry::LineString(LineString(coords)) => coords,
+        let coords = match wkt {
+            Wkt::LineString(LineString(coords)) => coords,
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());

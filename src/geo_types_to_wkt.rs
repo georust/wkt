@@ -4,7 +4,7 @@ use crate::types::{
     Coord, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
     Polygon,
 };
-use crate::{Geometry, ToWkt, Wkt};
+use crate::{ToWkt, Wkt};
 
 /// # Examples
 /// ```
@@ -49,9 +49,7 @@ where
     T: CoordNum + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        Wkt {
-            item: g_point_to_w_point(self).as_item(),
-        }
+        Wkt::Point(g_point_to_w_point(self))
     }
 }
 
@@ -69,9 +67,7 @@ where
     T: CoordNum + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        Wkt {
-            item: g_line_to_w_linestring(self).as_item(),
-        }
+        g_line_to_w_linestring(self).into()
     }
 }
 
@@ -89,9 +85,7 @@ where
     T: CoordNum + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        Wkt {
-            item: g_linestring_to_w_linestring(self).as_item(),
-        }
+        g_linestring_to_w_linestring(self).into()
     }
 }
 
@@ -109,9 +103,7 @@ where
     T: CoordNum + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        Wkt {
-            item: g_polygon_to_w_polygon(self).as_item(),
-        }
+        g_polygon_to_w_polygon(self).into()
     }
 }
 
@@ -129,9 +121,7 @@ where
     T: CoordNum + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        Wkt {
-            item: g_mpoint_to_w_mpoint(self).as_item(),
-        }
+        g_mpoint_to_w_mpoint(self).into()
     }
 }
 
@@ -151,9 +141,7 @@ where
     T: CoordNum + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        Wkt {
-            item: g_mline_to_w_mline(self).as_item(),
-        }
+        g_mline_to_w_mline(self).into()
     }
 }
 
@@ -175,9 +163,7 @@ where
     T: CoordNum + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        Wkt {
-            item: g_mpolygon_to_w_mpolygon(self).as_item(),
-        }
+        g_mpolygon_to_w_mpolygon(self).into()
     }
 }
 
@@ -197,9 +183,7 @@ where
     T: CoordNum + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        Wkt {
-            item: g_geocol_to_w_geocol(self).as_item(),
-        }
+        g_geocol_to_w_geocol(self).into()
     }
 }
 
@@ -217,9 +201,7 @@ where
     T: CoordNum + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        Wkt {
-            item: g_rect_to_w_polygon(self).as_item(),
-        }
+        g_rect_to_w_polygon(self).into()
     }
 }
 
@@ -237,9 +219,7 @@ where
     T: CoordNum + std::fmt::Display,
 {
     fn to_wkt(&self) -> Wkt<T> {
-        Wkt {
-            item: g_triangle_to_w_polygon(self).as_item(),
-        }
+        g_triangle_to_w_polygon(self).into()
     }
 }
 
@@ -405,37 +385,33 @@ where
     GeometryCollection(w_geoms)
 }
 
-fn g_geom_to_w_geom<T>(g_geom: &geo_types::Geometry<T>) -> Geometry<T>
+fn g_geom_to_w_geom<T>(g_geom: &geo_types::Geometry<T>) -> Wkt<T>
 where
     T: CoordNum,
 {
     match *g_geom {
-        geo_types::Geometry::Point(ref g_point) => g_point_to_w_point(g_point).as_item(),
+        geo_types::Geometry::Point(ref g_point) => g_point_to_w_point(g_point).into(),
 
-        geo_types::Geometry::Line(ref g_line) => g_line_to_w_linestring(g_line).as_item(),
+        geo_types::Geometry::Line(ref g_line) => g_line_to_w_linestring(g_line).into(),
 
-        geo_types::Geometry::LineString(ref g_line) => {
-            g_linestring_to_w_linestring(g_line).as_item()
-        }
+        geo_types::Geometry::LineString(ref g_line) => g_linestring_to_w_linestring(g_line).into(),
 
-        geo_types::Geometry::Triangle(ref g_triangle) => {
-            g_triangle_to_w_polygon(g_triangle).as_item()
-        }
+        geo_types::Geometry::Triangle(ref g_triangle) => g_triangle_to_w_polygon(g_triangle).into(),
 
-        geo_types::Geometry::Rect(ref g_rect) => g_rect_to_w_polygon(g_rect).as_item(),
+        geo_types::Geometry::Rect(ref g_rect) => g_rect_to_w_polygon(g_rect).into(),
 
-        geo_types::Geometry::Polygon(ref g_polygon) => g_polygon_to_w_polygon(g_polygon).as_item(),
+        geo_types::Geometry::Polygon(ref g_polygon) => g_polygon_to_w_polygon(g_polygon).into(),
 
-        geo_types::Geometry::MultiPoint(ref g_mpoint) => g_mpoint_to_w_mpoint(g_mpoint).as_item(),
+        geo_types::Geometry::MultiPoint(ref g_mpoint) => g_mpoint_to_w_mpoint(g_mpoint).into(),
 
-        geo_types::Geometry::MultiLineString(ref g_mline) => g_mline_to_w_mline(g_mline).as_item(),
+        geo_types::Geometry::MultiLineString(ref g_mline) => g_mline_to_w_mline(g_mline).into(),
 
         geo_types::Geometry::MultiPolygon(ref g_mpolygon) => {
-            g_mpolygon_to_w_mpolygon(g_mpolygon).as_item()
+            g_mpolygon_to_w_mpolygon(g_mpolygon).into()
         }
 
         geo_types::Geometry::GeometryCollection(ref g_geocol) => {
-            g_geocol_to_w_geocol(g_geocol).as_item()
+            g_geocol_to_w_geocol(g_geocol).into()
         }
     }
 }
