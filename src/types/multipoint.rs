@@ -14,6 +14,7 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
+use crate::types::Dimension;
 use crate::{FromTokens, Geometry, WktNum};
 use std::fmt;
 use std::str::FromStr;
@@ -55,10 +56,11 @@ impl<T> FromTokens<T> for MultiPoint<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
         let result = FromTokens::comma_many(
             <Point<T> as FromTokens<T>>::from_tokens_with_optional_parens,
             tokens,
+            dim,
         );
         result.map(MultiPoint)
     }

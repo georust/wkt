@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::tokenizer::{PeekableTokens, Token};
+use crate::types::Dimension;
 use crate::{FromTokens, WktNum};
 use std::fmt;
 use std::str::FromStr;
@@ -48,7 +49,7 @@ impl<T> FromTokens<T> for Coord<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
         let x = match tokens.next().transpose()? {
             Some(Token::Number(n)) => n,
             _ => return Err("Expected a number for the X coordinate"),
@@ -61,17 +62,33 @@ where
         let mut z = None;
         let mut m = None;
 
-        if let Some(Ok(Token::Number(_))) = tokens.peek() {
-            z = match tokens.next().transpose()? {
-                Some(Token::Number(n)) => Some(n),
-                _ => None,
-            };
-
-            if let Some(Ok(Token::Number(_))) = tokens.peek() {
-                m = match tokens.next().transpose()? {
-                    Some(Token::Number(n)) => Some(n),
-                    _ => None,
-                };
+        match dim {
+            Dimension::XY => (),
+            Dimension::XYZ => match tokens.next().transpose()? {
+                Some(Token::Number(n)) => {
+                    z = Some(n);
+                }
+                _ => return Err("Expected a number for the Z coordinate"),
+            },
+            Dimension::XYM => match tokens.next().transpose()? {
+                Some(Token::Number(n)) => {
+                    m = Some(n);
+                }
+                _ => return Err("Expected a number for the M coordinate"),
+            },
+            Dimension::XYZM => {
+                match tokens.next().transpose()? {
+                    Some(Token::Number(n)) => {
+                        z = Some(n);
+                    }
+                    _ => return Err("Expected a number for the Z coordinate"),
+                }
+                match tokens.next().transpose()? {
+                    Some(Token::Number(n)) => {
+                        m = Some(n);
+                    }
+                    _ => return Err("Expected a number for the M coordinate"),
+                }
             }
         }
 
