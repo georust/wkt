@@ -7,6 +7,8 @@
 * Bump min version of geo-types, and update geo_types::Coordinate to non-deprecated geo_types::Coord
 * BREAKING: WktNum must implement PartialEq
 * Implement PartialEq for Wkt
+* BREAKING: Simplify Wkt data structure by replacing it with it's only field (formerly known as `item: Geometry`)
+* BREAKING: Replace geometry_variant.as_item() with Wkt::from(geometry_variant)
 
 ## 0.10.3 - 2022-06-22
 
