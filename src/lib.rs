@@ -432,7 +432,7 @@ mod tests {
             .unwrap();
         match wkt {
             Wkt::Point(Point(Some(coord))) => {
-               assert_eq!(coord.x, 10.0);
+                assert_eq!(coord.x, 10.0);
                 assert_eq!(coord.y, 20.1);
                 assert_eq!(coord.z, Some(5.0));
                 assert_eq!(coord.m, Some(80.0));
