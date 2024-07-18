@@ -154,6 +154,28 @@ mod tests {
     }
 
     #[test]
+    fn basic_linestring_zm_one_word() {
+        let wkt = Wkt::from_str("LINESTRINGZM (-117 33 2 3, -116 34 4 5)")
+            .ok()
+            .unwrap();
+        let coords = match wkt {
+            Wkt::LineString(LineString(coords)) => coords,
+            _ => unreachable!(),
+        };
+        assert_eq!(2, coords.len());
+
+        assert_eq!(-117.0, coords[0].x);
+        assert_eq!(33.0, coords[0].y);
+        assert_eq!(Some(2.0), coords[0].z);
+        assert_eq!(Some(3.0), coords[0].m);
+
+        assert_eq!(-116.0, coords[1].x);
+        assert_eq!(34.0, coords[1].y);
+        assert_eq!(Some(4.0), coords[1].z);
+        assert_eq!(Some(5.0), coords[1].m);
+    }
+
+    #[test]
     fn write_empty_linestring() {
         let linestring: LineString<f64> = LineString(vec![]);
 

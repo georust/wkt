@@ -159,33 +159,186 @@ where
         word: &str,
         tokens: &mut PeekableTokens<T>,
     ) -> Result<Self, &'static str> {
+        // Normally Z/M/ZM is separated by a space from the primary WKT word. E.g. `POINT Z`
+        // instead of `POINTZ`. However we wish to support both types (in reading). When written
+        // without a space, `POINTZ` is considered a single word, which means we need to include
+        // matches here.
         match word {
             w if w.eq_ignore_ascii_case("POINT") => {
-                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(tokens);
+                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("POINTZ") => {
+                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZ),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("POINTM") => {
+                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYM),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("POINTZM") => {
+                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZM),
+                );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("LINESTRING") || w.eq_ignore_ascii_case("LINEARRING") => {
-                let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(tokens);
+                let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("LINESTRINGZ") => {
+                let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZ),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("LINESTRINGM") => {
+                let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYM),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("LINESTRINGZM") => {
+                let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZM),
+                );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("POLYGON") => {
-                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(tokens);
+                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("POLYGONZ") => {
+                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZ),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("POLYGONM") => {
+                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYM),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("POLYGONZM") => {
+                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZM),
+                );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTIPOINT") => {
-                let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(tokens);
+                let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("MULTIPOINTZ") => {
+                let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZ),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("MULTIPOINTM") => {
+                let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYM),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("MULTIPOINTZM") => {
+                let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZM),
+                );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTILINESTRING") => {
-                let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(tokens);
+                let x =
+                    <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("MULTILINESTRINGZ") => {
+                let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZ),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("MULTILINESTRINGM") => {
+                let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYM),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("MULTILINESTRINGZM") => {
+                let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZM),
+                );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTIPOLYGON") => {
-                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(tokens);
+                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("MULTIPOLYGONZ") => {
+                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZ),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("MULTIPOLYGONM") => {
+                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYM),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("MULTIPOLYGONZM") => {
+                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZM),
+                );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTION") => {
-                let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(tokens);
+                let x =
+                    <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZ") => {
+                let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZ),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONM") => {
+                let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYM),
+                );
+                x.map(|y| y.into())
+            }
+            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZM") => {
+                let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens,
+                    Some(Dimension::XYZM),
+                );
                 x.map(|y| y.into())
             }
             _ => Err("Invalid type encountered"),
@@ -279,8 +432,15 @@ where
 
     /// The preferred top-level FromTokens API, which additionally checks for the presence of Z, M,
     /// and ZM in the token stream.
-    fn from_tokens_with_header(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
-        let dim = infer_geom_dimension(tokens)?;
+    fn from_tokens_with_header(
+        tokens: &mut PeekableTokens<T>,
+        dim: Option<Dimension>,
+    ) -> Result<Self, &'static str> {
+        let dim = if let Some(dim) = dim {
+            dim
+        } else {
+            infer_geom_dimension(tokens)?
+        };
         FromTokens::from_tokens_with_parens(tokens, dim)
     }
 
