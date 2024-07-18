@@ -83,13 +83,10 @@ use std::str::FromStr;
 use num_traits::{Float, Num, NumCast};
 
 use crate::tokenizer::{PeekableTokens, Token, Tokens};
-use crate::types::LineString;
-use crate::types::MultiLineString;
-use crate::types::MultiPoint;
-use crate::types::MultiPolygon;
-use crate::types::Point;
-use crate::types::Polygon;
-use crate::types::{Dimension, GeometryCollection};
+use crate::types::{
+    Dimension, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
+    Polygon,
+};
 
 mod to_wkt;
 mod tokenizer;
