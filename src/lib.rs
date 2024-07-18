@@ -249,21 +249,21 @@ fn infer_geom_dimension<T: WktNum + FromStr + Default>(
     if let Some(Ok(c)) = tokens.peek() {
         match c {
             // If we match a word check if it's Z/M/ZM and consume the token from the stream
-            Token::Word(x) => match x.as_str() {
-                "Z" => {
+            Token::Word(w) => match w.as_str() {
+                w if w.eq_ignore_ascii_case("Z") => {
                     tokens.next().unwrap().unwrap();
                     Ok(Dimension::XYZ)
                 }
-                "M" => {
+                w if w.eq_ignore_ascii_case("M") => {
                     tokens.next().unwrap().unwrap();
 
                     Ok(Dimension::XYM)
                 }
-                "ZM" => {
+                w if w.eq_ignore_ascii_case("ZM") => {
                     tokens.next().unwrap().unwrap();
                     Ok(Dimension::XYZM)
                 }
-                "EMPTY" => Ok(Dimension::XY),
+                w if w.eq_ignore_ascii_case("EMPTY") => Ok(Dimension::XY),
                 _ => Err("Unexpected word before open paren"),
             },
             // Not a word, e.g. an open paren
