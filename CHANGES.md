@@ -1,13 +1,13 @@
 # Changes
 
-## Unreleased
+## 0.11.0 - 2024-07-24
 
 * Support parsing Z, M, and ZM WKT strings.
 * Changed license field to [SPDX 2.1 license expression](https://spdx.dev/spdx-specification-21-web-version/#h.jxpfx0ykyb60)
 * Bump min version of geo-types, and update geo_types::Coordinate to non-deprecated geo_types::Coord
 * BREAKING: WktNum must implement PartialEq
 * Implement PartialEq for Wkt
-* BREAKING: Simplify Wkt data structure by replacing it with it's only field (formerly known as `item: Geometry`)
+* BREAKING: Simplify Wkt data structure by replacing it with its only field (formerly known as `item: Geometry`)
 * BREAKING: Replace geometry_variant.as_item() with Wkt::from(geometry_variant)
 
 ## 0.10.3 - 2022-06-22
