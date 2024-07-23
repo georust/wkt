@@ -14,6 +14,7 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
+use crate::types::Dimension;
 use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
@@ -34,8 +35,8 @@ impl<T> FromTokens<T> for LineString<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
-        let result = FromTokens::comma_many(<Coord<T> as FromTokens<T>>::from_tokens, tokens);
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+        let result = FromTokens::comma_many(<Coord<T> as FromTokens<T>>::from_tokens, tokens, dim);
         result.map(LineString)
     }
 }
@@ -84,6 +85,94 @@ mod tests {
         assert_eq!(-0.5, coords[1].y);
         assert_eq!(None, coords[1].z);
         assert_eq!(None, coords[1].m);
+    }
+
+    #[test]
+    fn basic_linestring_z() {
+        let wkt = Wkt::from_str("LINESTRING Z (-117 33 2, -116 34 4)")
+            .ok()
+            .unwrap();
+        let coords = match wkt {
+            Wkt::LineString(LineString(coords)) => coords,
+            _ => unreachable!(),
+        };
+        assert_eq!(2, coords.len());
+
+        assert_eq!(-117.0, coords[0].x);
+        assert_eq!(33.0, coords[0].y);
+        assert_eq!(Some(2.0), coords[0].z);
+        assert_eq!(None, coords[0].m);
+
+        assert_eq!(-116.0, coords[1].x);
+        assert_eq!(34.0, coords[1].y);
+        assert_eq!(Some(4.0), coords[1].z);
+        assert_eq!(None, coords[1].m);
+    }
+
+    #[test]
+    fn basic_linestring_m() {
+        let wkt = Wkt::from_str("LINESTRING M (-117 33 2, -116 34 4)")
+            .ok()
+            .unwrap();
+        let coords = match wkt {
+            Wkt::LineString(LineString(coords)) => coords,
+            _ => unreachable!(),
+        };
+        assert_eq!(2, coords.len());
+
+        assert_eq!(-117.0, coords[0].x);
+        assert_eq!(33.0, coords[0].y);
+        assert_eq!(None, coords[0].z);
+        assert_eq!(Some(2.0), coords[0].m);
+
+        assert_eq!(-116.0, coords[1].x);
+        assert_eq!(34.0, coords[1].y);
+        assert_eq!(None, coords[1].z);
+        assert_eq!(Some(4.0), coords[1].m);
+    }
+
+    #[test]
+    fn basic_linestring_zm() {
+        let wkt = Wkt::from_str("LINESTRING ZM (-117 33 2 3, -116 34 4 5)")
+            .ok()
+            .unwrap();
+        let coords = match wkt {
+            Wkt::LineString(LineString(coords)) => coords,
+            _ => unreachable!(),
+        };
+        assert_eq!(2, coords.len());
+
+        assert_eq!(-117.0, coords[0].x);
+        assert_eq!(33.0, coords[0].y);
+        assert_eq!(Some(2.0), coords[0].z);
+        assert_eq!(Some(3.0), coords[0].m);
+
+        assert_eq!(-116.0, coords[1].x);
+        assert_eq!(34.0, coords[1].y);
+        assert_eq!(Some(4.0), coords[1].z);
+        assert_eq!(Some(5.0), coords[1].m);
+    }
+
+    #[test]
+    fn basic_linestring_zm_one_word() {
+        let wkt = Wkt::from_str("LINESTRINGZM (-117 33 2 3, -116 34 4 5)")
+            .ok()
+            .unwrap();
+        let coords = match wkt {
+            Wkt::LineString(LineString(coords)) => coords,
+            _ => unreachable!(),
+        };
+        assert_eq!(2, coords.len());
+
+        assert_eq!(-117.0, coords[0].x);
+        assert_eq!(33.0, coords[0].y);
+        assert_eq!(Some(2.0), coords[0].z);
+        assert_eq!(Some(3.0), coords[0].m);
+
+        assert_eq!(-116.0, coords[1].x);
+        assert_eq!(34.0, coords[1].y);
+        assert_eq!(Some(4.0), coords[1].z);
+        assert_eq!(Some(5.0), coords[1].m);
     }
 
     #[test]

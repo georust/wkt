@@ -14,6 +14,7 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
+use crate::types::Dimension;
 use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
@@ -59,10 +60,11 @@ impl<T> FromTokens<T> for Polygon<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
         let result = FromTokens::comma_many(
             <LineString<T> as FromTokens<T>>::from_tokens_with_parens,
             tokens,
+            dim,
         );
         result.map(Polygon)
     }

@@ -14,6 +14,7 @@
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
+use crate::types::Dimension;
 use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
@@ -55,10 +56,11 @@ impl<T> FromTokens<T> for MultiPoint<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
         let result = FromTokens::comma_many(
             <Point<T> as FromTokens<T>>::from_tokens_with_optional_parens,
             tokens,
+            dim,
         );
         result.map(MultiPoint)
     }
@@ -81,6 +83,49 @@ mod tests {
         assert_eq!(2, points.len());
     }
 
+    #[test]
+    fn basic_multipoint_zm() {
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT ZM (0 0 4 3, 1 2 4 5)")
+            .ok()
+            .unwrap();
+        let points = match wkt {
+            Wkt::MultiPoint(MultiPoint(points)) => points,
+            _ => unreachable!(),
+        };
+        assert_eq!(2, points.len());
+
+        assert_eq!(0.0, points[0].0.as_ref().unwrap().x);
+        assert_eq!(0.0, points[0].0.as_ref().unwrap().y);
+        assert_eq!(Some(4.0), points[0].0.as_ref().unwrap().z);
+        assert_eq!(Some(3.0), points[0].0.as_ref().unwrap().m);
+
+        assert_eq!(1.0, points[1].0.as_ref().unwrap().x);
+        assert_eq!(2.0, points[1].0.as_ref().unwrap().y);
+        assert_eq!(Some(4.0), points[1].0.as_ref().unwrap().z);
+        assert_eq!(Some(5.0), points[1].0.as_ref().unwrap().m);
+    }
+
+    #[test]
+    fn basic_multipoint_zm_extra_parents() {
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT ZM ((0 0 4 3), (1 2 4 5))")
+            .ok()
+            .unwrap();
+        let points = match wkt {
+            Wkt::MultiPoint(MultiPoint(points)) => points,
+            _ => unreachable!(),
+        };
+        assert_eq!(2, points.len());
+
+        assert_eq!(0.0, points[0].0.as_ref().unwrap().x);
+        assert_eq!(0.0, points[0].0.as_ref().unwrap().y);
+        assert_eq!(Some(4.0), points[0].0.as_ref().unwrap().z);
+        assert_eq!(Some(3.0), points[0].0.as_ref().unwrap().m);
+
+        assert_eq!(1.0, points[1].0.as_ref().unwrap().x);
+        assert_eq!(2.0, points[1].0.as_ref().unwrap().y);
+        assert_eq!(Some(4.0), points[1].0.as_ref().unwrap().z);
+        assert_eq!(Some(5.0), points[1].0.as_ref().unwrap().m);
+    }
     #[test]
     fn postgis_style_multipoint() {
         let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT (8 4, 4 0)").unwrap();

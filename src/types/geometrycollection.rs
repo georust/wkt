@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::tokenizer::{PeekableTokens, Token};
+use crate::types::Dimension;
 use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
@@ -53,7 +54,10 @@ impl<T> FromTokens<T> for GeometryCollection<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>) -> Result<Self, &'static str> {
+    // Unsure if the dimension should be used in parsing GeometryCollection; is it
+    // GEOMETRYCOLLECTION ( POINT Z (...) , POINT ZM (...))
+    // or does a geometry collection have a known dimension?
+    fn from_tokens(tokens: &mut PeekableTokens<T>, _dim: Dimension) -> Result<Self, &'static str> {
         let mut items = Vec::new();
 
         let word = match tokens.next().transpose()? {

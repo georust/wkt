@@ -13,6 +13,7 @@
 // limitations under the License.
 
 pub use self::coord::Coord;
+pub(crate) use self::dimension::Dimension;
 pub use self::geometrycollection::GeometryCollection;
 pub use self::linestring::LineString;
 pub use self::multilinestring::MultiLineString;
@@ -22,6 +23,7 @@ pub use self::point::Point;
 pub use self::polygon::Polygon;
 
 mod coord;
+mod dimension;
 mod geometrycollection;
 mod linestring;
 mod multilinestring;

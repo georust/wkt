@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Support parsing Z, M, and ZM WKT strings.
 * Changed license field to [SPDX 2.1 license expression](https://spdx.dev/spdx-specification-21-web-version/#h.jxpfx0ykyb60)
 * Bump min version of geo-types, and update geo_types::Coordinate to non-deprecated geo_types::Coord
 * BREAKING: WktNum must implement PartialEq
