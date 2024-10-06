@@ -94,6 +94,10 @@ mod tokenizer;
 /// `WKT` primitive types and collections
 pub mod types;
 
+mod infer_type;
+
+pub use infer_type::infer_type;
+
 #[cfg(feature = "geo-types")]
 extern crate geo_types;
 
