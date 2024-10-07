@@ -112,6 +112,19 @@ mod test {
     }
 
     #[test]
+    fn test_with_leading_whitespace() {
+        assert_eq!(
+            infer_type(" POINT (10 20.1)").unwrap(),
+            (GeometryType::Point, Some(Dimension::XY))
+        );
+
+        assert_eq!(
+            infer_type("POINT EMPTY").unwrap(),
+            (GeometryType::Point, None)
+        );
+    }
+
+    #[test]
     fn lowercase_point() {
         assert_eq!(
             infer_type("point EMPTY").unwrap(),
