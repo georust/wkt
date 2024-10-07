@@ -65,19 +65,20 @@ pub fn infer_type(input: &str) -> Result<(GeometryType, Option<Dimension>), Stri
             return Err("Invalid WKT; no '(' character and not EMPTY".to_string());
         }
 
-        if input.starts_with(POINT) {
+        // We use contains instead of starts_with to allow leading whitespace
+        if input.contains(POINT) {
             Ok((GeometryType::Point, None))
-        } else if input.starts_with(LINESTRING) {
+        } else if input.contains(LINESTRING) {
             Ok((GeometryType::LineString, None))
-        } else if input.starts_with(POLYGON) {
+        } else if input.contains(POLYGON) {
             Ok((GeometryType::Polygon, None))
-        } else if input.starts_with(MULTIPOINT) {
+        } else if input.contains(MULTIPOINT) {
             Ok((GeometryType::MultiPoint, None))
-        } else if input.starts_with(MULTILINESTRING) {
+        } else if input.contains(MULTILINESTRING) {
             Ok((GeometryType::MultiLineString, None))
-        } else if input.starts_with(MULTIPOLYGON) {
+        } else if input.contains(MULTIPOLYGON) {
             Ok((GeometryType::MultiPolygon, None))
-        } else if input.starts_with(GEOMETRYCOLLECTION) {
+        } else if input.contains(GEOMETRYCOLLECTION) {
             Ok((GeometryType::GeometryCollection, None))
         } else {
             return Err(format!("Unsupported WKT prefix {}", input));
