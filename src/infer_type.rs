@@ -27,6 +27,8 @@ const GEOMETRYCOLLECTION: &str = "GEOMETRYCOLLECTION";
 /// );
 /// ```
 pub fn infer_type(input: &str) -> Result<(GeometryType, Option<Dimension>), String> {
+    let input = input.trim_start();
+
     if let Some((prefix, _suffix)) = input.split_once("(") {
         let prefix = prefix.to_uppercase();
 
@@ -65,20 +67,19 @@ pub fn infer_type(input: &str) -> Result<(GeometryType, Option<Dimension>), Stri
             return Err("Invalid WKT; no '(' character and not EMPTY".to_string());
         }
 
-        // We use contains instead of starts_with to allow leading whitespace
-        if input.contains(POINT) {
+        if input.starts_with(POINT) {
             Ok((GeometryType::Point, None))
-        } else if input.contains(LINESTRING) {
+        } else if input.starts_with(LINESTRING) {
             Ok((GeometryType::LineString, None))
-        } else if input.contains(POLYGON) {
+        } else if input.starts_with(POLYGON) {
             Ok((GeometryType::Polygon, None))
-        } else if input.contains(MULTIPOINT) {
+        } else if input.starts_with(MULTIPOINT) {
             Ok((GeometryType::MultiPoint, None))
-        } else if input.contains(MULTILINESTRING) {
+        } else if input.starts_with(MULTILINESTRING) {
             Ok((GeometryType::MultiLineString, None))
-        } else if input.contains(MULTIPOLYGON) {
+        } else if input.starts_with(MULTIPOLYGON) {
             Ok((GeometryType::MultiPolygon, None))
-        } else if input.contains(GEOMETRYCOLLECTION) {
+        } else if input.starts_with(GEOMETRYCOLLECTION) {
             Ok((GeometryType::GeometryCollection, None))
         } else {
             return Err(format!("Unsupported WKT prefix {}", input));
