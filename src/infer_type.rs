@@ -119,7 +119,7 @@ mod test {
         );
 
         assert_eq!(
-            infer_type("POINT EMPTY").unwrap(),
+            infer_type(" POINT EMPTY").unwrap(),
             (GeometryType::Point, None)
         );
     }
