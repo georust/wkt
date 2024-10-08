@@ -1,5 +1,9 @@
 # Changes
 
+## Unreleased
+
+* Add an `infer_type` function to extract only the geometry type and dimension from a WKT string.
+
 ## 0.11.0 - 2024-07-24
 
 * Support parsing Z, M, and ZM WKT strings.
