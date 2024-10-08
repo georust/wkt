@@ -41,25 +41,39 @@ where
     }
 }
 
-impl<T> fmt::Display for LineString<T>
-where
-    T: WktNum + fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if self.0.is_empty() {
-            f.write_str("LINESTRING EMPTY")
-        } else {
-            let strings = self
-                .0
-                .iter()
-                .map(|c| format!("{}", c))
-                .collect::<Vec<_>>()
-                .join(",");
+macro_rules! impl_display {
+    ($t: ident) => {
+        impl fmt::Display for LineString<$t> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                if self.0.is_empty() {
+                    f.write_str("LINESTRING EMPTY")
+                } else {
+                    let strings = self
+                        .0
+                        .iter()
+                        .map(|c| format!("{}", c))
+                        .collect::<Vec<_>>()
+                        .join(",");
 
-            write!(f, "LINESTRING({})", strings)
+                    write!(f, "LINESTRING({})", strings)
+                }
+            }
         }
-    }
+    };
 }
+
+impl_display!(f32);
+impl_display!(f64);
+impl_display!(u8);
+impl_display!(u16);
+impl_display!(u32);
+impl_display!(u64);
+impl_display!(usize);
+impl_display!(i8);
+impl_display!(i16);
+impl_display!(i32);
+impl_display!(i64);
+impl_display!(isize);
 
 #[cfg(test)]
 mod tests {

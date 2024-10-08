@@ -31,30 +31,44 @@ where
     }
 }
 
-impl<T> fmt::Display for Point<T>
-where
-    T: WktNum + fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        match self.0 {
-            Some(ref coord) => {
-                let mut lrs = String::new();
-                if coord.z.is_some() {
-                    lrs += "Z";
-                }
-                if coord.m.is_some() {
-                    lrs += "M";
-                }
-                if !lrs.is_empty() {
-                    lrs = " ".to_string() + &lrs;
-                }
+macro_rules! impl_display {
+    ($t: ident) => {
+        impl fmt::Display for Point<$t> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                match self.0 {
+                    Some(ref coord) => {
+                        let mut lrs = String::new();
+                        if coord.z.is_some() {
+                            lrs += "Z";
+                        }
+                        if coord.m.is_some() {
+                            lrs += "M";
+                        }
+                        if !lrs.is_empty() {
+                            lrs = " ".to_string() + &lrs;
+                        }
 
-                write!(f, "POINT{}({})", lrs, coord)
+                        write!(f, "POINT{}({})", lrs, coord)
+                    }
+                    None => f.write_str("POINT EMPTY"),
+                }
             }
-            None => f.write_str("POINT EMPTY"),
         }
-    }
+    };
 }
+
+impl_display!(f32);
+impl_display!(f64);
+impl_display!(u8);
+impl_display!(u16);
+impl_display!(u32);
+impl_display!(u64);
+impl_display!(usize);
+impl_display!(i8);
+impl_display!(i16);
+impl_display!(i32);
+impl_display!(i64);
+impl_display!(isize);
 
 impl<T> FromTokens<T> for Point<T>
 where
@@ -173,7 +187,7 @@ mod tests {
             m: Some(10.),
         }));
 
-        assert_eq!("POINT M(10.12345 20.67891 10)", format!("{}", point));
+        assert_eq!("POINT M(10.12345 20.67891 10.0)", format!("{}", point));
     }
 
     #[test]
@@ -186,7 +200,7 @@ mod tests {
         }));
 
         assert_eq!(
-            "POINT ZM(10.12345 20.67891 -32.56455 10)",
+            "POINT ZM(10.12345 20.67891 -32.56455 10.0)",
             format!("{}", point)
         );
     }

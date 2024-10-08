@@ -4,6 +4,7 @@ use crate::{Wkt, WktNum};
 pub trait ToWkt<T>
 where
     T: WktNum + std::fmt::Display,
+    Wkt<T>: std::fmt::Display,
 {
     /// Converts the value of `self` to an [`Wkt`] struct.
     ///

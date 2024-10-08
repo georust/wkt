@@ -29,21 +29,63 @@ where
     pub m: Option<T>,
 }
 
-impl<T> fmt::Display for Coord<T>
-where
-    T: WktNum + fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "{} {}", self.x, self.y)?;
-        if let Some(z) = self.z {
-            write!(f, " {}", z)?;
+macro_rules! impl_display_for_float {
+    ($t: ident) => {
+        impl fmt::Display for Coord<$t> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                let mut buffer = ryu::Buffer::new();
+                let x = buffer.format(self.x);
+
+                let mut buffer = ryu::Buffer::new();
+                let y = buffer.format(self.y);
+
+                write!(f, "{} {}", x, y)?;
+                if let Some(z) = self.z {
+                    let mut buffer = ryu::Buffer::new();
+                    let z = buffer.format(z);
+                    write!(f, " {}", z)?;
+                }
+                if let Some(m) = self.m {
+                    let mut buffer = ryu::Buffer::new();
+                    let m = buffer.format(m);
+                    write!(f, " {}", m)?;
+                }
+                Ok(())
+            }
         }
-        if let Some(m) = self.m {
-            write!(f, " {}", m)?;
-        }
-        Ok(())
-    }
+    };
 }
+
+macro_rules! impl_display_for_int {
+    ($t: ident) => {
+        impl fmt::Display for Coord<$t> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                write!(f, "{} {}", self.x, self.y)?;
+                if let Some(z) = self.z {
+                    write!(f, " {}", z)?;
+                }
+                if let Some(m) = self.m {
+                    write!(f, " {}", m)?;
+                }
+                Ok(())
+            }
+        }
+    };
+}
+
+impl_display_for_float!(f32);
+impl_display_for_float!(f64);
+
+impl_display_for_int!(u8);
+impl_display_for_int!(u16);
+impl_display_for_int!(u32);
+impl_display_for_int!(u64);
+impl_display_for_int!(usize);
+impl_display_for_int!(i8);
+impl_display_for_int!(i16);
+impl_display_for_int!(i32);
+impl_display_for_int!(i64);
+impl_display_for_int!(isize);
 
 impl<T> FromTokens<T> for Coord<T>
 where
@@ -133,7 +175,7 @@ mod tests {
             m: Some(10.),
         };
 
-        assert_eq!("10.1 20.2 10", format!("{}", coord));
+        assert_eq!("10.1 20.2 10.0", format!("{}", coord));
     }
 
     #[test]
@@ -145,6 +187,6 @@ mod tests {
             m: Some(10.),
         };
 
-        assert_eq!("10.1 20.2 -30.3 10", format!("{}", coord));
+        assert_eq!("10.1 20.2 -30.3 10.0", format!("{}", coord));
     }
 }
