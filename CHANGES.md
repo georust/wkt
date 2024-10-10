@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased
+## 0.11.1 - 2024-10-10
 
 * Add an `infer_type` function to extract only the geometry type and dimension from a WKT string.
 
