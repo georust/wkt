@@ -30,25 +30,39 @@ where
     }
 }
 
-impl<T> fmt::Display for GeometryCollection<T>
-where
-    T: WktNum + fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if self.0.is_empty() {
-            f.write_str("GEOMETRYCOLLECTION EMPTY")
-        } else {
-            let strings = self
-                .0
-                .iter()
-                .map(|geometry| format!("{}", geometry))
-                .collect::<Vec<_>>()
-                .join(",");
+macro_rules! impl_display {
+    ($t: ident) => {
+        impl fmt::Display for GeometryCollection<$t> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                if self.0.is_empty() {
+                    f.write_str("GEOMETRYCOLLECTION EMPTY")
+                } else {
+                    let strings = self
+                        .0
+                        .iter()
+                        .map(|geometry| format!("{}", geometry))
+                        .collect::<Vec<_>>()
+                        .join(",");
 
-            write!(f, "GEOMETRYCOLLECTION({})", strings)
+                    write!(f, "GEOMETRYCOLLECTION({})", strings)
+                }
+            }
         }
-    }
+    };
 }
+
+impl_display!(f32);
+impl_display!(f64);
+impl_display!(u8);
+impl_display!(u16);
+impl_display!(u32);
+impl_display!(u64);
+impl_display!(usize);
+impl_display!(i8);
+impl_display!(i16);
+impl_display!(i32);
+impl_display!(i64);
+impl_display!(isize);
 
 impl<T> FromTokens<T> for GeometryCollection<T>
 where
@@ -288,9 +302,9 @@ mod tests {
 
         assert_eq!(
             "GEOMETRYCOLLECTION(\
-             POINT(10 20),\
+             POINT(10.0 20.0),\
              MULTIPOINT((10.1 20.2),(30.3 40.4)),\
-             LINESTRING(10 20,30 40),\
+             LINESTRING(10.0 20.0,30.0 40.0),\
              POLYGON((0 0,20 40,40 0,0 0)),\
              MULTILINESTRING((10.1 20.2,30.3 40.4),(50.5 60.6,70.7 80.8)),\
              MULTIPOLYGON(((0 0,20 40,40 0,0 0)),((40 40,20 45,45 30,40 40)))\

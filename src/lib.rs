@@ -50,7 +50,7 @@
 //! use geo_types::Point;
 //!
 //! let point: Point<f64> = Point::new(1.0, 2.0);
-//! assert_eq!(point.wkt_string(), "POINT(1 2)");
+//! assert_eq!(point.wkt_string(), "POINT(1.0 2.0)");
 //! ```
 //!
 //! ## Read or write your own geometry types
@@ -135,10 +135,22 @@ pub use deserialize::geo_types::deserialize_geometry;
 pub use deserialize::geo_types::deserialize_point;
 
 pub trait WktNum: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {}
-impl<T> WktNum for T where T: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {}
+impl WktNum for f32 {}
+impl WktNum for f64 {}
+impl WktNum for u8 {}
+impl WktNum for u16 {}
+impl WktNum for u32 {}
+impl WktNum for u64 {}
+impl WktNum for usize {}
+impl WktNum for i8 {}
+impl WktNum for i16 {}
+impl WktNum for i32 {}
+impl WktNum for i64 {}
+impl WktNum for isize {}
 
 pub trait WktFloat: WktNum + Float {}
-impl<T> WktFloat for T where T: WktNum + Float {}
+impl WktFloat for f32 {}
+impl WktFloat for f64 {}
 
 #[derive(Clone, Debug, PartialEq)]
 /// All supported WKT geometry [`types`]
@@ -350,22 +362,36 @@ where
     }
 }
 
-impl<T> fmt::Display for Wkt<T>
-where
-    T: WktNum + fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        match self {
-            Wkt::Point(point) => point.fmt(f),
-            Wkt::LineString(linestring) => linestring.fmt(f),
-            Wkt::Polygon(polygon) => polygon.fmt(f),
-            Wkt::MultiPoint(multipoint) => multipoint.fmt(f),
-            Wkt::MultiLineString(multilinstring) => multilinstring.fmt(f),
-            Wkt::MultiPolygon(multipolygon) => multipolygon.fmt(f),
-            Wkt::GeometryCollection(geometrycollection) => geometrycollection.fmt(f),
+macro_rules! impl_display {
+    ($t: ident) => {
+        impl fmt::Display for Wkt<$t> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                match self {
+                    Wkt::Point(point) => point.fmt(f),
+                    Wkt::LineString(linestring) => linestring.fmt(f),
+                    Wkt::Polygon(polygon) => polygon.fmt(f),
+                    Wkt::MultiPoint(multipoint) => multipoint.fmt(f),
+                    Wkt::MultiLineString(multilinstring) => multilinstring.fmt(f),
+                    Wkt::MultiPolygon(multipolygon) => multipolygon.fmt(f),
+                    Wkt::GeometryCollection(geometrycollection) => geometrycollection.fmt(f),
+                }
+            }
         }
-    }
+    };
 }
+
+impl_display!(f32);
+impl_display!(f64);
+impl_display!(u8);
+impl_display!(u16);
+impl_display!(u32);
+impl_display!(u64);
+impl_display!(usize);
+impl_display!(i8);
+impl_display!(i16);
+impl_display!(i32);
+impl_display!(i64);
+impl_display!(isize);
 
 impl<T> Wkt<T>
 where
@@ -629,6 +655,6 @@ mod tests {
     fn test_display_on_wkt() {
         let wktls: Wkt<f64> = Wkt::from_str("LINESTRING(10 20, 20 30)").unwrap();
 
-        assert_eq!(wktls.to_string(), "LINESTRING(10 20,20 30)");
+        assert_eq!(wktls.to_string(), "LINESTRING(10.0 20.0,20.0 30.0)");
     }
 }
