@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use geo_traits::{LineStringTrait, MultiLineStringTrait};
+
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
 use crate::types::Dimension;
@@ -67,6 +69,48 @@ where
             dim,
         );
         result.map(MultiLineString)
+    }
+}
+
+impl<T: WktNum> MultiLineStringTrait for MultiLineString<T> {
+    type T = T;
+    type LineStringType<'a> = &'a LineString<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        if self.0.is_empty() {
+            geo_traits::Dimensions::XY
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn num_line_strings(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+        &self.0[i]
+    }
+}
+
+impl<T: WktNum> MultiLineStringTrait for &MultiLineString<T> {
+    type T = T;
+    type LineStringType<'a> = &'a LineString<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        if self.0.is_empty() {
+            geo_traits::Dimensions::XY
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn num_line_strings(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+        &self.0[i]
     }
 }
 

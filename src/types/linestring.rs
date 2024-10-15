@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use geo_traits::{LineStringTrait, PointTrait};
+
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
 use crate::types::Dimension;
@@ -58,6 +60,48 @@ where
 
             write!(f, "LINESTRING({})", strings)
         }
+    }
+}
+
+impl<T: WktNum> LineStringTrait for LineString<T> {
+    type T = T;
+    type PointType<'a> = &'a Coord<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        if self.0.is_empty() {
+            geo_traits::Dimensions::XY
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn num_points(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
+        &self.0[i]
+    }
+}
+
+impl<T: WktNum> LineStringTrait for &LineString<T> {
+    type T = T;
+    type PointType<'a> = &'a Coord<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        if self.0.is_empty() {
+            geo_traits::Dimensions::XY
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn num_points(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
+        &self.0[i]
     }
 }
 

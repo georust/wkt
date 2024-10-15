@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use geo_traits::{GeometryCollectionTrait, GeometryTrait};
+
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
 use crate::{FromTokens, Wkt, WktNum};
@@ -81,6 +83,27 @@ where
         }
 
         Ok(GeometryCollection(items))
+    }
+}
+
+impl<T: WktNum> GeometryCollectionTrait for GeometryCollection<T> {
+    type T = T;
+    type GeometryType<'a> = &'a Wkt<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        if self.0.is_empty() {
+            geo_traits::Dimensions::XY
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn num_geometries(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
+        &self.0[i]
     }
 }
 
