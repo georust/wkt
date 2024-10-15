@@ -153,7 +153,7 @@ impl<T: WktNum> PointTrait for &Coord<T> {
             (true, true) => geo_traits::Dimensions::XYZM,
             (true, false) => geo_traits::Dimensions::XYZ,
             (false, true) => geo_traits::Dimensions::XYM,
-            (false, false) => geo_traits::Dimensions::XYM,
+            (false, false) => geo_traits::Dimensions::XY,
         }
     }
 
