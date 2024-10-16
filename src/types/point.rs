@@ -75,8 +75,13 @@ impl<T: WktNum> PointTrait for Point<T> {
         if let Some(coord) = &self.0 {
             coord.dim()
         } else {
-            geo_traits::Dimensions::XY
+            // TODO: infer dimension from empty WKT
+            geo_traits::Dimensions::Xy
         }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_none()
     }
 
     fn x(&self) -> Self::T {
@@ -99,8 +104,13 @@ impl<T: WktNum> PointTrait for &Point<T> {
         if let Some(coord) = &self.0 {
             coord.dim()
         } else {
-            geo_traits::Dimensions::XY
+            // TODO: infer dimension from empty WKT
+            geo_traits::Dimensions::Xy
         }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_none()
     }
 
     fn x(&self) -> Self::T {

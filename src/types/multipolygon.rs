@@ -82,8 +82,9 @@ impl<T: WktNum> MultiPolygonTrait for MultiPolygon<T> {
     type PolygonType<'a> = &'a Polygon<T> where Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
+        // TODO: infer dimension from empty WKT
         if self.0.is_empty() {
-            geo_traits::Dimensions::XY
+            geo_traits::Dimensions::Xy
         } else {
             self.0[0].dim()
         }
@@ -103,8 +104,9 @@ impl<T: WktNum> MultiPolygonTrait for &MultiPolygon<T> {
     type PolygonType<'a> = &'a Polygon<T> where Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
+        // TODO: infer dimension from empty WKT
         if self.0.is_empty() {
-            geo_traits::Dimensions::XY
+            geo_traits::Dimensions::Xy
         } else {
             self.0[0].dim()
         }

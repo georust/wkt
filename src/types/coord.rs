@@ -103,10 +103,10 @@ impl<T: WktNum> PointTrait for Coord<T> {
 
     fn dim(&self) -> geo_traits::Dimensions {
         match (self.z.is_some(), self.m.is_some()) {
-            (true, true) => geo_traits::Dimensions::XYZM,
-            (true, false) => geo_traits::Dimensions::XYZ,
-            (false, true) => geo_traits::Dimensions::XYM,
-            (false, false) => geo_traits::Dimensions::XYM,
+            (true, true) => geo_traits::Dimensions::Xyzm,
+            (true, false) => geo_traits::Dimensions::Xyz,
+            (false, true) => geo_traits::Dimensions::Xym,
+            (false, false) => geo_traits::Dimensions::Xy,
         }
     }
 
@@ -116,6 +116,11 @@ impl<T: WktNum> PointTrait for Coord<T> {
 
     fn y(&self) -> Self::T {
         self.y
+    }
+
+    fn is_empty(&self) -> bool {
+        // the Coord is never empty; the Point contains an `Option<Coord>` and thus may be empty.
+        false
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -150,11 +155,16 @@ impl<T: WktNum> PointTrait for &Coord<T> {
 
     fn dim(&self) -> geo_traits::Dimensions {
         match (self.z.is_some(), self.m.is_some()) {
-            (true, true) => geo_traits::Dimensions::XYZM,
-            (true, false) => geo_traits::Dimensions::XYZ,
-            (false, true) => geo_traits::Dimensions::XYM,
-            (false, false) => geo_traits::Dimensions::XY,
+            (true, true) => geo_traits::Dimensions::Xyzm,
+            (true, false) => geo_traits::Dimensions::Xyz,
+            (false, true) => geo_traits::Dimensions::Xym,
+            (false, false) => geo_traits::Dimensions::Xy,
         }
+    }
+
+    fn is_empty(&self) -> bool {
+        // the Coord is never empty; the Point contains an `Option<Coord>` and thus may be empty.
+        false
     }
 
     fn x(&self) -> Self::T {
