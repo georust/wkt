@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use geo_traits::PointTrait;
+
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
 use crate::types::Dimension;
@@ -66,6 +68,63 @@ where
     }
 }
 
+impl<T: WktNum> PointTrait for Point<T> {
+    type T = T;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        if let Some(coord) = &self.0 {
+            coord.dim()
+        } else {
+            // TODO: infer dimension from empty WKT
+            geo_traits::Dimensions::Xy
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_none()
+    }
+
+    fn x(&self) -> Self::T {
+        self.0.as_ref().unwrap().x()
+    }
+
+    fn y(&self) -> Self::T {
+        self.0.as_ref().unwrap().y()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.0.as_ref().unwrap().nth_unchecked(n)
+    }
+}
+
+impl<T: WktNum> PointTrait for &Point<T> {
+    type T = T;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        if let Some(coord) = &self.0 {
+            coord.dim()
+        } else {
+            // TODO: infer dimension from empty WKT
+            geo_traits::Dimensions::Xy
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_none()
+    }
+
+    fn x(&self) -> Self::T {
+        self.0.as_ref().unwrap().x()
+    }
+
+    fn y(&self) -> Self::T {
+        self.0.as_ref().unwrap().y()
+    }
+
+    fn nth_unchecked(&self, n: usize) -> Self::T {
+        self.0.as_ref().unwrap().nth_unchecked(n)
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::{Coord, Point};
