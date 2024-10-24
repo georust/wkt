@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::{LineStringTrait, PointTrait};
+use geo_traits::{CoordTrait, LineStringTrait};
 
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
@@ -65,7 +65,7 @@ where
 
 impl<T: WktNum> LineStringTrait for LineString<T> {
     type T = T;
-    type PointType<'a> = &'a Coord<T> where Self: 'a;
+    type CoordType<'a> = &'a Coord<T> where Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT
@@ -76,18 +76,18 @@ impl<T: WktNum> LineStringTrait for LineString<T> {
         }
     }
 
-    fn num_points(&self) -> usize {
+    fn num_coords(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         &self.0[i]
     }
 }
 
 impl<T: WktNum> LineStringTrait for &LineString<T> {
     type T = T;
-    type PointType<'a> = &'a Coord<T> where Self: 'a;
+    type CoordType<'a> = &'a Coord<T> where Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT
@@ -98,11 +98,11 @@ impl<T: WktNum> LineStringTrait for &LineString<T> {
         }
     }
 
-    fn num_points(&self) -> usize {
+    fn num_coords(&self) -> usize {
         self.0.len()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         &self.0[i]
     }
 }

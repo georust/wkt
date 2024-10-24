@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::PointTrait;
+use geo_traits::CoordTrait;
 
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
@@ -98,7 +98,7 @@ where
     }
 }
 
-impl<T: WktNum> PointTrait for Coord<T> {
+impl<T: WktNum> CoordTrait for Coord<T> {
     type T = T;
 
     fn dim(&self) -> geo_traits::Dimensions {
@@ -116,11 +116,6 @@ impl<T: WktNum> PointTrait for Coord<T> {
 
     fn y(&self) -> Self::T {
         self.y
-    }
-
-    fn is_empty(&self) -> bool {
-        // the Coord is never empty; the Point contains an `Option<Coord>` and thus may be empty.
-        false
     }
 
     fn nth_unchecked(&self, n: usize) -> Self::T {
@@ -150,7 +145,7 @@ impl<T: WktNum> PointTrait for Coord<T> {
     }
 }
 
-impl<T: WktNum> PointTrait for &Coord<T> {
+impl<T: WktNum> CoordTrait for &Coord<T> {
     type T = T;
 
     fn dim(&self) -> geo_traits::Dimensions {
@@ -160,11 +155,6 @@ impl<T: WktNum> PointTrait for &Coord<T> {
             (false, true) => geo_traits::Dimensions::Xym,
             (false, false) => geo_traits::Dimensions::Xy,
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        // the Coord is never empty; the Point contains an `Option<Coord>` and thus may be empty.
-        false
     }
 
     fn x(&self) -> Self::T {
