@@ -96,7 +96,7 @@ pub fn polygon_to_wkt<T: CoordNum + WktNum + fmt::Display, G: PolygonTrait<T = T
     let size = PhysicalCoordinateDimension::from(dim);
     if let Some(exterior) = polygon.exterior() {
         if exterior.num_coords() != 0 {
-            f.write_str(" (")?;
+            f.write_str("(")?;
             add_coord_sequence(exterior.coords(), f, size)?;
 
             for interior in polygon.interiors() {
@@ -137,17 +137,17 @@ pub fn multi_point_to_wkt<
     // Note: This is largely copied from `add_coord_sequence`, because `multipoint.points()`
     // yields a sequence of Point, not Coord.
     if let Some(first_point) = points.next() {
-        f.write_char('(')?;
+        f.write_str("((")?;
 
         // Assume no empty points within this MultiPoint
         add_coord(&first_point.coord().unwrap(), f, size)?;
 
         for point in points {
-            f.write_char(',')?;
+            f.write_str("),(")?;
             add_coord(&point.coord().unwrap(), f, size)?;
         }
 
-        f.write_char(')')?;
+        f.write_str("))")?;
     } else {
         f.write_str(" EMPTY")?;
     }
@@ -202,10 +202,10 @@ pub fn multi_polygon_to_wkt<
     let dim = multipolygon.dim();
     // Write prefix
     match dim {
-        geo_traits::Dimensions::Xy => f.write_str("MULTILINESTRING"),
-        geo_traits::Dimensions::Xyz => f.write_str("MULTILINESTRING Z"),
-        geo_traits::Dimensions::Xym => f.write_str("MULTILINESTRING M"),
-        geo_traits::Dimensions::Xyzm => f.write_str("MULTILINESTRING ZM"),
+        geo_traits::Dimensions::Xy => f.write_str("MULTIPOLYGON"),
+        geo_traits::Dimensions::Xyz => f.write_str("MULTIPOLYGON Z"),
+        geo_traits::Dimensions::Xym => f.write_str("MULTIPOLYGON M"),
+        geo_traits::Dimensions::Xyzm => f.write_str("MULTIPOLYGON ZM"),
         geo_traits::Dimensions::Unknown(_) => todo!(),
     }?;
     let size = PhysicalCoordinateDimension::from(dim);
@@ -213,7 +213,7 @@ pub fn multi_polygon_to_wkt<
     let mut polygons = multipolygon.polygons();
 
     if let Some(first_polygon) = polygons.next() {
-        f.write_str(" ((")?;
+        f.write_str("((")?;
 
         add_coord_sequence(first_polygon.exterior().unwrap().coords(), f, size)?;
         for interior in first_polygon.interiors() {
@@ -281,7 +281,7 @@ pub fn geometry_collection_to_wkt<
     let mut geometries = gc.geometries();
 
     if let Some(first_geometry) = geometries.next() {
-        f.write_str(" (")?;
+        f.write_str("(")?;
 
         geometry_to_wkt(&first_geometry, f)?;
         for geom in geometries {
