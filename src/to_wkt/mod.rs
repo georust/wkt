@@ -1,5 +1,7 @@
 use crate::{Wkt, WktNum};
 
+pub mod geo_trait_impl;
+
 /// A trait for converting values to WKT
 pub trait ToWkt<T>
 where

@@ -14,6 +14,7 @@
 
 use geo_traits::{CoordTrait, LineStringTrait};
 
+use crate::to_wkt::geo_trait_impl::linestring_to_wkt;
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
 use crate::types::Dimension;
@@ -48,18 +49,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if self.0.is_empty() {
-            f.write_str("LINESTRING EMPTY")
-        } else {
-            let strings = self
-                .0
-                .iter()
-                .map(|c| format!("{}", c))
-                .collect::<Vec<_>>()
-                .join(",");
-
-            write!(f, "LINESTRING({})", strings)
-        }
+        linestring_to_wkt(self, f)
     }
 }
 

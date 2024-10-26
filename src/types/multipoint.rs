@@ -14,6 +14,7 @@
 
 use geo_traits::{MultiPointTrait, PointTrait};
 
+use crate::to_wkt::geo_trait_impl::multipoint_to_wkt;
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
 use crate::types::Dimension;
@@ -38,19 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if self.0.is_empty() {
-            f.write_str("MULTIPOINT EMPTY")
-        } else {
-            let strings = self
-                .0
-                .iter()
-                .filter_map(|p| p.0.as_ref())
-                .map(|c| format!("({} {})", c.x, c.y))
-                .collect::<Vec<_>>()
-                .join(",");
-
-            write!(f, "MULTIPOINT({})", strings)
-        }
+        multipoint_to_wkt(self, f)
     }
 }
 

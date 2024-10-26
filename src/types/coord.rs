@@ -14,6 +14,7 @@
 
 use geo_traits::CoordTrait;
 
+use crate::to_wkt::geo_trait_impl::coord_to_wkt;
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
 use crate::{FromTokens, WktNum};
@@ -36,14 +37,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "{} {}", self.x, self.y)?;
-        if let Some(z) = self.z {
-            write!(f, " {}", z)?;
-        }
-        if let Some(m) = self.m {
-            write!(f, " {}", m)?;
-        }
-        Ok(())
+        coord_to_wkt(self, f)
     }
 }
 

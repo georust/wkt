@@ -112,6 +112,7 @@ pub use crate::to_wkt::ToWkt;
 #[cfg(feature = "geo-types")]
 #[deprecated(note = "renamed module to `wkt::geo_types_from_wkt`")]
 pub mod conversion;
+pub mod geo_traits_to_wkt;
 #[cfg(feature = "geo-types")]
 pub mod geo_types_from_wkt;
 #[cfg(feature = "geo-types")]
