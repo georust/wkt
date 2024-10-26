@@ -93,7 +93,7 @@ use crate::types::{
     Polygon,
 };
 
-mod to_wkt;
+pub mod to_wkt;
 mod tokenizer;
 
 /// `WKT` primitive types and collections
