@@ -11,7 +11,7 @@ edition = "2021"
 
 [dependencies]
 geo-types = { version = "0.7.8", optional = true }
-geo-traits = { git = "https://github.com/kylebarron/geo", rev = "2b776919d561547f2e2658f804ce42574869d44b" }
+geo-traits = "0.1"
 num-traits = "0.2"
 serde = { version = "1.0", default-features = false, optional = true }
 thiserror = "1.0.23"
