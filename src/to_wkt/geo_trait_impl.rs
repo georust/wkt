@@ -2,38 +2,33 @@ use core::fmt;
 use std::fmt::Write;
 
 use geo_traits::{
-    CoordTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait,
-    PointTrait, PolygonTrait,
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait,
+    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
 };
 use geo_types::CoordNum;
 
 use crate::WktNum;
 
-pub fn coord_to_wkt<T: CoordNum + WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write>(
-    g: &G,
-    f: &mut W,
-) -> Result<(), std::fmt::Error> {
-    match g.dim() {
-        geo_traits::Dimensions::Xy => {
-            write!(f, "{} {}", g.x(), g.y())?;
-        }
-        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Xym => {
-            write!(f, "{} {} {}", g.x(), g.y(), g.nth_unchecked(2))?;
-        }
-        geo_traits::Dimensions::Xyzm => {
-            write!(
-                f,
-                "{} {} {} {}",
-                g.x(),
-                g.y(),
-                g.nth_unchecked(2),
-                g.nth_unchecked(3)
-            )?;
-        }
-        geo_traits::Dimensions::Unknown(_) => todo!(),
-    };
+/// The physical size of the coordinate dimension
+///
+/// This is used so that we don't have to call `.dim()` on **every** coordinate. We infer it once
+/// from the `geo_traits::Dimensions` and then pass it to each coordinate.
+#[derive(Clone, Copy)]
+pub(crate) enum PhysicalCoordinateDimension {
+    Two,
+    Three,
+    Four,
+}
 
-    Ok(())
+impl From<geo_traits::Dimensions> for PhysicalCoordinateDimension {
+    fn from(value: geo_traits::Dimensions) -> Self {
+        match value.size() {
+            2 => Self::Two,
+            3 => Self::Three,
+            4 => Self::Four,
+            size => panic!("Unexpected dimension for coordinate: {}", size),
+        }
+    }
 }
 
 pub fn point_to_wkt<T: CoordNum + WktNum + fmt::Display, G: PointTrait<T = T>, W: Write>(
@@ -49,9 +44,10 @@ pub fn point_to_wkt<T: CoordNum + WktNum + fmt::Display, G: PointTrait<T = T>, W
         geo_traits::Dimensions::Xyzm => f.write_str("POINT ZM"),
         geo_traits::Dimensions::Unknown(_) => todo!(),
     }?;
+    let size = PhysicalCoordinateDimension::from(dim);
     if let Some(coord) = g.coord() {
         f.write_char('(')?;
-        coord_to_wkt(&coord, f)?;
+        add_coord(&coord, f, size)?;
         f.write_char(')')?;
         Ok(())
     } else {
@@ -64,10 +60,10 @@ pub fn linestring_to_wkt<
     G: LineStringTrait<T = T>,
     W: Write,
 >(
-    g: &G,
+    linestring: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
-    let dim = g.dim();
+    let dim = linestring.dim();
     // Write prefix
     match dim {
         geo_traits::Dimensions::Xy => f.write_str("LINESTRING"),
@@ -76,28 +72,19 @@ pub fn linestring_to_wkt<
         geo_traits::Dimensions::Xyzm => f.write_str("LINESTRING ZM"),
         geo_traits::Dimensions::Unknown(_) => todo!(),
     }?;
-    if g.num_coords() == 0 {
+    let size = PhysicalCoordinateDimension::from(dim);
+    if linestring.num_coords() == 0 {
         f.write_str(" EMPTY")
     } else {
-        // add_coords(linestring.coords(), f)?;
-        let strings = g
-            .coords()
-            .map(|c| {
-                let mut s = String::new();
-                coord_to_wkt(&c, &mut s)?;
-                Ok(s)
-            })
-            .collect::<Result<Vec<_>, std::fmt::Error>>()?
-            .join(",");
-        write!(f, "({})", strings)
+        add_coord_sequence(linestring.coords(), f, size)
     }
 }
 
 pub fn polygon_to_wkt<T: CoordNum + WktNum + fmt::Display, G: PolygonTrait<T = T>, W: Write>(
-    g: &G,
+    polygon: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
-    let dim = g.dim();
+    let dim = polygon.dim();
     // Write prefix
     match dim {
         geo_traits::Dimensions::Xy => f.write_str("POLYGON"),
@@ -106,52 +93,35 @@ pub fn polygon_to_wkt<T: CoordNum + WktNum + fmt::Display, G: PolygonTrait<T = T
         geo_traits::Dimensions::Xyzm => f.write_str("POLYGON ZM"),
         geo_traits::Dimensions::Unknown(_) => todo!(),
     }?;
-    if let Some(exterior) = g.exterior() {
-        let exterior_string = exterior
-            .coords()
-            .map(|c| {
-                let mut s = String::new();
-                coord_to_wkt(&c, &mut s)?;
-                Ok(s)
-            })
-            .collect::<Result<Vec<_>, std::fmt::Error>>()?
-            .join(",");
+    let size = PhysicalCoordinateDimension::from(dim);
+    if let Some(exterior) = polygon.exterior() {
+        if exterior.num_coords() != 0 {
+            f.write_str(" (")?;
+            add_coord_sequence(exterior.coords(), f, size)?;
 
-        if g.num_interiors() == 0 {
-            write!(f, "({})", exterior_string)
+            for interior in polygon.interiors() {
+                f.write_char(',')?;
+                add_coord_sequence(interior.coords(), f, size)?;
+            }
+
+            f.write_char(')')
         } else {
-            let interior_string = g
-                .interiors()
-                .map(|ring| {
-                    let s = ring
-                        .coords()
-                        .map(|c| {
-                            let mut s = String::new();
-                            coord_to_wkt(&c, &mut s)?;
-                            Ok(s)
-                        })
-                        .collect::<Result<Vec<_>, std::fmt::Error>>()?
-                        .join(",");
-                    Ok(s)
-                })
-                .collect::<Result<Vec<_>, std::fmt::Error>>()?
-                .join("),(");
-            write!(f, "({},({}))", exterior_string, interior_string)
+            f.write_str(" EMPTY")
         }
     } else {
         f.write_str(" EMPTY")
     }
 }
 
-pub fn multipoint_to_wkt<
+pub fn multi_point_to_wkt<
     T: CoordNum + WktNum + fmt::Display,
     G: MultiPointTrait<T = T>,
     W: Write,
 >(
-    g: &G,
+    multipoint: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
-    let dim = g.dim();
+    let dim = multipoint.dim();
     // Write prefix
     match dim {
         geo_traits::Dimensions::Xy => f.write_str("MULTIPOINT"),
@@ -160,32 +130,40 @@ pub fn multipoint_to_wkt<
         geo_traits::Dimensions::Xyzm => f.write_str("MULTIPOINT ZM"),
         geo_traits::Dimensions::Unknown(_) => todo!(),
     }?;
-    if g.num_points() == 0 {
-        f.write_str(" EMPTY")
+    let size = PhysicalCoordinateDimension::from(dim);
+
+    let mut points = multipoint.points();
+
+    // Note: This is largely copied from `add_coord_sequence`, because `multipoint.points()`
+    // yields a sequence of Point, not Coord.
+    if let Some(first_point) = points.next() {
+        f.write_char('(')?;
+
+        // Assume no empty points within this MultiPoint
+        add_coord(&first_point.coord().unwrap(), f, size)?;
+
+        for point in points {
+            f.write_char(',')?;
+            add_coord(&point.coord().unwrap(), f, size)?;
+        }
+
+        f.write_char(')')?;
     } else {
-        let strings = g
-            .points()
-            .map(|c| {
-                let mut s = String::new();
-                // Assume no empty points within this MultiPoint
-                coord_to_wkt(&c.coord().unwrap(), &mut s)?;
-                Ok(s)
-            })
-            .collect::<Result<Vec<_>, std::fmt::Error>>()?
-            .join(",");
-        write!(f, "({})", strings)
+        f.write_str(" EMPTY")?;
     }
+
+    Ok(())
 }
 
-pub fn multilinestring_to_wkt<
+pub fn multi_linestring_to_wkt<
     T: CoordNum + WktNum + fmt::Display,
     G: MultiLineStringTrait<T = T>,
     W: Write,
 >(
-    g: &G,
+    multilinestring: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
-    let dim = g.dim();
+    let dim = multilinestring.dim();
     // Write prefix
     match dim {
         geo_traits::Dimensions::Xy => f.write_str("MULTILINESTRING"),
@@ -194,104 +172,180 @@ pub fn multilinestring_to_wkt<
         geo_traits::Dimensions::Xyzm => f.write_str("MULTILINESTRING ZM"),
         geo_traits::Dimensions::Unknown(_) => todo!(),
     }?;
+    let size = PhysicalCoordinateDimension::from(dim);
+    let mut line_strings = multilinestring.line_strings();
+    if let Some(first_linestring) = line_strings.next() {
+        f.write_str("(")?;
+        add_coord_sequence(first_linestring.coords(), f, size)?;
 
-    if g.num_line_strings() == 0 {
-        f.write_str(" EMPTY")
+        for linestring in line_strings {
+            f.write_char(',')?;
+            add_coord_sequence(linestring.coords(), f, size)?;
+        }
+
+        f.write_char(')')?;
     } else {
-        let strings = g
-            .line_strings()
-            .map(|ring| {
-                let s = ring
-                    .coords()
-                    .map(|c| {
-                        let mut s = String::new();
-                        coord_to_wkt(&c, &mut s)?;
-                        Ok(s)
-                    })
-                    .collect::<Result<Vec<_>, std::fmt::Error>>()?
-                    .join(",");
-                Ok(s)
-            })
-            .collect::<Result<Vec<_>, std::fmt::Error>>()?
-            .join("),(");
-        write!(f, "({})", strings)
+        f.write_str(" EMPTY")?;
+    };
+
+    Ok(())
+}
+
+pub fn multi_polygon_to_wkt<
+    T: CoordNum + WktNum + fmt::Display,
+    G: MultiPolygonTrait<T = T>,
+    W: Write,
+>(
+    multipolygon: &G,
+    f: &mut W,
+) -> Result<(), std::fmt::Error> {
+    let dim = multipolygon.dim();
+    // Write prefix
+    match dim {
+        geo_traits::Dimensions::Xy => f.write_str("MULTILINESTRING"),
+        geo_traits::Dimensions::Xyz => f.write_str("MULTILINESTRING Z"),
+        geo_traits::Dimensions::Xym => f.write_str("MULTILINESTRING M"),
+        geo_traits::Dimensions::Xyzm => f.write_str("MULTILINESTRING ZM"),
+        geo_traits::Dimensions::Unknown(_) => todo!(),
+    }?;
+    let size = PhysicalCoordinateDimension::from(dim);
+
+    let mut polygons = multipolygon.polygons();
+
+    if let Some(first_polygon) = polygons.next() {
+        f.write_str(" ((")?;
+
+        add_coord_sequence(first_polygon.exterior().unwrap().coords(), f, size)?;
+        for interior in first_polygon.interiors() {
+            f.write_char(',')?;
+            add_coord_sequence(interior.coords(), f, size)?;
+        }
+
+        for polygon in polygons {
+            f.write_str("),(")?;
+
+            add_coord_sequence(polygon.exterior().unwrap().coords(), f, size)?;
+            for interior in polygon.interiors() {
+                f.write_char(',')?;
+                add_coord_sequence(interior.coords(), f, size)?;
+            }
+        }
+
+        f.write_str("))")?;
+    } else {
+        f.write_str(" EMPTY")?;
+    };
+
+    Ok(())
+}
+
+/// Create geometry to WKT representation.
+
+pub fn geometry_to_wkt<T: CoordNum + WktNum + fmt::Display, G: GeometryTrait<T = T>, W: Write>(
+    geometry: &G,
+    f: &mut W,
+) -> Result<(), std::fmt::Error> {
+    match geometry.as_type() {
+        geo_traits::GeometryType::Point(point) => point_to_wkt(point, f),
+        geo_traits::GeometryType::LineString(linestring) => linestring_to_wkt(linestring, f),
+        geo_traits::GeometryType::Polygon(polygon) => polygon_to_wkt(polygon, f),
+        geo_traits::GeometryType::MultiPoint(multi_point) => multi_point_to_wkt(multi_point, f),
+        geo_traits::GeometryType::MultiLineString(mls) => multi_linestring_to_wkt(mls, f),
+        geo_traits::GeometryType::MultiPolygon(multi_polygon) => {
+            multi_polygon_to_wkt(multi_polygon, f)
+        }
+        geo_traits::GeometryType::GeometryCollection(gc) => geometry_collection_to_wkt(gc, f),
+        geo_traits::GeometryType::Rect(rect) => rect_to_wkt(rect, f),
+        geo_traits::GeometryType::Triangle(_) => todo!(),
+        geo_traits::GeometryType::Line(_) => todo!(),
     }
 }
 
-// pub fn multipolygon_to_wkt<
-//     T: CoordNum + WktNum + fmt::Display,
-//     G: MultiPolygonTrait<T = T>,
-//     W: Write,
-// >(
-//     g: &G,
-//     f: &mut W,
-// ) -> Result<(), std::fmt::Error> {
-//     let dim = g.dim();
-//     // Write prefix
-//     match dim {
-//         geo_traits::Dimensions::Xy => f.write_str("MULTIPOLYGON"),
-//         geo_traits::Dimensions::Xyz => f.write_str("MULTIPOLYGON Z"),
-//         geo_traits::Dimensions::Xym => f.write_str("MULTIPOLYGON M"),
-//         geo_traits::Dimensions::Xyzm => f.write_str("MULTIPOLYGON ZM"),
-//         geo_traits::Dimensions::Unknown(_) => todo!(),
-//     }?;
-
-//     if g.num_polygons() == 0 {
-//         f.write_str(" EMPTY")
-//     } else {
-//         let strings = g
-//             .polygons()
-//             .map(|polygon| {
-//                 let exterior = polygon.exterior().unwrap();
-//                 let exterior_string = exterior
-//                     .coords()
-//                     .map(|c| {
-//                         let mut s = String::new();
-//                         coord_to_wkt(&c, &mut s)?;
-//                         Ok(s)
-//                     })
-//                     .collect::<Result<Vec<_>, std::fmt::Error>>()?
-//                     .join(",");
-
-//                 if polygon.num_interiors() == 0 {
-//                     write!(f, "({})", exterior_string)
-//                 } else {
-//                     let interior_string = polygon
-//                         .interiors()
-//                         .map(|ring| {
-//                             let s = ring
-//                                 .coords()
-//                                 .map(|c| {
-//                                     let mut s = String::new();
-//                                     coord_to_wkt(&c, &mut s)?;
-//                                     Ok(s)
-//                                 })
-//                                 .collect::<Result<Vec<_>, std::fmt::Error>>()?
-//                                 .join(",");
-//                             Ok(s)
-//                         })
-//                         .collect::<Result<Vec<_>, std::fmt::Error>>()?
-//                         .join("),(");
-//                     write!(f, "({},({}))", exterior_string, interior_string)
-//                 };
-//                 Ok(s)
-//             })
-//             .collect::<Result<Vec<_>, std::fmt::Error>>()?
-//             .join("),(");
-//         write!(f, "({})", strings)
-//     }
-// }
-
-fn add_coord<T: CoordNum + WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write>(
-    coord: &G,
+pub fn geometry_collection_to_wkt<
+    T: CoordNum + WktNum + fmt::Display,
+    G: GeometryCollectionTrait<T = T>,
+    W: Write,
+>(
+    gc: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
-    match coord.dim().size() {
-        2 => write!(f, "{} {}", coord.x(), coord.y()),
-        3 => {
+    let dim = gc.dim();
+    // Write prefix
+    match dim {
+        geo_traits::Dimensions::Xy => f.write_str("GEOMETRYCOLLECTION"),
+        geo_traits::Dimensions::Xyz => f.write_str("GEOMETRYCOLLECTION Z"),
+        geo_traits::Dimensions::Xym => f.write_str("GEOMETRYCOLLECTION M"),
+        geo_traits::Dimensions::Xyzm => f.write_str("GEOMETRYCOLLECTION ZM"),
+        geo_traits::Dimensions::Unknown(_) => todo!(),
+    }?;
+    let mut geometries = gc.geometries();
+
+    if let Some(first_geometry) = geometries.next() {
+        f.write_str(" (")?;
+
+        geometry_to_wkt(&first_geometry, f)?;
+        for geom in geometries {
+            f.write_char(',')?;
+            geometry_to_wkt(&geom, f)?;
+        }
+
+        f.write_char(')')?;
+    } else {
+        f.write_str(" EMPTY")?;
+    }
+    Ok(())
+}
+
+pub fn rect_to_wkt<T: CoordNum + WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
+    _rect: &G,
+    _f: &mut W,
+) -> Result<(), std::fmt::Error> {
+    todo!()
+
+    // let dim = rect.dim();
+    // // Write prefix
+    // match dim {
+    //     geo_traits::Dimensions::Xy => f.write_str("POLYGON"),
+    //     geo_traits::Dimensions::Xyz => f.write_str("POLYGON Z"),
+    //     geo_traits::Dimensions::Xym => f.write_str("POLYGON M"),
+    //     geo_traits::Dimensions::Xyzm => f.write_str("POLYGON ZM"),
+    //     geo_traits::Dimensions::Unknown(_) => todo!(),
+    // }?;
+
+    // let size = PhysicalCoordinateDimension::from(dim);
+
+    // // A rect cannot be empty
+    // let min = rect.min();
+    // let max = rect.max();
+
+    // match rect.dim() {
+    //     2 => writer.write_fmt(format_args!(
+    //         " ({0} {1},{2} {1},{2} {3},{0} {3},{0} {1})",
+    //         lower.x(),
+    //         lower.y(),
+    //         upper.x(),
+    //         upper.y(),
+    //     ))?,
+    //     3 => todo!("cube as polygon / linestring / multipoint?"),
+
+    //     _ => unimplemented!(),
+    // };
+}
+
+/// Write a single coordinate to the writer.
+///
+/// Will not include any start or end `()` characters.
+pub(crate) fn add_coord<T: CoordNum + WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write>(
+    coord: &G,
+    f: &mut W,
+    size: PhysicalCoordinateDimension,
+) -> Result<(), std::fmt::Error> {
+    match size {
+        PhysicalCoordinateDimension::Two => write!(f, "{} {}", coord.x(), coord.y()),
+        PhysicalCoordinateDimension::Three => {
             write!(f, "{} {} {}", coord.x(), coord.y(), coord.nth_unchecked(2))
         }
-        4 => {
+        PhysicalCoordinateDimension::Four => {
             write!(
                 f,
                 "{} {} {} {}",
@@ -301,26 +355,32 @@ fn add_coord<T: CoordNum + WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write
                 coord.nth_unchecked(3)
             )
         }
-        size => panic!("Unexpected dimension for coordinate: {}", size),
     }
 }
 
-fn add_coords<T: CoordNum + WktNum + fmt::Display, W: Write, C: CoordTrait<T = T>>(
+/// Includes the `()` characters to start and end this sequence.
+///
+/// E.g. it will write:
+/// ```notest
+/// (1 2, 3 4, 5 6)
+/// ```
+/// for a coordinate sequence with three coordinates.
+fn add_coord_sequence<T: CoordNum + WktNum + fmt::Display, W: Write, C: CoordTrait<T = T>>(
     mut coords: impl ExactSizeIterator<Item = C>,
     f: &mut W,
+    size: PhysicalCoordinateDimension,
 ) -> Result<(), std::fmt::Error> {
     f.write_char('(')?;
 
     if let Some(first_coord) = coords.next() {
-        add_coord(&first_coord, f)?;
+        add_coord(&first_coord, f, size)?;
 
         for coord in coords {
             f.write_char(',')?;
-            add_coord(&coord, f)?;
+            add_coord(&coord, f, size)?;
         }
     }
 
     f.write_char(')')?;
-
     Ok(())
 }
