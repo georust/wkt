@@ -2,11 +2,13 @@ use core::fmt;
 use std::fmt::Write;
 
 use geo_traits::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait,
-    MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, LineTrait,
+    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
+    TriangleTrait,
 };
 use geo_types::CoordNum;
 
+use crate::types::{Coord, LineString, Polygon};
 use crate::WktNum;
 
 /// The physical size of the coordinate dimension
@@ -256,8 +258,8 @@ pub fn geometry_to_wkt<T: CoordNum + WktNum + fmt::Display, G: GeometryTrait<T =
         }
         geo_traits::GeometryType::GeometryCollection(gc) => geometry_collection_to_wkt(gc, f),
         geo_traits::GeometryType::Rect(rect) => rect_to_wkt(rect, f),
-        geo_traits::GeometryType::Triangle(_) => todo!(),
-        geo_traits::GeometryType::Line(_) => todo!(),
+        geo_traits::GeometryType::Triangle(triangle) => triangle_to_wkt(triangle, f),
+        geo_traits::GeometryType::Line(line) => line_to_wkt(line, f),
     }
 }
 
@@ -296,40 +298,98 @@ pub fn geometry_collection_to_wkt<
     Ok(())
 }
 
+fn rect_to_polygon<T: CoordNum + WktNum + fmt::Display, G: RectTrait<T = T>>(
+    rect: &G,
+) -> Polygon<T> {
+    let min_coord = rect.min();
+    let max_coord = rect.max();
+
+    // Note: Even if the rect has more than 2 dimensions, we omit the other dimensions when
+    // converting to a Polygon.
+    let coords = vec![
+        Coord {
+            x: min_coord.x(),
+            y: min_coord.y(),
+            z: None,
+            m: None,
+        },
+        Coord {
+            x: min_coord.x(),
+            y: max_coord.y(),
+            z: None,
+            m: None,
+        },
+        Coord {
+            x: max_coord.x(),
+            y: max_coord.y(),
+            z: None,
+            m: None,
+        },
+        Coord {
+            x: max_coord.x(),
+            y: min_coord.y(),
+            z: None,
+            m: None,
+        },
+        Coord {
+            x: min_coord.x(),
+            y: min_coord.y(),
+            z: None,
+            m: None,
+        },
+    ];
+    let ring = LineString(coords);
+    Polygon(vec![ring])
+}
+
 pub fn rect_to_wkt<T: CoordNum + WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
-    _rect: &G,
-    _f: &mut W,
+    rect: &G,
+    f: &mut W,
 ) -> Result<(), std::fmt::Error> {
-    todo!()
+    let polygon = rect_to_polygon(rect);
+    polygon_to_wkt(&polygon, f)
+}
 
-    // let dim = rect.dim();
-    // // Write prefix
-    // match dim {
-    //     geo_traits::Dimensions::Xy => f.write_str("POLYGON"),
-    //     geo_traits::Dimensions::Xyz => f.write_str("POLYGON Z"),
-    //     geo_traits::Dimensions::Xym => f.write_str("POLYGON M"),
-    //     geo_traits::Dimensions::Xyzm => f.write_str("POLYGON ZM"),
-    //     geo_traits::Dimensions::Unknown(_) => todo!(),
-    // }?;
+pub fn triangle_to_wkt<T: CoordNum + WktNum + fmt::Display, G: TriangleTrait<T = T>, W: Write>(
+    triangle: &G,
+    f: &mut W,
+) -> Result<(), std::fmt::Error> {
+    let dim = triangle.dim();
+    // Write prefix
+    match dim {
+        geo_traits::Dimensions::Xy => f.write_str("POLYGON"),
+        geo_traits::Dimensions::Xyz => f.write_str("POLYGON Z"),
+        geo_traits::Dimensions::Xym => f.write_str("POLYGON M"),
+        geo_traits::Dimensions::Xyzm => f.write_str("POLYGON ZM"),
+        geo_traits::Dimensions::Unknown(_) => todo!(),
+    }?;
+    let size = PhysicalCoordinateDimension::from(dim);
+    f.write_str("(")?;
 
-    // let size = PhysicalCoordinateDimension::from(dim);
+    let coords_iter = triangle
+        .coords()
+        .into_iter()
+        .chain(std::iter::once(triangle.first()));
+    add_coord_sequence(coords_iter, f, size)?;
 
-    // // A rect cannot be empty
-    // let min = rect.min();
-    // let max = rect.max();
+    f.write_char(')')
+}
 
-    // match rect.dim() {
-    //     2 => writer.write_fmt(format_args!(
-    //         " ({0} {1},{2} {1},{2} {3},{0} {3},{0} {1})",
-    //         lower.x(),
-    //         lower.y(),
-    //         upper.x(),
-    //         upper.y(),
-    //     ))?,
-    //     3 => todo!("cube as polygon / linestring / multipoint?"),
-
-    //     _ => unimplemented!(),
-    // };
+pub fn line_to_wkt<T: CoordNum + WktNum + fmt::Display, G: LineTrait<T = T>, W: Write>(
+    line: &G,
+    f: &mut W,
+) -> Result<(), std::fmt::Error> {
+    let dim = line.dim();
+    // Write prefix
+    match dim {
+        geo_traits::Dimensions::Xy => f.write_str("LINESTRING"),
+        geo_traits::Dimensions::Xyz => f.write_str("LINESTRING Z"),
+        geo_traits::Dimensions::Xym => f.write_str("LINESTRING M"),
+        geo_traits::Dimensions::Xyzm => f.write_str("LINESTRING ZM"),
+        geo_traits::Dimensions::Unknown(_) => todo!(),
+    }?;
+    let size = PhysicalCoordinateDimension::from(dim);
+    add_coord_sequence(line.coords().into_iter(), f, size)
 }
 
 /// Write a single coordinate to the writer.
@@ -366,7 +426,7 @@ pub(crate) fn add_coord<T: CoordNum + WktNum + fmt::Display, G: CoordTrait<T = T
 /// ```
 /// for a coordinate sequence with three coordinates.
 fn add_coord_sequence<T: CoordNum + WktNum + fmt::Display, W: Write, C: CoordTrait<T = T>>(
-    mut coords: impl ExactSizeIterator<Item = C>,
+    mut coords: impl Iterator<Item = C>,
     f: &mut W,
     size: PhysicalCoordinateDimension,
 ) -> Result<(), std::fmt::Error> {
