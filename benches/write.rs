@@ -70,7 +70,7 @@ fn geo_write_wkt_as_trait(c: &mut criterion::Criterion) {
         let w = wkt::Wkt::<f64>::from_str(s).unwrap();
         let g = geo_types::Geometry::try_from(w).unwrap();
         bencher.iter(|| {
-            wkt::to_wkt::geo_trait_impl::write_geometry(&g, &mut String::new()).unwrap();
+            wkt::to_wkt::write_geometry(&g, &mut String::new()).unwrap();
         });
     });
 
@@ -79,7 +79,7 @@ fn geo_write_wkt_as_trait(c: &mut criterion::Criterion) {
         let w = wkt::Wkt::<f64>::from_str(s).unwrap();
         let g = geo_types::Geometry::try_from(w).unwrap();
         bencher.iter(|| {
-            wkt::to_wkt::geo_trait_impl::write_geometry(&g, &mut String::new()).unwrap();
+            wkt::to_wkt::write_geometry(&g, &mut String::new()).unwrap();
         });
     });
 }

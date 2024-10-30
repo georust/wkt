@@ -86,7 +86,7 @@ use geo_traits::{
 };
 use num_traits::{Float, Num, NumCast};
 
-use crate::to_wkt::geo_trait_impl::write_geometry;
+use crate::to_wkt::write_geometry;
 use crate::tokenizer::{PeekableTokens, Token, Tokens};
 use crate::types::{
     Dimension, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,

@@ -16,7 +16,7 @@ use crate::WktNum;
 /// This is used so that we don't have to call `.dim()` on **every** coordinate. We infer it once
 /// from the `geo_traits::Dimensions` and then pass it to each coordinate.
 #[derive(Clone, Copy)]
-pub(crate) enum PhysicalCoordinateDimension {
+enum PhysicalCoordinateDimension {
     Two,
     Three,
     Four,
@@ -395,7 +395,7 @@ pub fn write_line<T: CoordNum + WktNum + fmt::Display, G: LineTrait<T = T>, W: W
 /// Write a single coordinate to the writer.
 ///
 /// Will not include any start or end `()` characters.
-pub(crate) fn add_coord<T: CoordNum + WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write>(
+fn add_coord<T: CoordNum + WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write>(
     coord: &G,
     f: &mut W,
     size: PhysicalCoordinateDimension,

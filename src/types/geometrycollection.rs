@@ -14,7 +14,7 @@
 
 use geo_traits::{GeometryCollectionTrait, GeometryTrait};
 
-use crate::to_wkt::geo_trait_impl::write_geometry_collection;
+use crate::to_wkt::write_geometry_collection;
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
 use crate::{FromTokens, Wkt, WktNum};

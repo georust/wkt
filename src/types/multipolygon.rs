@@ -14,7 +14,7 @@
 
 use geo_traits::{MultiPolygonTrait, PolygonTrait};
 
-use crate::to_wkt::geo_trait_impl::write_multi_polygon;
+use crate::to_wkt::write_multi_polygon;
 use crate::tokenizer::PeekableTokens;
 use crate::types::polygon::Polygon;
 use crate::types::Dimension;

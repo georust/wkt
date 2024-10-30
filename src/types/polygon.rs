@@ -14,7 +14,7 @@
 
 use geo_traits::{LineStringTrait, PolygonTrait};
 
-use crate::to_wkt::geo_trait_impl::write_polygon;
+use crate::to_wkt::write_polygon;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
 use crate::types::Dimension;

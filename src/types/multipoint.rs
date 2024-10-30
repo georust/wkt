@@ -14,7 +14,7 @@
 
 use geo_traits::{MultiPointTrait, PointTrait};
 
-use crate::to_wkt::geo_trait_impl::write_multi_point;
+use crate::to_wkt::write_multi_point;
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
 use crate::types::Dimension;

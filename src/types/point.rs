@@ -14,7 +14,7 @@
 
 use geo_traits::{CoordTrait, PointTrait};
 
-use crate::to_wkt::geo_trait_impl::write_point;
+use crate::to_wkt::write_point;
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
 use crate::types::Dimension;
