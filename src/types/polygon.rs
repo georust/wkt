@@ -94,7 +94,7 @@ impl<T: WktNum> PolygonTrait for Polygon<T> {
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        &self.0[i + 1]
+        self.0.get_unchecked(i + 1)
     }
 }
 
@@ -120,7 +120,7 @@ impl<T: WktNum> PolygonTrait for &Polygon<T> {
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        &self.0[i + 1]
+        self.0.get_unchecked(i + 1)
     }
 }
 

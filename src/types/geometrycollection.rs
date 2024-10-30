@@ -104,7 +104,7 @@ impl<T: WktNum> GeometryCollectionTrait for GeometryCollection<T> {
     }
 
     unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
-        &self.0[i]
+        self.0.get_unchecked(i)
     }
 }
 
