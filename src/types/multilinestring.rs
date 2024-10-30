@@ -14,7 +14,7 @@
 
 use geo_traits::{LineStringTrait, MultiLineStringTrait};
 
-use crate::to_wkt::geo_trait_impl::multi_linestring_to_wkt;
+use crate::to_wkt::geo_trait_impl::write_multi_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
 use crate::types::Dimension;
@@ -39,7 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        multi_linestring_to_wkt(self, f)
+        write_multi_linestring(self, f)
     }
 }
 

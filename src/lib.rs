@@ -86,7 +86,7 @@ use geo_traits::{
 };
 use num_traits::{Float, Num, NumCast};
 
-use crate::to_wkt::geo_trait_impl::geometry_to_wkt;
+use crate::to_wkt::geo_trait_impl::write_geometry;
 use crate::tokenizer::{PeekableTokens, Token, Tokens};
 use crate::types::{
     Dimension, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
@@ -360,7 +360,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        geometry_to_wkt(self, f)
+        write_geometry(self, f)
     }
 }
 

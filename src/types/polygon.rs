@@ -14,7 +14,7 @@
 
 use geo_traits::{LineStringTrait, PolygonTrait};
 
-use crate::to_wkt::geo_trait_impl::polygon_to_wkt;
+use crate::to_wkt::geo_trait_impl::write_polygon;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
 use crate::types::Dimension;
@@ -39,7 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        polygon_to_wkt(self, f)
+        write_polygon(self, f)
     }
 }
 

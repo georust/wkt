@@ -14,7 +14,7 @@
 
 use geo_traits::{CoordTrait, PointTrait};
 
-use crate::to_wkt::geo_trait_impl::point_to_wkt;
+use crate::to_wkt::geo_trait_impl::write_point;
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
 use crate::types::Dimension;
@@ -39,7 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        point_to_wkt(self, f)
+        write_point(self, f)
     }
 }
 

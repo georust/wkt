@@ -14,7 +14,7 @@
 
 use geo_traits::{MultiPointTrait, PointTrait};
 
-use crate::to_wkt::geo_trait_impl::multi_point_to_wkt;
+use crate::to_wkt::geo_trait_impl::write_multi_point;
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
 use crate::types::Dimension;
@@ -39,7 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        multi_point_to_wkt(self, f)
+        write_multi_point(self, f)
     }
 }
 

@@ -33,7 +33,7 @@ impl From<geo_traits::Dimensions> for PhysicalCoordinateDimension {
     }
 }
 
-pub fn point_to_wkt<T: CoordNum + WktNum + fmt::Display, G: PointTrait<T = T>, W: Write>(
+pub fn write_point<T: CoordNum + WktNum + fmt::Display, G: PointTrait<T = T>, W: Write>(
     g: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
@@ -57,7 +57,7 @@ pub fn point_to_wkt<T: CoordNum + WktNum + fmt::Display, G: PointTrait<T = T>, W
     }
 }
 
-pub fn linestring_to_wkt<
+pub fn write_linestring<
     T: CoordNum + WktNum + fmt::Display,
     G: LineStringTrait<T = T>,
     W: Write,
@@ -82,7 +82,7 @@ pub fn linestring_to_wkt<
     }
 }
 
-pub fn polygon_to_wkt<T: CoordNum + WktNum + fmt::Display, G: PolygonTrait<T = T>, W: Write>(
+pub fn write_polygon<T: CoordNum + WktNum + fmt::Display, G: PolygonTrait<T = T>, W: Write>(
     polygon: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
@@ -115,7 +115,7 @@ pub fn polygon_to_wkt<T: CoordNum + WktNum + fmt::Display, G: PolygonTrait<T = T
     }
 }
 
-pub fn multi_point_to_wkt<
+pub fn write_multi_point<
     T: CoordNum + WktNum + fmt::Display,
     G: MultiPointTrait<T = T>,
     W: Write,
@@ -157,7 +157,7 @@ pub fn multi_point_to_wkt<
     Ok(())
 }
 
-pub fn multi_linestring_to_wkt<
+pub fn write_multi_linestring<
     T: CoordNum + WktNum + fmt::Display,
     G: MultiLineStringTrait<T = T>,
     W: Write,
@@ -193,7 +193,7 @@ pub fn multi_linestring_to_wkt<
     Ok(())
 }
 
-pub fn multi_polygon_to_wkt<
+pub fn write_multi_polygon<
     T: CoordNum + WktNum + fmt::Display,
     G: MultiPolygonTrait<T = T>,
     W: Write,
@@ -243,27 +243,27 @@ pub fn multi_polygon_to_wkt<
 
 /// Create geometry to WKT representation.
 
-pub fn geometry_to_wkt<T: CoordNum + WktNum + fmt::Display, G: GeometryTrait<T = T>, W: Write>(
+pub fn write_geometry<T: CoordNum + WktNum + fmt::Display, G: GeometryTrait<T = T>, W: Write>(
     geometry: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
     match geometry.as_type() {
-        geo_traits::GeometryType::Point(point) => point_to_wkt(point, f),
-        geo_traits::GeometryType::LineString(linestring) => linestring_to_wkt(linestring, f),
-        geo_traits::GeometryType::Polygon(polygon) => polygon_to_wkt(polygon, f),
-        geo_traits::GeometryType::MultiPoint(multi_point) => multi_point_to_wkt(multi_point, f),
-        geo_traits::GeometryType::MultiLineString(mls) => multi_linestring_to_wkt(mls, f),
+        geo_traits::GeometryType::Point(point) => write_point(point, f),
+        geo_traits::GeometryType::LineString(linestring) => write_linestring(linestring, f),
+        geo_traits::GeometryType::Polygon(polygon) => write_polygon(polygon, f),
+        geo_traits::GeometryType::MultiPoint(multi_point) => write_multi_point(multi_point, f),
+        geo_traits::GeometryType::MultiLineString(mls) => write_multi_linestring(mls, f),
         geo_traits::GeometryType::MultiPolygon(multi_polygon) => {
-            multi_polygon_to_wkt(multi_polygon, f)
+            write_multi_polygon(multi_polygon, f)
         }
-        geo_traits::GeometryType::GeometryCollection(gc) => geometry_collection_to_wkt(gc, f),
-        geo_traits::GeometryType::Rect(rect) => rect_to_wkt(rect, f),
-        geo_traits::GeometryType::Triangle(triangle) => triangle_to_wkt(triangle, f),
-        geo_traits::GeometryType::Line(line) => line_to_wkt(line, f),
+        geo_traits::GeometryType::GeometryCollection(gc) => write_geometry_collection(gc, f),
+        geo_traits::GeometryType::Rect(rect) => write_rect(rect, f),
+        geo_traits::GeometryType::Triangle(triangle) => write_triangle(triangle, f),
+        geo_traits::GeometryType::Line(line) => write_line(line, f),
     }
 }
 
-pub fn geometry_collection_to_wkt<
+pub fn write_geometry_collection<
     T: CoordNum + WktNum + fmt::Display,
     G: GeometryCollectionTrait<T = T>,
     W: Write,
@@ -285,10 +285,10 @@ pub fn geometry_collection_to_wkt<
     if let Some(first_geometry) = geometries.next() {
         f.write_str("(")?;
 
-        geometry_to_wkt(&first_geometry, f)?;
+        write_geometry(&first_geometry, f)?;
         for geom in geometries {
             f.write_char(',')?;
-            geometry_to_wkt(&geom, f)?;
+            write_geometry(&geom, f)?;
         }
 
         f.write_char(')')?;
@@ -342,15 +342,15 @@ fn rect_to_polygon<T: CoordNum + WktNum + fmt::Display, G: RectTrait<T = T>>(
     Polygon(vec![ring])
 }
 
-pub fn rect_to_wkt<T: CoordNum + WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
+pub fn write_rect<T: CoordNum + WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
     rect: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
     let polygon = rect_to_polygon(rect);
-    polygon_to_wkt(&polygon, f)
+    write_polygon(&polygon, f)
 }
 
-pub fn triangle_to_wkt<T: CoordNum + WktNum + fmt::Display, G: TriangleTrait<T = T>, W: Write>(
+pub fn write_triangle<T: CoordNum + WktNum + fmt::Display, G: TriangleTrait<T = T>, W: Write>(
     triangle: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
@@ -375,7 +375,7 @@ pub fn triangle_to_wkt<T: CoordNum + WktNum + fmt::Display, G: TriangleTrait<T =
     f.write_char(')')
 }
 
-pub fn line_to_wkt<T: CoordNum + WktNum + fmt::Display, G: LineTrait<T = T>, W: Write>(
+pub fn write_line<T: CoordNum + WktNum + fmt::Display, G: LineTrait<T = T>, W: Write>(
     line: &G,
     f: &mut W,
 ) -> Result<(), std::fmt::Error> {
