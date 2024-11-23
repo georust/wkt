@@ -118,7 +118,7 @@ impl<T: WktNum> CoordTrait for Coord<T> {
         self.y
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         let has_z = self.z.is_some();
         let has_m = self.m.is_some();
         match n {
@@ -165,7 +165,7 @@ impl<T: WktNum> CoordTrait for &Coord<T> {
         self.y
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         let has_z = self.z.is_some();
         let has_m = self.m.is_some();
         match n {
