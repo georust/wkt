@@ -75,7 +75,7 @@ impl<T: WktNum> MultiPointTrait for MultiPoint<T> {
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
-        &self.0[i]
+        self.0.get_unchecked(i)
     }
 }
 
@@ -97,7 +97,7 @@ impl<T: WktNum> MultiPointTrait for &MultiPoint<T> {
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
-        &self.0[i]
+        self.0.get_unchecked(i)
     }
 }
 

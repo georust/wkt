@@ -75,7 +75,7 @@ impl<T: WktNum> MultiLineStringTrait for MultiLineString<T> {
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        &self.0[i]
+        self.0.get_unchecked(i)
     }
 }
 
@@ -97,7 +97,7 @@ impl<T: WktNum> MultiLineStringTrait for &MultiLineString<T> {
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        &self.0[i]
+        self.0.get_unchecked(i)
     }
 }
 
