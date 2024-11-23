@@ -403,7 +403,11 @@ fn add_coord<T: CoordNum + WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write
     match size {
         PhysicalCoordinateDimension::Two => write!(f, "{} {}", coord.x(), coord.y()),
         PhysicalCoordinateDimension::Three => {
-            write!(f, "{} {} {}", coord.x(), coord.y(), coord.nth_unchecked(2))
+            // Safety:
+            // We've validated that there are three dimensions
+            write!(f, "{} {} {}", coord.x(), coord.y(), unsafe {
+                coord.nth_unchecked(2)
+            })
         }
         PhysicalCoordinateDimension::Four => {
             write!(
@@ -411,8 +415,12 @@ fn add_coord<T: CoordNum + WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write
                 "{} {} {} {}",
                 coord.x(),
                 coord.y(),
-                coord.nth_unchecked(2),
-                coord.nth_unchecked(3)
+                // Safety:
+                // We've validated that there are four dimensions
+                unsafe { coord.nth_unchecked(2) },
+                // Safety:
+                // We've validated that there are four dimensions
+                unsafe { coord.nth_unchecked(3) }
             )
         }
     }
