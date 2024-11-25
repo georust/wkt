@@ -6,6 +6,7 @@ use geo_traits::{
     MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
     TriangleTrait,
 };
+#[cfg(feature = "geo-types")]
 use geo_types::CoordNum;
 
 use crate::types::{Coord, LineString, Polygon};
