@@ -96,6 +96,8 @@ use crate::types::{
 pub mod to_wkt;
 mod tokenizer;
 
+/// Error variant for this crate
+pub mod error;
 /// `WKT` primitive types and collections
 pub mod types;
 
@@ -105,8 +107,6 @@ pub use infer_type::infer_type;
 
 #[cfg(feature = "geo-types")]
 extern crate geo_types;
-
-extern crate thiserror;
 
 pub use crate::to_wkt::ToWkt;
 
@@ -360,7 +360,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write_geometry(self, f)
+        Ok(write_geometry(self, f)?)
     }
 }
 

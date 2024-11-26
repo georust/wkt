@@ -7,6 +7,7 @@ use geo_traits::{
     TriangleTrait,
 };
 
+use crate::error::Error;
 use crate::types::{Coord, LineString, Polygon};
 use crate::WktNum;
 
@@ -35,15 +36,17 @@ impl From<geo_traits::Dimensions> for PhysicalCoordinateDimension {
 pub fn write_point<T: WktNum + fmt::Display, G: PointTrait<T = T>, W: Write>(
     g: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), Error> {
     let dim = g.dim();
     // Write prefix
     match dim {
-        geo_traits::Dimensions::Xy => f.write_str("POINT"),
-        geo_traits::Dimensions::Xyz => f.write_str("POINT Z"),
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => f.write_str("POINT"),
+        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => f.write_str("POINT Z"),
         geo_traits::Dimensions::Xym => f.write_str("POINT M"),
-        geo_traits::Dimensions::Xyzm => f.write_str("POINT ZM"),
-        geo_traits::Dimensions::Unknown(_) => todo!(),
+        geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+            f.write_str("POINT ZM")
+        }
+        geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
     let size = PhysicalCoordinateDimension::from(dim);
     if let Some(coord) = g.coord() {
@@ -52,26 +55,32 @@ pub fn write_point<T: WktNum + fmt::Display, G: PointTrait<T = T>, W: Write>(
         f.write_char(')')?;
         Ok(())
     } else {
-        f.write_str(" EMPTY")
+        Ok(f.write_str(" EMPTY")?)
     }
 }
 
 pub fn write_linestring<T: WktNum + fmt::Display, G: LineStringTrait<T = T>, W: Write>(
     linestring: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     let dim = linestring.dim();
     // Write prefix
     match dim {
-        geo_traits::Dimensions::Xy => f.write_str("LINESTRING"),
-        geo_traits::Dimensions::Xyz => f.write_str("LINESTRING Z"),
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {
+            f.write_str("LINESTRING")
+        }
+        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
+            f.write_str("LINESTRING Z")
+        }
         geo_traits::Dimensions::Xym => f.write_str("LINESTRING M"),
-        geo_traits::Dimensions::Xyzm => f.write_str("LINESTRING ZM"),
-        geo_traits::Dimensions::Unknown(_) => todo!(),
+        geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+            f.write_str("LINESTRING ZM")
+        }
+        geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
     let size = PhysicalCoordinateDimension::from(dim);
     if linestring.num_coords() == 0 {
-        f.write_str(" EMPTY")
+        Ok(f.write_str(" EMPTY")?)
     } else {
         add_coord_sequence(linestring.coords(), f, size)
     }
@@ -80,15 +89,19 @@ pub fn write_linestring<T: WktNum + fmt::Display, G: LineStringTrait<T = T>, W: 
 pub fn write_polygon<T: WktNum + fmt::Display, G: PolygonTrait<T = T>, W: Write>(
     polygon: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     let dim = polygon.dim();
     // Write prefix
     match dim {
-        geo_traits::Dimensions::Xy => f.write_str("POLYGON"),
-        geo_traits::Dimensions::Xyz => f.write_str("POLYGON Z"),
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => f.write_str("POLYGON"),
+        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
+            f.write_str("POLYGON Z")
+        }
         geo_traits::Dimensions::Xym => f.write_str("POLYGON M"),
-        geo_traits::Dimensions::Xyzm => f.write_str("POLYGON ZM"),
-        geo_traits::Dimensions::Unknown(_) => todo!(),
+        geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+            f.write_str("POLYGON ZM")
+        }
+        geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
     let size = PhysicalCoordinateDimension::from(dim);
     if let Some(exterior) = polygon.exterior() {
@@ -101,27 +114,33 @@ pub fn write_polygon<T: WktNum + fmt::Display, G: PolygonTrait<T = T>, W: Write>
                 add_coord_sequence(interior.coords(), f, size)?;
             }
 
-            f.write_char(')')
+            Ok(f.write_char(')')?)
         } else {
-            f.write_str(" EMPTY")
+            Ok(f.write_str(" EMPTY")?)
         }
     } else {
-        f.write_str(" EMPTY")
+        Ok(f.write_str(" EMPTY")?)
     }
 }
 
 pub fn write_multi_point<T: WktNum + fmt::Display, G: MultiPointTrait<T = T>, W: Write>(
     multipoint: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     let dim = multipoint.dim();
     // Write prefix
     match dim {
-        geo_traits::Dimensions::Xy => f.write_str("MULTIPOINT"),
-        geo_traits::Dimensions::Xyz => f.write_str("MULTIPOINT Z"),
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {
+            f.write_str("MULTIPOINT")
+        }
+        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
+            f.write_str("MULTIPOINT Z")
+        }
         geo_traits::Dimensions::Xym => f.write_str("MULTIPOINT M"),
-        geo_traits::Dimensions::Xyzm => f.write_str("MULTIPOINT ZM"),
-        geo_traits::Dimensions::Unknown(_) => todo!(),
+        geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+            f.write_str("MULTIPOINT ZM")
+        }
+        geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
     let size = PhysicalCoordinateDimension::from(dim);
 
@@ -155,15 +174,21 @@ pub fn write_multi_linestring<
 >(
     multilinestring: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     let dim = multilinestring.dim();
     // Write prefix
     match dim {
-        geo_traits::Dimensions::Xy => f.write_str("MULTILINESTRING"),
-        geo_traits::Dimensions::Xyz => f.write_str("MULTILINESTRING Z"),
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {
+            f.write_str("MULTILINESTRING")
+        }
+        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
+            f.write_str("MULTILINESTRING Z")
+        }
         geo_traits::Dimensions::Xym => f.write_str("MULTILINESTRING M"),
-        geo_traits::Dimensions::Xyzm => f.write_str("MULTILINESTRING ZM"),
-        geo_traits::Dimensions::Unknown(_) => todo!(),
+        geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+            f.write_str("MULTILINESTRING ZM")
+        }
+        geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
     let size = PhysicalCoordinateDimension::from(dim);
     let mut line_strings = multilinestring.line_strings();
@@ -187,15 +212,21 @@ pub fn write_multi_linestring<
 pub fn write_multi_polygon<T: WktNum + fmt::Display, G: MultiPolygonTrait<T = T>, W: Write>(
     multipolygon: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     let dim = multipolygon.dim();
     // Write prefix
     match dim {
-        geo_traits::Dimensions::Xy => f.write_str("MULTIPOLYGON"),
-        geo_traits::Dimensions::Xyz => f.write_str("MULTIPOLYGON Z"),
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {
+            f.write_str("MULTIPOLYGON")
+        }
+        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
+            f.write_str("MULTIPOLYGON Z")
+        }
         geo_traits::Dimensions::Xym => f.write_str("MULTIPOLYGON M"),
-        geo_traits::Dimensions::Xyzm => f.write_str("MULTIPOLYGON ZM"),
-        geo_traits::Dimensions::Unknown(_) => todo!(),
+        geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+            f.write_str("MULTIPOLYGON ZM")
+        }
+        geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
     let size = PhysicalCoordinateDimension::from(dim);
 
@@ -233,7 +264,7 @@ pub fn write_multi_polygon<T: WktNum + fmt::Display, G: MultiPolygonTrait<T = T>
 pub fn write_geometry<T: WktNum + fmt::Display, G: GeometryTrait<T = T>, W: Write>(
     geometry: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     match geometry.as_type() {
         geo_traits::GeometryType::Point(point) => write_point(point, f),
         geo_traits::GeometryType::LineString(linestring) => write_linestring(linestring, f),
@@ -257,15 +288,21 @@ pub fn write_geometry_collection<
 >(
     gc: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     let dim = gc.dim();
     // Write prefix
     match dim {
-        geo_traits::Dimensions::Xy => f.write_str("GEOMETRYCOLLECTION"),
-        geo_traits::Dimensions::Xyz => f.write_str("GEOMETRYCOLLECTION Z"),
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {
+            f.write_str("GEOMETRYCOLLECTION")
+        }
+        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
+            f.write_str("GEOMETRYCOLLECTION Z")
+        }
         geo_traits::Dimensions::Xym => f.write_str("GEOMETRYCOLLECTION M"),
-        geo_traits::Dimensions::Xyzm => f.write_str("GEOMETRYCOLLECTION ZM"),
-        geo_traits::Dimensions::Unknown(_) => todo!(),
+        geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+            f.write_str("GEOMETRYCOLLECTION ZM")
+        }
+        geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
     let mut geometries = gc.geometries();
 
@@ -330,7 +367,7 @@ fn rect_to_polygon<T: WktNum + fmt::Display, G: RectTrait<T = T>>(rect: &G) -> P
 pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
     rect: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     let polygon = rect_to_polygon(rect);
     write_polygon(&polygon, f)
 }
@@ -338,15 +375,19 @@ pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
 pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>, W: Write>(
     triangle: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     let dim = triangle.dim();
     // Write prefix
     match dim {
-        geo_traits::Dimensions::Xy => f.write_str("POLYGON"),
-        geo_traits::Dimensions::Xyz => f.write_str("POLYGON Z"),
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => f.write_str("POLYGON"),
+        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
+            f.write_str("POLYGON Z")
+        }
         geo_traits::Dimensions::Xym => f.write_str("POLYGON M"),
-        geo_traits::Dimensions::Xyzm => f.write_str("POLYGON ZM"),
-        geo_traits::Dimensions::Unknown(_) => todo!(),
+        geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+            f.write_str("POLYGON ZM")
+        }
+        geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
     let size = PhysicalCoordinateDimension::from(dim);
     f.write_str("(")?;
@@ -357,21 +398,27 @@ pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>, W: Writ
         .chain(std::iter::once(triangle.first()));
     add_coord_sequence(coords_iter, f, size)?;
 
-    f.write_char(')')
+    Ok(f.write_char(')')?)
 }
 
 pub fn write_line<T: WktNum + fmt::Display, G: LineTrait<T = T>, W: Write>(
     line: &G,
     f: &mut W,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     let dim = line.dim();
     // Write prefix
     match dim {
-        geo_traits::Dimensions::Xy => f.write_str("LINESTRING"),
-        geo_traits::Dimensions::Xyz => f.write_str("LINESTRING Z"),
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => {
+            f.write_str("LINESTRING")
+        }
+        geo_traits::Dimensions::Xyz | geo_traits::Dimensions::Unknown(3) => {
+            f.write_str("LINESTRING Z")
+        }
         geo_traits::Dimensions::Xym => f.write_str("LINESTRING M"),
-        geo_traits::Dimensions::Xyzm => f.write_str("LINESTRING ZM"),
-        geo_traits::Dimensions::Unknown(_) => todo!(),
+        geo_traits::Dimensions::Xyzm | geo_traits::Dimensions::Unknown(4) => {
+            f.write_str("LINESTRING ZM")
+        }
+        geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
     let size = PhysicalCoordinateDimension::from(dim);
     add_coord_sequence(line.coords().into_iter(), f, size)
@@ -422,7 +469,7 @@ fn add_coord_sequence<T: WktNum + fmt::Display, W: Write, C: CoordTrait<T = T>>(
     mut coords: impl Iterator<Item = C>,
     f: &mut W,
     size: PhysicalCoordinateDimension,
-) -> Result<(), std::fmt::Error> {
+) -> Result<(), crate::error::Error> {
     f.write_char('(')?;
 
     if let Some(first_coord) = coords.next() {
