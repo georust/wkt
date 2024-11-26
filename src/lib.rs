@@ -22,7 +22,7 @@
 //! geometry format.
 //!
 //! Conversions are available via the [`TryFromWkt`] and [`ToWkt`] traits, with implementations for
-//! [`geo_types`] primitives enabled by default.
+//! [`geo_types`] and [`geo_traits`] primitives enabled by default.
 //!
 //! For advanced usage, see the [`types`](crate::types) module for a list of internally used types.
 //!
@@ -56,6 +56,16 @@
 //! ## Read or write your own geometry types
 //!
 //! Not using `geo-types` for your geometries? No problem!
+//!
+//! As of `wkt` version 0.12, this crate provides read and write integration with [`geo_traits`],
+//! a collection of geometry access traits, to provide zero-copy integration with geometry
+//! representations other than `geo-types`.
+//!
+//! This integration allows you to transparently read data from this crate's intermediate geometry
+//! structure, and it allows you to write WKT strings directly from your geometry without any
+//! intermediate representation.
+//!
+//!
 //!
 //! You can use [`Wkt::from_str`] to parse a WKT string into this crate's intermediate geometry
 //! structure. You can use that directly, or if have your own geometry types that you'd prefer to

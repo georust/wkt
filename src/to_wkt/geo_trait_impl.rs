@@ -22,17 +22,20 @@ enum PhysicalCoordinateDimension {
     Four,
 }
 
-impl From<geo_traits::Dimensions> for PhysicalCoordinateDimension {
-    fn from(value: geo_traits::Dimensions) -> Self {
+impl TryFrom<geo_traits::Dimensions> for PhysicalCoordinateDimension {
+    type Error = Error;
+
+    fn try_from(value: geo_traits::Dimensions) -> Result<Self, Self::Error> {
         match value.size() {
-            2 => Self::Two,
-            3 => Self::Three,
-            4 => Self::Four,
-            size => panic!("Unexpected dimension for coordinate: {}", size),
+            2 => Ok(Self::Two),
+            3 => Ok(Self::Three),
+            4 => Ok(Self::Four),
+            _ => Err(Error::UnknownDimension),
         }
     }
 }
 
+/// Write an object implementing [`PointTrait`] to a WKT string.
 pub fn write_point<T: WktNum + fmt::Display, G: PointTrait<T = T>>(
     f: &mut impl Write,
     g: &G,
@@ -48,7 +51,7 @@ pub fn write_point<T: WktNum + fmt::Display, G: PointTrait<T = T>>(
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = PhysicalCoordinateDimension::from(dim);
+    let size = dim.try_into()?;
     if let Some(coord) = g.coord() {
         f.write_char('(')?;
         write_coord(f, &coord, size)?;
@@ -59,6 +62,7 @@ pub fn write_point<T: WktNum + fmt::Display, G: PointTrait<T = T>>(
     }
 }
 
+/// Write an object implementing [`LineStringTrait`] to a WKT string.
 pub fn write_linestring<T: WktNum + fmt::Display, G: LineStringTrait<T = T>>(
     f: &mut impl Write,
     linestring: &G,
@@ -78,7 +82,7 @@ pub fn write_linestring<T: WktNum + fmt::Display, G: LineStringTrait<T = T>>(
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = PhysicalCoordinateDimension::from(dim);
+    let size = dim.try_into()?;
     if linestring.num_coords() == 0 {
         Ok(f.write_str(" EMPTY")?)
     } else {
@@ -86,6 +90,7 @@ pub fn write_linestring<T: WktNum + fmt::Display, G: LineStringTrait<T = T>>(
     }
 }
 
+/// Write an object implementing [`PolygonTrait`] to a WKT string.
 pub fn write_polygon<T: WktNum + fmt::Display, G: PolygonTrait<T = T>>(
     f: &mut impl Write,
     polygon: &G,
@@ -103,7 +108,7 @@ pub fn write_polygon<T: WktNum + fmt::Display, G: PolygonTrait<T = T>>(
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = PhysicalCoordinateDimension::from(dim);
+    let size = dim.try_into()?;
     if let Some(exterior) = polygon.exterior() {
         if exterior.num_coords() != 0 {
             f.write_str("(")?;
@@ -123,6 +128,7 @@ pub fn write_polygon<T: WktNum + fmt::Display, G: PolygonTrait<T = T>>(
     }
 }
 
+/// Write an object implementing [`MultiPointTrait`] to a WKT string.
 pub fn write_multi_point<T: WktNum + fmt::Display, G: MultiPointTrait<T = T>>(
     f: &mut impl Write,
     multipoint: &G,
@@ -142,7 +148,7 @@ pub fn write_multi_point<T: WktNum + fmt::Display, G: MultiPointTrait<T = T>>(
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = PhysicalCoordinateDimension::from(dim);
+    let size = dim.try_into()?;
 
     let mut points = multipoint.points();
 
@@ -167,6 +173,7 @@ pub fn write_multi_point<T: WktNum + fmt::Display, G: MultiPointTrait<T = T>>(
     Ok(())
 }
 
+/// Write an object implementing [`MultiLineStringTrait`] to a WKT string.
 pub fn write_multi_linestring<T: WktNum + fmt::Display, G: MultiLineStringTrait<T = T>>(
     f: &mut impl Write,
     multilinestring: &G,
@@ -186,7 +193,7 @@ pub fn write_multi_linestring<T: WktNum + fmt::Display, G: MultiLineStringTrait<
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = PhysicalCoordinateDimension::from(dim);
+    let size = dim.try_into()?;
     let mut line_strings = multilinestring.line_strings();
     if let Some(first_linestring) = line_strings.next() {
         f.write_str("(")?;
@@ -205,6 +212,7 @@ pub fn write_multi_linestring<T: WktNum + fmt::Display, G: MultiLineStringTrait<
     Ok(())
 }
 
+/// Write an object implementing [`MultiPolygonTrait`] to a WKT string.
 pub fn write_multi_polygon<T: WktNum + fmt::Display, G: MultiPolygonTrait<T = T>>(
     f: &mut impl Write,
     multipolygon: &G,
@@ -224,7 +232,7 @@ pub fn write_multi_polygon<T: WktNum + fmt::Display, G: MultiPolygonTrait<T = T>
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = PhysicalCoordinateDimension::from(dim);
+    let size = dim.try_into()?;
 
     let mut polygons = multipolygon.polygons();
 
@@ -255,8 +263,7 @@ pub fn write_multi_polygon<T: WktNum + fmt::Display, G: MultiPolygonTrait<T = T>
     Ok(())
 }
 
-/// Create geometry to WKT representation.
-
+/// Write an object implementing [`GeometryTrait`] to a WKT string.
 pub fn write_geometry<T: WktNum + fmt::Display, G: GeometryTrait<T = T>>(
     f: &mut impl Write,
     geometry: &G,
@@ -277,6 +284,7 @@ pub fn write_geometry<T: WktNum + fmt::Display, G: GeometryTrait<T = T>>(
     }
 }
 
+/// Write an object implementing [`GeometryCollectionTrait`] to a WKT string.
 pub fn write_geometry_collection<T: WktNum + fmt::Display, G: GeometryCollectionTrait<T = T>>(
     f: &mut impl Write,
     gc: &G,
@@ -314,6 +322,13 @@ pub fn write_geometry_collection<T: WktNum + fmt::Display, G: GeometryCollection
     Ok(())
 }
 
+/// Write an object implementing [`RectTrait`] to a WKT string.
+///
+/// The Rect will written as a Polygon with one exterior ring.
+///
+/// Note that only 2D `Rect`s are supported, because it's unclear how to map a higher-dimensional
+/// Rect to a Polygon. For higher dimensional `Rect`, transform your data to a Polygon and use
+/// [`write_polygon`].
 pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>>(
     f: &mut impl Write,
     rect: &G,
@@ -366,6 +381,9 @@ pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>>(
     Ok(f.write_char(')')?)
 }
 
+/// Write an object implementing [`TriangleTrait`] to a WKT string.
+///
+/// The Triangle will written as a Polygon with one exterior ring.
 pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>>(
     f: &mut impl Write,
     triangle: &G,
@@ -383,7 +401,7 @@ pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>>(
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = PhysicalCoordinateDimension::from(dim);
+    let size = dim.try_into()?;
     f.write_str("(")?;
 
     let coords_iter = triangle
@@ -395,6 +413,9 @@ pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>>(
     Ok(f.write_char(')')?)
 }
 
+/// Write an object implementing [`LineTrait`] to a WKT string.
+///
+/// The Line will written as a LineString with two coordinates.
 pub fn write_line<T: WktNum + fmt::Display, G: LineTrait<T = T>>(
     f: &mut impl Write,
     line: &G,
@@ -414,7 +435,7 @@ pub fn write_line<T: WktNum + fmt::Display, G: LineTrait<T = T>>(
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = PhysicalCoordinateDimension::from(dim);
+    let size = dim.try_into()?;
     write_coord_sequence(f, line.coords().into_iter(), size)
 }
 
