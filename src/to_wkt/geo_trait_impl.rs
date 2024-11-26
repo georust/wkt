@@ -1,4 +1,4 @@
-use core::fmt;
+use std::fmt;
 use std::fmt::Write;
 
 use geo_traits::{

@@ -1,4 +1,4 @@
-use core::fmt;
+use std::fmt;
 
 use thiserror::Error;
 
@@ -11,14 +11,14 @@ pub enum Error {
     UnknownDimension,
     /// Wrapper around `[std::fmt::Error]`
     #[error(transparent)]
-    FmtError(#[from] core::fmt::Error),
+    FmtError(#[from] std::fmt::Error),
 }
 
 impl From<Error> for fmt::Error {
     fn from(value: Error) -> Self {
         match value {
             Error::FmtError(err) => err,
-            _ => core::fmt::Error,
+            _ => std::fmt::Error,
         }
     }
 }
