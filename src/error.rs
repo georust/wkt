@@ -5,8 +5,8 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 /// WKT to [`geo_types`] conversions errors
 pub enum Error {
-    // #[error("The WKT Point was empty, but geo_type::Points cannot be empty")]
-    // RectWriter,
+    #[error("Only 2D input is supported when writing Rect to WKT.")]
+    RectUnsupportedDimension,
     #[error("Only defined dimensions and undefined dimensions of 2, 3, or 4 are supported.")]
     UnknownDimension,
     /// Wrapper around `[std::fmt::Error]`

@@ -8,7 +8,7 @@ use geo_traits::{
 };
 
 use crate::error::Error;
-use crate::types::{Coord, LineString, Polygon};
+use crate::types::Coord;
 use crate::WktNum;
 
 /// The physical size of the coordinate dimension
@@ -322,13 +322,21 @@ pub fn write_geometry_collection<
     Ok(())
 }
 
-fn rect_to_polygon<T: WktNum + fmt::Display, G: RectTrait<T = T>>(rect: &G) -> Polygon<T> {
+pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
+    rect: &G,
+    f: &mut W,
+) -> Result<(), crate::error::Error> {
+    // Write prefix and error if not 2D
+    match rect.dim() {
+        geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => f.write_str("POLYGON"),
+        _ => return Err(Error::RectUnsupportedDimension),
+    }?;
+
     let min_coord = rect.min();
     let max_coord = rect.max();
 
-    // Note: Even if the rect has more than 2 dimensions, we omit the other dimensions when
-    // converting to a Polygon.
-    let coords = vec![
+    // We need to construct the five points of the rect that make up the exterior Polygon
+    let coords = [
         Coord {
             x: min_coord.x(),
             y: min_coord.y(),
@@ -360,16 +368,10 @@ fn rect_to_polygon<T: WktNum + fmt::Display, G: RectTrait<T = T>>(rect: &G) -> P
             m: None,
         },
     ];
-    let ring = LineString(coords);
-    Polygon(vec![ring])
-}
 
-pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
-    rect: &G,
-    f: &mut W,
-) -> Result<(), crate::error::Error> {
-    let polygon = rect_to_polygon(rect);
-    write_polygon(&polygon, f)
+    f.write_str("(")?;
+    add_coord_sequence(coords.iter(), f, PhysicalCoordinateDimension::Two)?;
+    Ok(f.write_char(')')?)
 }
 
 pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>, W: Write>(
