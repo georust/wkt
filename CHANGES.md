@@ -1,5 +1,12 @@
 # Changes
 
+## 0.12.0 - 2024-11-26
+
+* Writing WKT is now up to 50% faster by avoiding extra allocations and writing directly to an underlying buffer.
+* Any `geo_traits` input is now supported when writing to WKT.
+* Implements `geo_traits` on `Wkt` and all structs in `types`. This allows for easier interoperability when reading WKT data to other representations than `geo-types`.
+* BREAKING: removed the `fmt::Display` impl on `wkt::Coord`.
+
 ## 0.11.1 - 2024-10-10
 
 * Add an `infer_type` function to extract only the geometry type and dimension from a WKT string.
