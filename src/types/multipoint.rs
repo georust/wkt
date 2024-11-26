@@ -39,7 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        Ok(write_multi_point(self, f)?)
+        Ok(write_multi_point(f, self)?)
     }
 }
 

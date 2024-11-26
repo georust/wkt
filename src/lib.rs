@@ -360,7 +360,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        Ok(write_geometry(self, f)?)
+        Ok(write_geometry(f, self)?)
     }
 }
 
