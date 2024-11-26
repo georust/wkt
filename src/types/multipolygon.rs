@@ -39,7 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write_multi_polygon(self, f)
+        Ok(write_multi_polygon(self, f)?)
     }
 }
 

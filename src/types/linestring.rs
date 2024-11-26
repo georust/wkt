@@ -49,7 +49,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write_linestring(self, f)
+        Ok(write_linestring(self, f)?)
     }
 }
 
