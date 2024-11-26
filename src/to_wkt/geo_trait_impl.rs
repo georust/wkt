@@ -51,7 +51,7 @@ pub fn write_point<T: WktNum + fmt::Display, G: PointTrait<T = T>, W: Write>(
     let size = PhysicalCoordinateDimension::from(dim);
     if let Some(coord) = g.coord() {
         f.write_char('(')?;
-        add_coord(&coord, f, size)?;
+        write_coord(&coord, f, size)?;
         f.write_char(')')?;
         Ok(())
     } else {
@@ -82,7 +82,7 @@ pub fn write_linestring<T: WktNum + fmt::Display, G: LineStringTrait<T = T>, W: 
     if linestring.num_coords() == 0 {
         Ok(f.write_str(" EMPTY")?)
     } else {
-        add_coord_sequence(linestring.coords(), f, size)
+        write_coord_sequence(linestring.coords(), f, size)
     }
 }
 
@@ -107,11 +107,11 @@ pub fn write_polygon<T: WktNum + fmt::Display, G: PolygonTrait<T = T>, W: Write>
     if let Some(exterior) = polygon.exterior() {
         if exterior.num_coords() != 0 {
             f.write_str("(")?;
-            add_coord_sequence(exterior.coords(), f, size)?;
+            write_coord_sequence(exterior.coords(), f, size)?;
 
             for interior in polygon.interiors() {
                 f.write_char(',')?;
-                add_coord_sequence(interior.coords(), f, size)?;
+                write_coord_sequence(interior.coords(), f, size)?;
             }
 
             Ok(f.write_char(')')?)
@@ -146,17 +146,17 @@ pub fn write_multi_point<T: WktNum + fmt::Display, G: MultiPointTrait<T = T>, W:
 
     let mut points = multipoint.points();
 
-    // Note: This is largely copied from `add_coord_sequence`, because `multipoint.points()`
+    // Note: This is largely copied from `write_coord_sequence`, because `multipoint.points()`
     // yields a sequence of Point, not Coord.
     if let Some(first_point) = points.next() {
         f.write_str("((")?;
 
         // Assume no empty points within this MultiPoint
-        add_coord(&first_point.coord().unwrap(), f, size)?;
+        write_coord(&first_point.coord().unwrap(), f, size)?;
 
         for point in points {
             f.write_str("),(")?;
-            add_coord(&point.coord().unwrap(), f, size)?;
+            write_coord(&point.coord().unwrap(), f, size)?;
         }
 
         f.write_str("))")?;
@@ -194,11 +194,11 @@ pub fn write_multi_linestring<
     let mut line_strings = multilinestring.line_strings();
     if let Some(first_linestring) = line_strings.next() {
         f.write_str("(")?;
-        add_coord_sequence(first_linestring.coords(), f, size)?;
+        write_coord_sequence(first_linestring.coords(), f, size)?;
 
         for linestring in line_strings {
             f.write_char(',')?;
-            add_coord_sequence(linestring.coords(), f, size)?;
+            write_coord_sequence(linestring.coords(), f, size)?;
         }
 
         f.write_char(')')?;
@@ -235,19 +235,19 @@ pub fn write_multi_polygon<T: WktNum + fmt::Display, G: MultiPolygonTrait<T = T>
     if let Some(first_polygon) = polygons.next() {
         f.write_str("((")?;
 
-        add_coord_sequence(first_polygon.exterior().unwrap().coords(), f, size)?;
+        write_coord_sequence(first_polygon.exterior().unwrap().coords(), f, size)?;
         for interior in first_polygon.interiors() {
             f.write_char(',')?;
-            add_coord_sequence(interior.coords(), f, size)?;
+            write_coord_sequence(interior.coords(), f, size)?;
         }
 
         for polygon in polygons {
             f.write_str("),(")?;
 
-            add_coord_sequence(polygon.exterior().unwrap().coords(), f, size)?;
+            write_coord_sequence(polygon.exterior().unwrap().coords(), f, size)?;
             for interior in polygon.interiors() {
                 f.write_char(',')?;
-                add_coord_sequence(interior.coords(), f, size)?;
+                write_coord_sequence(interior.coords(), f, size)?;
             }
         }
 
@@ -370,7 +370,7 @@ pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
     ];
 
     f.write_str("(")?;
-    add_coord_sequence(coords.iter(), f, PhysicalCoordinateDimension::Two)?;
+    write_coord_sequence(coords.iter(), f, PhysicalCoordinateDimension::Two)?;
     Ok(f.write_char(')')?)
 }
 
@@ -398,7 +398,7 @@ pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>, W: Writ
         .coords()
         .into_iter()
         .chain(std::iter::once(triangle.first()));
-    add_coord_sequence(coords_iter, f, size)?;
+    write_coord_sequence(coords_iter, f, size)?;
 
     Ok(f.write_char(')')?)
 }
@@ -423,13 +423,13 @@ pub fn write_line<T: WktNum + fmt::Display, G: LineTrait<T = T>, W: Write>(
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
     let size = PhysicalCoordinateDimension::from(dim);
-    add_coord_sequence(line.coords().into_iter(), f, size)
+    write_coord_sequence(line.coords().into_iter(), f, size)
 }
 
 /// Write a single coordinate to the writer.
 ///
 /// Will not include any start or end `()` characters.
-fn add_coord<T: WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write>(
+fn write_coord<T: WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write>(
     coord: &G,
     f: &mut W,
     size: PhysicalCoordinateDimension,
@@ -467,7 +467,7 @@ fn add_coord<T: WktNum + fmt::Display, G: CoordTrait<T = T>, W: Write>(
 /// (1 2, 3 4, 5 6)
 /// ```
 /// for a coordinate sequence with three coordinates.
-fn add_coord_sequence<T: WktNum + fmt::Display, W: Write, C: CoordTrait<T = T>>(
+fn write_coord_sequence<T: WktNum + fmt::Display, W: Write, C: CoordTrait<T = T>>(
     mut coords: impl Iterator<Item = C>,
     f: &mut W,
     size: PhysicalCoordinateDimension,
@@ -475,11 +475,11 @@ fn add_coord_sequence<T: WktNum + fmt::Display, W: Write, C: CoordTrait<T = T>>(
     f.write_char('(')?;
 
     if let Some(first_coord) = coords.next() {
-        add_coord(&first_coord, f, size)?;
+        write_coord(&first_coord, f, size)?;
 
         for coord in coords {
             f.write_char(',')?;
-            add_coord(&coord, f, size)?;
+            write_coord(&coord, f, size)?;
         }
     }
 
