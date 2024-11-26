@@ -33,9 +33,9 @@ impl From<geo_traits::Dimensions> for PhysicalCoordinateDimension {
     }
 }
 
-pub fn write_point<T: WktNum + fmt::Display, G: PointTrait<T = T>>(
+pub fn write_point<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    g: &G,
+    g: &impl PointTrait<T = T>,
 ) -> Result<(), Error> {
     let dim = g.dim();
     // Write prefix
@@ -59,9 +59,9 @@ pub fn write_point<T: WktNum + fmt::Display, G: PointTrait<T = T>>(
     }
 }
 
-pub fn write_linestring<T: WktNum + fmt::Display, G: LineStringTrait<T = T>>(
+pub fn write_linestring<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    linestring: &G,
+    linestring: &impl LineStringTrait<T = T>,
 ) -> Result<(), Error> {
     let dim = linestring.dim();
     // Write prefix
@@ -86,9 +86,9 @@ pub fn write_linestring<T: WktNum + fmt::Display, G: LineStringTrait<T = T>>(
     }
 }
 
-pub fn write_polygon<T: WktNum + fmt::Display, G: PolygonTrait<T = T>>(
+pub fn write_polygon<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    polygon: &G,
+    polygon: &impl PolygonTrait<T = T>,
 ) -> Result<(), Error> {
     let dim = polygon.dim();
     // Write prefix
@@ -123,9 +123,9 @@ pub fn write_polygon<T: WktNum + fmt::Display, G: PolygonTrait<T = T>>(
     }
 }
 
-pub fn write_multi_point<T: WktNum + fmt::Display, G: MultiPointTrait<T = T>>(
+pub fn write_multi_point<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    multipoint: &G,
+    multipoint: &impl MultiPointTrait<T = T>,
 ) -> Result<(), Error> {
     let dim = multipoint.dim();
     // Write prefix
@@ -167,9 +167,9 @@ pub fn write_multi_point<T: WktNum + fmt::Display, G: MultiPointTrait<T = T>>(
     Ok(())
 }
 
-pub fn write_multi_linestring<T: WktNum + fmt::Display, G: MultiLineStringTrait<T = T>>(
+pub fn write_multi_linestring<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    multilinestring: &G,
+    multilinestring: &impl MultiLineStringTrait<T = T>,
 ) -> Result<(), Error> {
     let dim = multilinestring.dim();
     // Write prefix
@@ -205,9 +205,9 @@ pub fn write_multi_linestring<T: WktNum + fmt::Display, G: MultiLineStringTrait<
     Ok(())
 }
 
-pub fn write_multi_polygon<T: WktNum + fmt::Display, G: MultiPolygonTrait<T = T>>(
+pub fn write_multi_polygon<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    multipolygon: &G,
+    multipolygon: &impl MultiPolygonTrait<T = T>,
 ) -> Result<(), Error> {
     let dim = multipolygon.dim();
     // Write prefix
@@ -257,9 +257,9 @@ pub fn write_multi_polygon<T: WktNum + fmt::Display, G: MultiPolygonTrait<T = T>
 
 /// Create geometry to WKT representation.
 
-pub fn write_geometry<T: WktNum + fmt::Display, G: GeometryTrait<T = T>>(
+pub fn write_geometry<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    geometry: &G,
+    geometry: &impl GeometryTrait<T = T>,
 ) -> Result<(), Error> {
     match geometry.as_type() {
         geo_traits::GeometryType::Point(point) => write_point(f, point),
@@ -277,9 +277,9 @@ pub fn write_geometry<T: WktNum + fmt::Display, G: GeometryTrait<T = T>>(
     }
 }
 
-pub fn write_geometry_collection<T: WktNum + fmt::Display, G: GeometryCollectionTrait<T = T>>(
+pub fn write_geometry_collection<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    gc: &G,
+    gc: &impl GeometryCollectionTrait<T = T>,
 ) -> Result<(), Error> {
     let dim = gc.dim();
     // Write prefix
@@ -314,9 +314,9 @@ pub fn write_geometry_collection<T: WktNum + fmt::Display, G: GeometryCollection
     Ok(())
 }
 
-pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>>(
+pub fn write_rect<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    rect: &G,
+    rect: &impl RectTrait<T = T>,
 ) -> Result<(), Error> {
     // Write prefix and error if not 2D
     match rect.dim() {
@@ -366,9 +366,9 @@ pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>>(
     Ok(f.write_char(')')?)
 }
 
-pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>>(
+pub fn write_triangle<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    triangle: &G,
+    triangle: &impl TriangleTrait<T = T>,
 ) -> Result<(), Error> {
     let dim = triangle.dim();
     // Write prefix
@@ -395,9 +395,9 @@ pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>>(
     Ok(f.write_char(')')?)
 }
 
-pub fn write_line<T: WktNum + fmt::Display, G: LineTrait<T = T>>(
+pub fn write_line<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    line: &G,
+    line: &impl LineTrait<T = T>,
 ) -> Result<(), Error> {
     let dim = line.dim();
     // Write prefix
@@ -421,9 +421,9 @@ pub fn write_line<T: WktNum + fmt::Display, G: LineTrait<T = T>>(
 /// Write a single coordinate to the writer.
 ///
 /// Will not include any start or end `()` characters.
-fn write_coord<T: WktNum + fmt::Display, G: CoordTrait<T = T>>(
+fn write_coord<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    coord: &G,
+    coord: &impl CoordTrait<T = T>,
     size: PhysicalCoordinateDimension,
 ) -> Result<(), std::fmt::Error> {
     match size {
@@ -459,9 +459,9 @@ fn write_coord<T: WktNum + fmt::Display, G: CoordTrait<T = T>>(
 /// (1 2, 3 4, 5 6)
 /// ```
 /// for a coordinate sequence with three coordinates.
-fn write_coord_sequence<T: WktNum + fmt::Display, C: CoordTrait<T = T>>(
+fn write_coord_sequence<T: WktNum + fmt::Display>(
     f: &mut impl Write,
-    mut coords: impl Iterator<Item = C>,
+    mut coords: impl Iterator<Item = impl CoordTrait<T = T>>,
     size: PhysicalCoordinateDimension,
 ) -> Result<(), Error> {
     f.write_char('(')?;
