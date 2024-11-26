@@ -8,6 +8,18 @@ pub use geo_trait_impl::{
     write_rect, write_triangle,
 };
 
+/// A wrapper around something that implements std::io::Write to be used with our writer traits,
+/// which require std::fmt::Write
+struct WriterWrapper<W: std::io::Write>(W);
+
+impl<W: std::io::Write> std::fmt::Write for WriterWrapper<W> {
+    fn write_str(&mut self, s: &str) -> std::fmt::Result {
+        // Sadly, this will lose the content of the error when mapping to std::fmt::Error
+        self.0.write(s.as_bytes()).map_err(|_| std::fmt::Error)?;
+        Ok(())
+    }
+}
+
 /// A trait for converting values to WKT
 pub trait ToWkt<T>
 where
@@ -49,7 +61,12 @@ where
     ///
     /// assert_eq!(wkt_string, "POINT(1.2 3.4)");
     /// ```
-    fn write_wkt(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
-        writer.write_all(self.wkt_string().as_bytes())
+    ///
+    /// ## Panics
+    ///
+    /// - If
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        write_geometry(&mut WriterWrapper(writer), &self.to_wkt())
+            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string()))
     }
 }

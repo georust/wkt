@@ -1,6 +1,5 @@
 use geo_types::CoordNum;
 
-use crate::to_wkt::{write_multi_polygon, write_point};
 use crate::types::{
     Coord, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
     Polygon,
@@ -36,17 +35,6 @@ where
     }
 }
 
-/// A wrapper around something that implements std::io::Write to be used with our writer traits,
-/// which require std::fmt::Write
-struct WriterWrapper<W: std::io::Write>(W);
-
-impl<W: std::io::Write> std::fmt::Write for WriterWrapper<W> {
-    fn write_str(&mut self, s: &str) -> std::fmt::Result {
-        self.0.write(s.as_bytes()).map_err(|_| std::fmt::Error)?;
-        Ok(())
-    }
-}
-
 /// # Examples
 /// ```
 /// use geo_types::{point, Point};
@@ -62,17 +50,6 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         Wkt::Point(g_point_to_w_point(self))
-    }
-
-    fn wkt_string(&self) -> String {
-        let mut s = String::new();
-        write_point(&mut s, self).unwrap();
-        s
-    }
-
-    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
-        write_point(&mut WriterWrapper(writer), self).unwrap();
-        Ok(())
     }
 }
 
@@ -187,17 +164,6 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_mpolygon_to_w_mpolygon(self).into()
-    }
-
-    fn wkt_string(&self) -> String {
-        let mut s = String::new();
-        write_multi_polygon(&mut s, self).unwrap();
-        s
-    }
-
-    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
-        write_multi_polygon(&mut WriterWrapper(writer), self).unwrap();
-        Ok(())
     }
 }
 
