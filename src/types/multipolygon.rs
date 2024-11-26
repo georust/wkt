@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use geo_traits::{MultiPolygonTrait, PolygonTrait};
+
 use crate::tokenizer::PeekableTokens;
 use crate::types::polygon::Polygon;
 use crate::types::Dimension;
@@ -72,6 +74,50 @@ where
             dim,
         );
         result.map(MultiPolygon)
+    }
+}
+
+impl<T: WktNum> MultiPolygonTrait for MultiPolygon<T> {
+    type T = T;
+    type PolygonType<'a> = &'a Polygon<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        // TODO: infer dimension from empty WKT
+        if self.0.is_empty() {
+            geo_traits::Dimensions::Xy
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn num_polygons(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
+        self.0.get_unchecked(i)
+    }
+}
+
+impl<T: WktNum> MultiPolygonTrait for &MultiPolygon<T> {
+    type T = T;
+    type PolygonType<'a> = &'a Polygon<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        // TODO: infer dimension from empty WKT
+        if self.0.is_empty() {
+            geo_traits::Dimensions::Xy
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn num_polygons(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
+        self.0.get_unchecked(i)
     }
 }
 

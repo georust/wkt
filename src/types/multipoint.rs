@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use geo_traits::{MultiPointTrait, PointTrait};
+
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
 use crate::types::Dimension;
@@ -63,6 +65,50 @@ where
             dim,
         );
         result.map(MultiPoint)
+    }
+}
+
+impl<T: WktNum> MultiPointTrait for MultiPoint<T> {
+    type T = T;
+    type PointType<'a> = &'a Point<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        // TODO: infer dimension from empty WKT
+        if self.0.is_empty() {
+            geo_traits::Dimensions::Xy
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn num_points(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
+        self.0.get_unchecked(i)
+    }
+}
+
+impl<T: WktNum> MultiPointTrait for &MultiPoint<T> {
+    type T = T;
+    type PointType<'a> = &'a Point<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        // TODO: infer dimension from empty WKT
+        if self.0.is_empty() {
+            geo_traits::Dimensions::Xy
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn num_points(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
+        self.0.get_unchecked(i)
     }
 }
 

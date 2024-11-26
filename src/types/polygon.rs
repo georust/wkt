@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use geo_traits::{LineStringTrait, PolygonTrait};
+
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
 use crate::types::Dimension;
@@ -67,6 +69,58 @@ where
             dim,
         );
         result.map(Polygon)
+    }
+}
+
+impl<T: WktNum> PolygonTrait for Polygon<T> {
+    type T = T;
+    type RingType<'a> = &'a LineString<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        // TODO: infer dimension from empty WKT
+        if self.0.is_empty() {
+            geo_traits::Dimensions::Xy
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
+        self.0.first()
+    }
+
+    fn num_interiors(&self) -> usize {
+        self.0.len().saturating_sub(1)
+    }
+
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
+        self.0.get_unchecked(i + 1)
+    }
+}
+
+impl<T: WktNum> PolygonTrait for &Polygon<T> {
+    type T = T;
+    type RingType<'a> = &'a LineString<T> where Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        // TODO: infer dimension from empty WKT
+        if self.0.is_empty() {
+            geo_traits::Dimensions::Xy
+        } else {
+            self.0[0].dim()
+        }
+    }
+
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
+        self.0.first()
+    }
+
+    fn num_interiors(&self) -> usize {
+        self.0.len().saturating_sub(1)
+    }
+
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
+        self.0.get_unchecked(i + 1)
     }
 }
 

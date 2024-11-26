@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use geo_traits::CoordTrait;
+
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
 use crate::{FromTokens, WktNum};
@@ -93,6 +95,100 @@ where
         }
 
         Ok(Coord { x, y, z, m })
+    }
+}
+
+impl<T: WktNum> CoordTrait for Coord<T> {
+    type T = T;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        match (self.z.is_some(), self.m.is_some()) {
+            (true, true) => geo_traits::Dimensions::Xyzm,
+            (true, false) => geo_traits::Dimensions::Xyz,
+            (false, true) => geo_traits::Dimensions::Xym,
+            (false, false) => geo_traits::Dimensions::Xy,
+        }
+    }
+
+    fn x(&self) -> Self::T {
+        self.x
+    }
+
+    fn y(&self) -> Self::T {
+        self.y
+    }
+
+    fn nth_or_panic(&self, n: usize) -> Self::T {
+        let has_z = self.z.is_some();
+        let has_m = self.m.is_some();
+        match n {
+            0 => self.x,
+            1 => self.y,
+            2 => {
+                if has_z {
+                    self.z.unwrap()
+                } else if has_m {
+                    self.m.unwrap()
+                } else {
+                    panic!("n out of range")
+                }
+            }
+            3 => {
+                if has_z && has_m {
+                    self.m.unwrap()
+                } else {
+                    panic!("n out of range")
+                }
+            }
+            _ => panic!("n out of range"),
+        }
+    }
+}
+
+impl<T: WktNum> CoordTrait for &Coord<T> {
+    type T = T;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        match (self.z.is_some(), self.m.is_some()) {
+            (true, true) => geo_traits::Dimensions::Xyzm,
+            (true, false) => geo_traits::Dimensions::Xyz,
+            (false, true) => geo_traits::Dimensions::Xym,
+            (false, false) => geo_traits::Dimensions::Xy,
+        }
+    }
+
+    fn x(&self) -> Self::T {
+        self.x
+    }
+
+    fn y(&self) -> Self::T {
+        self.y
+    }
+
+    fn nth_or_panic(&self, n: usize) -> Self::T {
+        let has_z = self.z.is_some();
+        let has_m = self.m.is_some();
+        match n {
+            0 => self.x,
+            1 => self.y,
+            2 => {
+                if has_z {
+                    self.z.unwrap()
+                } else if has_m {
+                    self.m.unwrap()
+                } else {
+                    panic!("n out of range")
+                }
+            }
+            3 => {
+                if has_z && has_m {
+                    self.m.unwrap()
+                } else {
+                    panic!("n out of range")
+                }
+            }
+            _ => panic!("n out of range"),
+        }
     }
 }
 
