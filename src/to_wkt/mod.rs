@@ -8,14 +8,31 @@ pub use geo_trait_impl::{
     write_rect, write_triangle,
 };
 
+use crate::error::Error;
+use std::io;
+
 /// A wrapper around something that implements std::io::Write to be used with our writer traits,
 /// which require std::fmt::Write
-struct WriterWrapper<W: std::io::Write>(W);
+struct WriterWrapper<W: io::Write> {
+    writer: W,
+    most_recent_err: Option<io::Error>,
+}
 
-impl<W: std::io::Write> std::fmt::Write for WriterWrapper<W> {
+impl<W: io::Write> WriterWrapper<W> {
+    fn new(writer: W) -> Self {
+        Self {
+            writer,
+            most_recent_err: None,
+        }
+    }
+}
+
+impl<W: io::Write> std::fmt::Write for WriterWrapper<W> {
     fn write_str(&mut self, s: &str) -> std::fmt::Result {
-        // Sadly, this will lose the content of the error when mapping to std::fmt::Error
-        self.0.write(s.as_bytes()).map_err(|_| std::fmt::Error)?;
+        self.writer.write(s.as_bytes()).map_err(|err| {
+            self.most_recent_err = Some(err);
+            std::fmt::Error
+        })?;
         Ok(())
     }
 }
@@ -61,8 +78,44 @@ where
     ///
     /// assert_eq!(wkt_string, "POINT(1.2 3.4)");
     /// ```
-    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
-        write_geometry(&mut WriterWrapper(writer), &self.to_wkt())
-            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string()))
+    fn write_wkt(&self, writer: impl io::Write) -> io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_geometry(&mut writer_wrapper, &self.to_wkt()).map_err(|err| {
+            match (err, writer_wrapper.most_recent_err) {
+                (Error::FmtError(_), Some(io_err)) => io_err,
+                (Error::FmtError(fmt_err), None) => {
+                    debug_assert!(false, "FmtError without setting an error on WriterWrapper");
+                    io::Error::new(io::ErrorKind::Other, fmt_err.to_string())
+                }
+                (other, _) => io::Error::new(io::ErrorKind::Other, other.to_string()),
+            }
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(feature = "geo-types")]
+    #[test]
+    fn write_wkt_error_handling() {
+        struct FailingWriter;
+        impl io::Write for FailingWriter {
+            fn write(&mut self, _buf: &[u8]) -> io::Result<usize> {
+                Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "FailingWriter always fails",
+                ))
+            }
+
+            fn flush(&mut self) -> io::Result<()> {
+                Ok(())
+            }
+        }
+
+        let point = geo_types::Point::new(1.2, 3.4);
+        let err = point.write_wkt(FailingWriter).unwrap_err();
+        assert_eq!(err.to_string(), "FailingWriter always fails");
     }
 }
