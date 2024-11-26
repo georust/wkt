@@ -2,8 +2,8 @@ use core::fmt;
 
 use thiserror::Error;
 
+/// Generic errors for WKT writing and reading
 #[derive(Error, Debug)]
-/// WKT to [`geo_types`] conversions errors
 pub enum Error {
     #[error("Only 2D input is supported when writing Rect to WKT.")]
     RectUnsupportedDimension,
