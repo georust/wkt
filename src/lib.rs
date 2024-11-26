@@ -86,15 +86,18 @@ use geo_traits::{
 };
 use num_traits::{Float, Num, NumCast};
 
+use crate::to_wkt::write_geometry;
 use crate::tokenizer::{PeekableTokens, Token, Tokens};
 use crate::types::{
     Dimension, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
     Polygon,
 };
 
-mod to_wkt;
+pub mod to_wkt;
 mod tokenizer;
 
+/// Error variant for this crate
+pub mod error;
 /// `WKT` primitive types and collections
 pub mod types;
 
@@ -104,8 +107,6 @@ pub use infer_type::infer_type;
 
 #[cfg(feature = "geo-types")]
 extern crate geo_types;
-
-extern crate thiserror;
 
 pub use crate::to_wkt::ToWkt;
 
@@ -359,15 +360,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        match self {
-            Wkt::Point(point) => point.fmt(f),
-            Wkt::LineString(linestring) => linestring.fmt(f),
-            Wkt::Polygon(polygon) => polygon.fmt(f),
-            Wkt::MultiPoint(multipoint) => multipoint.fmt(f),
-            Wkt::MultiLineString(multilinstring) => multilinstring.fmt(f),
-            Wkt::MultiPolygon(multipolygon) => multipolygon.fmt(f),
-            Wkt::GeometryCollection(geometrycollection) => geometrycollection.fmt(f),
-        }
+        Ok(write_geometry(f, self)?)
     }
 }
 

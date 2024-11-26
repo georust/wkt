@@ -17,7 +17,6 @@ use geo_traits::CoordTrait;
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
 use crate::{FromTokens, WktNum};
-use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -29,22 +28,6 @@ where
     pub y: T,
     pub z: Option<T>,
     pub m: Option<T>,
-}
-
-impl<T> fmt::Display for Coord<T>
-where
-    T: WktNum + fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "{} {}", self.x, self.y)?;
-        if let Some(z) = self.z {
-            write!(f, " {}", z)?;
-        }
-        if let Some(m) = self.m {
-            write!(f, " {}", m)?;
-        }
-        Ok(())
-    }
 }
 
 impl<T> FromTokens<T> for Coord<T>
@@ -189,58 +172,5 @@ impl<T: WktNum> CoordTrait for &Coord<T> {
             }
             _ => panic!("n out of range"),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::Coord;
-
-    #[test]
-    fn write_2d_coord() {
-        let coord = Coord {
-            x: 10.1,
-            y: 20.2,
-            z: None,
-            m: None,
-        };
-
-        assert_eq!("10.1 20.2", format!("{}", coord));
-    }
-
-    #[test]
-    fn write_3d_coord() {
-        let coord = Coord {
-            x: 10.1,
-            y: 20.2,
-            z: Some(-30.3),
-            m: None,
-        };
-
-        assert_eq!("10.1 20.2 -30.3", format!("{}", coord));
-    }
-
-    #[test]
-    fn write_2d_coord_with_linear_referencing_system() {
-        let coord = Coord {
-            x: 10.1,
-            y: 20.2,
-            z: None,
-            m: Some(10.),
-        };
-
-        assert_eq!("10.1 20.2 10", format!("{}", coord));
-    }
-
-    #[test]
-    fn write_3d_coord_with_linear_referencing_system() {
-        let coord = Coord {
-            x: 10.1,
-            y: 20.2,
-            z: Some(-30.3),
-            m: Some(10.),
-        };
-
-        assert_eq!("10.1 20.2 -30.3 10", format!("{}", coord));
     }
 }

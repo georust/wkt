@@ -14,6 +14,7 @@
 
 use geo_traits::{GeometryCollectionTrait, GeometryTrait};
 
+use crate::to_wkt::write_geometry_collection;
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
 use crate::{FromTokens, Wkt, WktNum};
@@ -37,18 +38,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if self.0.is_empty() {
-            f.write_str("GEOMETRYCOLLECTION EMPTY")
-        } else {
-            let strings = self
-                .0
-                .iter()
-                .map(|geometry| format!("{}", geometry))
-                .collect::<Vec<_>>()
-                .join(",");
-
-            write!(f, "GEOMETRYCOLLECTION({})", strings)
-        }
+        Ok(write_geometry_collection(f, self)?)
     }
 }
 

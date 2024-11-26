@@ -14,6 +14,7 @@
 
 use geo_traits::{CoordTrait, PointTrait};
 
+use crate::to_wkt::write_point;
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
 use crate::types::Dimension;
@@ -38,23 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        match self.0 {
-            Some(ref coord) => {
-                let mut lrs = String::new();
-                if coord.z.is_some() {
-                    lrs += "Z";
-                }
-                if coord.m.is_some() {
-                    lrs += "M";
-                }
-                if !lrs.is_empty() {
-                    lrs = " ".to_string() + &lrs;
-                }
-
-                write!(f, "POINT{}({})", lrs, coord)
-            }
-            None => f.write_str("POINT EMPTY"),
-        }
+        Ok(write_point(f, self)?)
     }
 }
 

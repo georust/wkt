@@ -14,6 +14,7 @@
 
 use geo_traits::{LineStringTrait, MultiLineStringTrait};
 
+use crate::to_wkt::write_multi_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
 use crate::types::Dimension;
@@ -38,23 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if self.0.is_empty() {
-            f.write_str("MULTILINESTRING EMPTY")
-        } else {
-            let strings = self
-                .0
-                .iter()
-                .map(|l| {
-                    l.0.iter()
-                        .map(|c| format!("{} {}", c.x, c.y))
-                        .collect::<Vec<_>>()
-                        .join(",")
-                })
-                .collect::<Vec<_>>()
-                .join("),(");
-
-            write!(f, "MULTILINESTRING(({}))", strings)
-        }
+        Ok(write_multi_linestring(f, self)?)
     }
 }
 

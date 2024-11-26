@@ -1,5 +1,13 @@
 use crate::{Wkt, WktNum};
 
+mod geo_trait_impl;
+
+pub use geo_trait_impl::{
+    write_geometry, write_geometry_collection, write_line, write_linestring,
+    write_multi_linestring, write_multi_point, write_multi_polygon, write_point, write_polygon,
+    write_rect, write_triangle,
+};
+
 /// A trait for converting values to WKT
 pub trait ToWkt<T>
 where

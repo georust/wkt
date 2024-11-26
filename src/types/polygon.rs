@@ -14,6 +14,7 @@
 
 use geo_traits::{LineStringTrait, PolygonTrait};
 
+use crate::to_wkt::write_polygon;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
 use crate::types::Dimension;
@@ -38,23 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if self.0.is_empty() {
-            f.write_str("POLYGON EMPTY")
-        } else {
-            let strings = self
-                .0
-                .iter()
-                .map(|l| {
-                    l.0.iter()
-                        .map(|c| format!("{} {}", c.x, c.y))
-                        .collect::<Vec<_>>()
-                        .join(",")
-                })
-                .collect::<Vec<_>>()
-                .join("),(");
-
-            write!(f, "POLYGON(({}))", strings)
-        }
+        Ok(write_polygon(f, self)?)
     }
 }
 

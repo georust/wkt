@@ -14,6 +14,7 @@
 
 use geo_traits::{MultiPolygonTrait, PolygonTrait};
 
+use crate::to_wkt::write_multi_polygon;
 use crate::tokenizer::PeekableTokens;
 use crate::types::polygon::Polygon;
 use crate::types::Dimension;
@@ -38,28 +39,7 @@ where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if self.0.is_empty() {
-            f.write_str("MULTIPOLYGON EMPTY")
-        } else {
-            let strings = self
-                .0
-                .iter()
-                .map(|p| {
-                    p.0.iter()
-                        .map(|l| {
-                            l.0.iter()
-                                .map(|c| format!("{} {}", c.x, c.y))
-                                .collect::<Vec<String>>()
-                                .join(",")
-                        })
-                        .collect::<Vec<String>>()
-                        .join("),(")
-                })
-                .collect::<Vec<String>>()
-                .join(")),((");
-
-            write!(f, "MULTIPOLYGON((({})))", strings)
-        }
+        Ok(write_multi_polygon(f, self)?)
     }
 }
 

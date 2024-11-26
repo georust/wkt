@@ -64,5 +64,31 @@ fn geo_write_wkt(c: &mut criterion::Criterion) {
     });
 }
 
-criterion_group!(benches, wkt_to_string, geo_to_wkt_string, geo_write_wkt);
+fn geo_write_wkt_as_trait(c: &mut criterion::Criterion) {
+    c.bench_function("geo: write small wkt using trait", |bencher| {
+        let s = include_str!("./small.wkt");
+        let w = wkt::Wkt::<f64>::from_str(s).unwrap();
+        let g = geo_types::Geometry::try_from(w).unwrap();
+        bencher.iter(|| {
+            wkt::to_wkt::write_geometry(&mut String::new(), &g).unwrap();
+        });
+    });
+
+    c.bench_function("geo: write big wkt using trait", |bencher| {
+        let s = include_str!("./big.wkt");
+        let w = wkt::Wkt::<f64>::from_str(s).unwrap();
+        let g = geo_types::Geometry::try_from(w).unwrap();
+        bencher.iter(|| {
+            wkt::to_wkt::write_geometry(&mut String::new(), &g).unwrap();
+        });
+    });
+}
+
+criterion_group!(
+    benches,
+    wkt_to_string,
+    geo_to_wkt_string,
+    geo_write_wkt,
+    geo_write_wkt_as_trait
+);
 criterion_main!(benches);
