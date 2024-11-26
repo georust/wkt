@@ -62,7 +62,7 @@ pub fn write_point<T: WktNum + fmt::Display, G: PointTrait<T = T>, W: Write>(
 pub fn write_linestring<T: WktNum + fmt::Display, G: LineStringTrait<T = T>, W: Write>(
     linestring: &G,
     f: &mut W,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     let dim = linestring.dim();
     // Write prefix
     match dim {
@@ -89,7 +89,7 @@ pub fn write_linestring<T: WktNum + fmt::Display, G: LineStringTrait<T = T>, W: 
 pub fn write_polygon<T: WktNum + fmt::Display, G: PolygonTrait<T = T>, W: Write>(
     polygon: &G,
     f: &mut W,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     let dim = polygon.dim();
     // Write prefix
     match dim {
@@ -126,7 +126,7 @@ pub fn write_polygon<T: WktNum + fmt::Display, G: PolygonTrait<T = T>, W: Write>
 pub fn write_multi_point<T: WktNum + fmt::Display, G: MultiPointTrait<T = T>, W: Write>(
     multipoint: &G,
     f: &mut W,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     let dim = multipoint.dim();
     // Write prefix
     match dim {
@@ -174,7 +174,7 @@ pub fn write_multi_linestring<
 >(
     multilinestring: &G,
     f: &mut W,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     let dim = multilinestring.dim();
     // Write prefix
     match dim {
@@ -212,7 +212,7 @@ pub fn write_multi_linestring<
 pub fn write_multi_polygon<T: WktNum + fmt::Display, G: MultiPolygonTrait<T = T>, W: Write>(
     multipolygon: &G,
     f: &mut W,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     let dim = multipolygon.dim();
     // Write prefix
     match dim {
@@ -264,7 +264,7 @@ pub fn write_multi_polygon<T: WktNum + fmt::Display, G: MultiPolygonTrait<T = T>
 pub fn write_geometry<T: WktNum + fmt::Display, G: GeometryTrait<T = T>, W: Write>(
     geometry: &G,
     f: &mut W,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     match geometry.as_type() {
         geo_traits::GeometryType::Point(point) => write_point(point, f),
         geo_traits::GeometryType::LineString(linestring) => write_linestring(linestring, f),
@@ -288,7 +288,7 @@ pub fn write_geometry_collection<
 >(
     gc: &G,
     f: &mut W,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     let dim = gc.dim();
     // Write prefix
     match dim {
@@ -325,7 +325,7 @@ pub fn write_geometry_collection<
 pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
     rect: &G,
     f: &mut W,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     // Write prefix and error if not 2D
     match rect.dim() {
         geo_traits::Dimensions::Xy | geo_traits::Dimensions::Unknown(2) => f.write_str("POLYGON"),
@@ -377,7 +377,7 @@ pub fn write_rect<T: WktNum + fmt::Display, G: RectTrait<T = T>, W: Write>(
 pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>, W: Write>(
     triangle: &G,
     f: &mut W,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     let dim = triangle.dim();
     // Write prefix
     match dim {
@@ -406,7 +406,7 @@ pub fn write_triangle<T: WktNum + fmt::Display, G: TriangleTrait<T = T>, W: Writ
 pub fn write_line<T: WktNum + fmt::Display, G: LineTrait<T = T>, W: Write>(
     line: &G,
     f: &mut W,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     let dim = line.dim();
     // Write prefix
     match dim {
@@ -471,7 +471,7 @@ fn add_coord_sequence<T: WktNum + fmt::Display, W: Write, C: CoordTrait<T = T>>(
     mut coords: impl Iterator<Item = C>,
     f: &mut W,
     size: PhysicalCoordinateDimension,
-) -> Result<(), crate::error::Error> {
+) -> Result<(), Error> {
     f.write_char('(')?;
 
     if let Some(first_coord) = coords.next() {
