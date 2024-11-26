@@ -61,10 +61,6 @@ where
     ///
     /// assert_eq!(wkt_string, "POINT(1.2 3.4)");
     /// ```
-    ///
-    /// ## Panics
-    ///
-    /// - If
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
         write_geometry(&mut WriterWrapper(writer), &self.to_wkt())
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string()))
