@@ -65,27 +65,36 @@
 //! structure, and it allows you to write WKT strings directly from your geometry without any
 //! intermediate representation.
 //!
-//!
+//! ### Reading
 //!
 //! You can use [`Wkt::from_str`] to parse a WKT string into this crate's intermediate geometry
-//! structure. You can use that directly, or if have your own geometry types that you'd prefer to
-//! use, utilize that [`Wkt`] struct to implement the [`ToWkt`] or [`TryFromWkt`] traits for your
-//! own types.
+//! structure. `Wkt` (and all structs defined in [types]) implement traits from [geo_traits]. You
+//! can write functions in terms of those traits and you'll be able to work with the parsed WKT
+//! without any further overhead.
 //!
-//! In doing so, you'll likely want to match on one of the WKT [`types`] (Point, Linestring, etc.)
-//! stored in its `item` field
 //! ```
 //! use std::str::FromStr;
 //! use wkt::Wkt;
+//! use geo_traits::{GeometryTrait, GeometryType};
+//!
+//! fn is_line_string(geom: &impl GeometryTrait<T = f64>) {
+//!     assert!(matches!(geom.as_type(), GeometryType::LineString(_)))
+//! }
 //!
 //! let wktls: Wkt<f64> = Wkt::from_str("LINESTRING(10 20, 20 30)").unwrap();
-//! let ls = match wktls {
-//!     Wkt::LineString(line_string) => {
-//!         // you now have access to the `wkt::types::LineString`.
-//!         assert_eq!(line_string.0[0].x, 10.0);
-//!     }
-//!     _ => unreachable!(),
-//! };
+//! is_line_string(&wktls);
+//! ```
+//!
+//! Working with the trait definition is preferable to working with `wkt::Wkt` directly, as the
+//! geometry trait will work with many different geometry representations; not just the one from
+//! this crate.
+//!
+//! ### Writing
+//!
+//! Consult the functions provided in [`to_wkt`]. Those functions will write any `geo_traits` object to WKT without any intermediate overhead.
+//!
+//! Implement [`geo_traits`] on your own geometry representation and those functions will work out
+//! of the box on your data.
 use std::default::Default;
 use std::fmt;
 use std::str::FromStr;
