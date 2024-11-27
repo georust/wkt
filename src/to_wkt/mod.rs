@@ -1,3 +1,5 @@
+//! Serialize geometries to WKT strings.
+
 use crate::{Wkt, WktNum};
 
 mod geo_trait_impl;

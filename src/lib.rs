@@ -22,7 +22,7 @@
 //! geometry format.
 //!
 //! Conversions are available via the [`TryFromWkt`] and [`ToWkt`] traits, with implementations for
-//! [`geo_types`] primitives enabled by default.
+//! [`geo_types`] and [`geo_traits`] primitives enabled by default.
 //!
 //! For advanced usage, see the [`types`](crate::types) module for a list of internally used types.
 //!
@@ -57,25 +57,44 @@
 //!
 //! Not using `geo-types` for your geometries? No problem!
 //!
-//! You can use [`Wkt::from_str`] to parse a WKT string into this crate's intermediate geometry
-//! structure. You can use that directly, or if have your own geometry types that you'd prefer to
-//! use, utilize that [`Wkt`] struct to implement the [`ToWkt`] or [`TryFromWkt`] traits for your
-//! own types.
+//! As of `wkt` version 0.12, this crate provides read and write integration with [`geo_traits`],
+//! a collection of geometry access traits, to provide zero-copy integration with geometry
+//! representations other than `geo-types`.
 //!
-//! In doing so, you'll likely want to match on one of the WKT [`types`] (Point, Linestring, etc.)
-//! stored in its `item` field
+//! This integration allows you to transparently read data from this crate's intermediate geometry
+//! structure, and it allows you to write WKT strings directly from your geometry without any
+//! intermediate representation.
+//!
+//! ### Reading
+//!
+//! You can use [`Wkt::from_str`] to parse a WKT string into this crate's intermediate geometry
+//! structure. `Wkt` (and all structs defined in [types]) implement traits from [geo_traits]. You
+//! can write functions in terms of those traits and you'll be able to work with the parsed WKT
+//! without any further overhead.
+//!
 //! ```
 //! use std::str::FromStr;
 //! use wkt::Wkt;
+//! use geo_traits::{GeometryTrait, GeometryType};
+//!
+//! fn is_line_string(geom: &impl GeometryTrait<T = f64>) {
+//!     assert!(matches!(geom.as_type(), GeometryType::LineString(_)))
+//! }
 //!
 //! let wktls: Wkt<f64> = Wkt::from_str("LINESTRING(10 20, 20 30)").unwrap();
-//! let ls = match wktls {
-//!     Wkt::LineString(line_string) => {
-//!         // you now have access to the `wkt::types::LineString`.
-//!         assert_eq!(line_string.0[0].x, 10.0);
-//!     }
-//!     _ => unreachable!(),
-//! };
+//! is_line_string(&wktls);
+//! ```
+//!
+//! Working with the trait definition is preferable to working with `wkt::Wkt` directly, as the
+//! geometry trait will work with many different geometry representations; not just the one from
+//! this crate.
+//!
+//! ### Writing
+//!
+//! Consult the functions provided in [`to_wkt`]. Those functions will write any `geo_traits` object to WKT without any intermediate overhead.
+//!
+//! Implement [`geo_traits`] on your own geometry representation and those functions will work out
+//! of the box on your data.
 use std::default::Default;
 use std::fmt;
 use std::str::FromStr;
