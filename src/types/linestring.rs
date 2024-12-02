@@ -55,7 +55,10 @@ where
 
 impl<T: WktNum> LineStringTrait for LineString<T> {
     type T = T;
-    type CoordType<'a> = &'a Coord<T> where Self: 'a;
+    type CoordType<'a>
+        = &'a Coord<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT
@@ -77,7 +80,10 @@ impl<T: WktNum> LineStringTrait for LineString<T> {
 
 impl<T: WktNum> LineStringTrait for &LineString<T> {
     type T = T;
-    type CoordType<'a> = &'a Coord<T> where Self: 'a;
+    type CoordType<'a>
+        = &'a Coord<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT

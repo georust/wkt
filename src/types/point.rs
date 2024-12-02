@@ -55,7 +55,10 @@ where
 
 impl<T: WktNum> PointTrait for Point<T> {
     type T = T;
-    type CoordType<'a> = &'a Coord<T> where Self: 'a;
+    type CoordType<'a>
+        = &'a Coord<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         if let Some(coord) = &self.0 {
@@ -73,7 +76,10 @@ impl<T: WktNum> PointTrait for Point<T> {
 
 impl<T: WktNum> PointTrait for &Point<T> {
     type T = T;
-    type CoordType<'a> = &'a Coord<T> where Self: 'a;
+    type CoordType<'a>
+        = &'a Coord<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         if let Some(coord) = &self.0 {
