@@ -60,7 +60,7 @@ where
     }
 }
 
-impl<'a, T> Iterator for Tokens<'a, T>
+impl<T> Iterator for Tokens<'_, T>
 where
     T: WktNum + str::FromStr,
 {
@@ -102,7 +102,7 @@ where
     }
 }
 
-impl<'a, T> Tokens<'a, T>
+impl<T> Tokens<'_, T>
 where
     T: str::FromStr,
 {

@@ -86,7 +86,7 @@ impl<T, G: TryFromWkt<T>> Default for TryFromWktVisitor<T, G> {
     }
 }
 
-impl<'de, T, G> Visitor<'de> for TryFromWktVisitor<T, G>
+impl<T, G> Visitor<'_> for TryFromWktVisitor<T, G>
 where
     T: FromStr + Default + WktNum,
     G: TryFromWkt<T>,
@@ -116,7 +116,7 @@ impl<T> Default for WktVisitor<T> {
     }
 }
 
-impl<'de, T> Visitor<'de> for WktVisitor<T>
+impl<T> Visitor<'_> for WktVisitor<T>
 where
     T: FromStr + Default + Debug + WktNum,
 {
@@ -156,7 +156,7 @@ impl<T> Default for GeometryVisitor<T> {
     }
 }
 
-impl<'de, T> Visitor<'de> for GeometryVisitor<T>
+impl<T> Visitor<'_> for GeometryVisitor<T>
 where
     T: FromStr + Default + WktNum,
 {
