@@ -59,7 +59,10 @@ where
 
 impl<T: WktNum> PolygonTrait for Polygon<T> {
     type T = T;
-    type RingType<'a> = &'a LineString<T> where Self: 'a;
+    type RingType<'a>
+        = &'a LineString<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT
@@ -85,7 +88,10 @@ impl<T: WktNum> PolygonTrait for Polygon<T> {
 
 impl<T: WktNum> PolygonTrait for &Polygon<T> {
     type T = T;
-    type RingType<'a> = &'a LineString<T> where Self: 'a;
+    type RingType<'a>
+        = &'a LineString<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT

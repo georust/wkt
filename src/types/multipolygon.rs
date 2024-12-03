@@ -59,7 +59,10 @@ where
 
 impl<T: WktNum> MultiPolygonTrait for MultiPolygon<T> {
     type T = T;
-    type PolygonType<'a> = &'a Polygon<T> where Self: 'a;
+    type PolygonType<'a>
+        = &'a Polygon<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT
@@ -81,7 +84,10 @@ impl<T: WktNum> MultiPolygonTrait for MultiPolygon<T> {
 
 impl<T: WktNum> MultiPolygonTrait for &MultiPolygon<T> {
     type T = T;
-    type PolygonType<'a> = &'a Polygon<T> where Self: 'a;
+    type PolygonType<'a>
+        = &'a Polygon<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT

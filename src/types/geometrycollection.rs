@@ -78,7 +78,10 @@ where
 
 impl<T: WktNum> GeometryCollectionTrait for GeometryCollection<T> {
     type T = T;
-    type GeometryType<'a> = &'a Wkt<T> where Self: 'a;
+    type GeometryType<'a>
+        = &'a Wkt<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT

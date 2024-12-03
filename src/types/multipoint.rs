@@ -59,7 +59,10 @@ where
 
 impl<T: WktNum> MultiPointTrait for MultiPoint<T> {
     type T = T;
-    type PointType<'a> = &'a Point<T> where Self: 'a;
+    type PointType<'a>
+        = &'a Point<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT
@@ -81,7 +84,10 @@ impl<T: WktNum> MultiPointTrait for MultiPoint<T> {
 
 impl<T: WktNum> MultiPointTrait for &MultiPoint<T> {
     type T = T;
-    type PointType<'a> = &'a Point<T> where Self: 'a;
+    type PointType<'a>
+        = &'a Point<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT

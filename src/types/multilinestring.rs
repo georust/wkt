@@ -59,7 +59,10 @@ where
 
 impl<T: WktNum> MultiLineStringTrait for MultiLineString<T> {
     type T = T;
-    type LineStringType<'a> = &'a LineString<T> where Self: 'a;
+    type LineStringType<'a>
+        = &'a LineString<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT
@@ -81,7 +84,10 @@ impl<T: WktNum> MultiLineStringTrait for MultiLineString<T> {
 
 impl<T: WktNum> MultiLineStringTrait for &MultiLineString<T> {
     type T = T;
-    type LineStringType<'a> = &'a LineString<T> where Self: 'a;
+    type LineStringType<'a>
+        = &'a LineString<T>
+    where
+        Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
         // TODO: infer dimension from empty WKT
