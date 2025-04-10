@@ -194,7 +194,7 @@ where
 ///
 /// let rect: Rect<f64> = Rect::new(coord!(x: 4., y: 4.), coord!(x: 8., y: 8.));
 ///
-/// assert_eq!(rect.wkt_string(), "POLYGON((4 4,4 8,8 8,8 4,4 4))");
+/// assert_eq!(rect.wkt_string(), "POLYGON((8 4,8 8,4 8,4 4,8 4))");
 /// ```
 impl<T> ToWkt<T> for geo_types::Rect<T>
 where
