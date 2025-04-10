@@ -125,40 +125,43 @@ mod tests {
     #[test]
     fn basic_point() {
         let wkt: Wkt<f64> = Wkt::from_str("POINT (10 -20)").ok().unwrap();
-        let coord = match wkt {
-            Wkt::Point(Point { coord, dim: _ }) => coord.unwrap(),
+        let (coord, dim) = match wkt {
+            Wkt::Point(Point { coord, dim }) => (coord.unwrap(), dim),
             _ => unreachable!(),
         };
         assert_eq!(10.0, coord.x);
         assert_eq!(-20.0, coord.y);
         assert_eq!(None, coord.z);
         assert_eq!(None, coord.m);
+        assert_eq!(dim, Dimension::XY);
     }
 
     #[test]
     fn basic_point_z() {
         let wkt = Wkt::from_str("POINT Z(-117 33 10)").ok().unwrap();
-        let coord = match wkt {
-            Wkt::Point(Point { coord, dim: _ }) => coord.unwrap(),
+        let (coord, dim) = match wkt {
+            Wkt::Point(Point { coord, dim }) => (coord.unwrap(), dim),
             _ => unreachable!(),
         };
         assert_eq!(-117.0, coord.x);
         assert_eq!(33.0, coord.y);
         assert_eq!(Some(10.0), coord.z);
         assert_eq!(None, coord.m);
+        assert_eq!(dim, Dimension::XYZ);
     }
 
     #[test]
     fn basic_point_z_one_word() {
         let wkt = Wkt::from_str("POINTZ(-117 33 10)").ok().unwrap();
-        let coord = match wkt {
-            Wkt::Point(Point { coord, dim: _ }) => coord.unwrap(),
+        let (coord, dim) = match wkt {
+            Wkt::Point(Point { coord, dim }) => (coord.unwrap(), dim),
             _ => unreachable!(),
         };
         assert_eq!(-117.0, coord.x);
         assert_eq!(33.0, coord.y);
         assert_eq!(Some(10.0), coord.z);
         assert_eq!(None, coord.m);
+        assert_eq!(dim, Dimension::XYZ);
     }
 
     #[test]
@@ -166,14 +169,15 @@ mod tests {
         let wkt: Wkt<f64> = Wkt::from_str(" \n\t\rPOINT \n\t\r( \n\r\t10 \n\t\r-20 \n\t\r) \n\t\r")
             .ok()
             .unwrap();
-        let coord = match wkt {
-            Wkt::Point(Point { coord, dim: _ }) => coord.unwrap(),
+        let (coord, dim) = match wkt {
+            Wkt::Point(Point { coord, dim }) => (coord.unwrap(), dim),
             _ => unreachable!(),
         };
         assert_eq!(10.0, coord.x);
         assert_eq!(-20.0, coord.y);
         assert_eq!(None, coord.z);
         assert_eq!(None, coord.m);
+        assert_eq!(dim, Dimension::XY);
     }
 
     #[test]

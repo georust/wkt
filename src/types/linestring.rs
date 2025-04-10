@@ -136,7 +136,10 @@ mod tests {
     fn basic_linestring() {
         let wkt: Wkt<f64> = Wkt::from_str("LINESTRING (10 -20, -0 -0.5)").ok().unwrap();
         let coords = match wkt {
-            Wkt::LineString(LineString { coords, dim: _ }) => coords,
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert_eq!(dim, Dimension::XY);
+                coords
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());
@@ -158,7 +161,10 @@ mod tests {
             .ok()
             .unwrap();
         let coords = match wkt {
-            Wkt::LineString(LineString { coords, dim: _ }) => coords,
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert_eq!(dim, Dimension::XYZ);
+                coords
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());
@@ -180,7 +186,10 @@ mod tests {
             .ok()
             .unwrap();
         let coords = match wkt {
-            Wkt::LineString(LineString { coords, dim: _ }) => coords,
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert_eq!(dim, Dimension::XYM);
+                coords
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());
@@ -202,7 +211,10 @@ mod tests {
             .ok()
             .unwrap();
         let coords = match wkt {
-            Wkt::LineString(LineString { coords, dim: _ }) => coords,
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert_eq!(dim, Dimension::XYZM);
+                coords
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());
@@ -224,7 +236,10 @@ mod tests {
             .ok()
             .unwrap();
         let coords = match wkt {
-            Wkt::LineString(LineString { coords, dim: _ }) => coords,
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert_eq!(dim, Dimension::XYZM);
+                coords
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());

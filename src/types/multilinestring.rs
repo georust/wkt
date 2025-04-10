@@ -142,10 +142,10 @@ mod tests {
             .ok()
             .unwrap();
         let lines = match wkt {
-            Wkt::MultiLineString(MultiLineString {
-                line_strings,
-                dim: _,
-            }) => line_strings,
+            Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                assert_eq!(dim, Dimension::XY);
+                line_strings
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, lines.len());

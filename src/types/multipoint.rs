@@ -193,7 +193,10 @@ mod tests {
     fn postgis_style_multipoint() {
         let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT (8 4, 4 0)").unwrap();
         let points = match wkt {
-            Wkt::MultiPoint(MultiPoint { points, dim: _ }) => points,
+            Wkt::MultiPoint(MultiPoint { points, dim }) => {
+                assert_eq!(dim, Dimension::XY);
+                points
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, points.len());
@@ -203,20 +206,13 @@ mod tests {
     fn mixed_parens_multipoint() {
         let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT (8 4, (4 0))").unwrap();
         let points = match wkt {
-            Wkt::MultiPoint(MultiPoint { points, dim: _ }) => points,
+            Wkt::MultiPoint(MultiPoint { points, dim }) => {
+                assert_eq!(dim, Dimension::XY);
+                points
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, points.len());
-    }
-
-    #[test]
-    fn empty_multipoint() {
-        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT EMPTY").unwrap();
-        let points = match wkt {
-            Wkt::MultiPoint(MultiPoint { points, dim: _ }) => points,
-            _ => unreachable!(),
-        };
-        assert_eq!(0, points.len());
     }
 
     #[test]

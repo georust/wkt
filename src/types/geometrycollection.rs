@@ -158,7 +158,10 @@ mod tests {
             .ok()
             .unwrap();
         let geoms = match wkt {
-            Wkt::GeometryCollection(GeometryCollection { geoms, dim: _ }) => geoms,
+            Wkt::GeometryCollection(GeometryCollection { geoms, dim }) => {
+                assert_eq!(dim, Dimension::XY);
+                geoms
+            }
             _ => unreachable!(),
         };
         assert_eq!(1, geoms.len());
@@ -170,7 +173,10 @@ mod tests {
             .ok()
             .unwrap();
         let geoms = match wkt {
-            Wkt::GeometryCollection(GeometryCollection { geoms, dim: _ }) => geoms,
+            Wkt::GeometryCollection(GeometryCollection { geoms, dim }) => {
+                assert_eq!(dim, Dimension::XY);
+                geoms
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, geoms.len());

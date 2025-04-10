@@ -150,7 +150,10 @@ mod tests {
             .ok()
             .unwrap();
         let rings = match wkt {
-            Wkt::Polygon(Polygon { rings, dim: _ }) => rings,
+            Wkt::Polygon(Polygon { rings, dim }) => {
+                assert_eq!(dim, Dimension::XY);
+                rings
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, rings.len());
