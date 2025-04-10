@@ -23,7 +23,16 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Polygon<T: WktNum>(pub Vec<LineString<T>>);
+pub struct Polygon<T: WktNum> {
+    dim: Dimension,
+    rings: Vec<LineString<T>>,
+}
+
+impl<T: WktNum> Polygon<T> {
+    pub fn new(rings: Vec<LineString<T>>, dim: Dimension) -> Self {
+        Polygon { dim, rings }
+    }
+}
 
 impl<T> From<Polygon<T>> for Wkt<T>
 where
@@ -65,24 +74,19 @@ impl<T: WktNum> PolygonTrait for Polygon<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
-        self.0.first()
+        self.rings.first()
     }
 
     fn num_interiors(&self) -> usize {
-        self.0.len().saturating_sub(1)
+        self.rings.len().saturating_sub(1)
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        self.0.get_unchecked(i + 1)
+        self.rings.get_unchecked(i + 1)
     }
 }
 
@@ -94,24 +98,19 @@ impl<T: WktNum> PolygonTrait for &Polygon<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
-        self.0.first()
+        self.rings.first()
     }
 
     fn num_interiors(&self) -> usize {
-        self.0.len().saturating_sub(1)
+        self.rings.len().saturating_sub(1)
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        self.0.get_unchecked(i + 1)
+        self.rings.get_unchecked(i + 1)
     }
 }
 
@@ -127,11 +126,11 @@ mod tests {
         let wkt: Wkt<f64> = Wkt::from_str("POLYGON ((8 4, 4 0, 0 4, 8 4), (7 3, 4 1, 1 4, 7 3))")
             .ok()
             .unwrap();
-        let lines = match wkt {
-            Wkt::Polygon(Polygon(lines)) => lines,
+        let rings = match wkt {
+            Wkt::Polygon(Polygon { rings, dim: _ }) => rings,
             _ => unreachable!(),
         };
-        assert_eq!(2, lines.len());
+        assert_eq!(2, rings.len());
     }
 
     #[test]

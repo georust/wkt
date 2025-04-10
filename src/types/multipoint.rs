@@ -23,7 +23,16 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiPoint<T: WktNum>(pub Vec<Point<T>>);
+pub struct MultiPoint<T: WktNum> {
+    dim: Dimension,
+    points: Vec<Point<T>>,
+}
+
+impl<T: WktNum> MultiPoint<T> {
+    pub fn new(points: Vec<Point<T>>, dim: Dimension) -> Self {
+        MultiPoint { dim, points }
+    }
+}
 
 impl<T> From<MultiPoint<T>> for Wkt<T>
 where
@@ -65,20 +74,15 @@ impl<T: WktNum> MultiPointTrait for MultiPoint<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_points(&self) -> usize {
-        self.0.len()
+        self.points.len()
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
-        self.0.get_unchecked(i)
+        self.points.get_unchecked(i)
     }
 }
 
@@ -90,20 +94,15 @@ impl<T: WktNum> MultiPointTrait for &MultiPoint<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_points(&self) -> usize {
-        self.0.len()
+        self.points.len()
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
-        self.0.get_unchecked(i)
+        self.points.get_unchecked(i)
     }
 }
 

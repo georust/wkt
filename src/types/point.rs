@@ -23,7 +23,16 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Point<T: WktNum>(pub Option<Coord<T>>);
+pub struct Point<T: WktNum> {
+    dim: Dimension,
+    coord: Option<Coord<T>>,
+}
+
+impl<T: WktNum> Point<T> {
+    pub fn new(coord: Option<Coord<T>>, dim: Dimension) -> Self {
+        Point { dim, coord }
+    }
+}
 
 impl<T> From<Point<T>> for Wkt<T>
 where
@@ -61,16 +70,11 @@ impl<T: WktNum> PointTrait for Point<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        if let Some(coord) = &self.0 {
-            coord.dim()
-        } else {
-            // TODO: infer dimension from empty WKT
-            geo_traits::Dimensions::Xy
-        }
+        self.dim.into()
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
-        self.0.as_ref()
+        self.coord.as_ref()
     }
 }
 
@@ -82,16 +86,11 @@ impl<T: WktNum> PointTrait for &Point<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        if let Some(coord) = &self.0 {
-            coord.dim()
-        } else {
-            // TODO: infer dimension from empty WKT
-            geo_traits::Dimensions::Xy
-        }
+        self.dim.into()
     }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
-        self.0.as_ref()
+        self.coord.as_ref()
     }
 }
 #[cfg(test)]

@@ -23,7 +23,16 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct LineString<T: WktNum>(pub Vec<Coord<T>>);
+pub struct LineString<T: WktNum> {
+    dim: Dimension,
+    coords: Vec<Coord<T>>,
+}
+
+impl<T: WktNum> LineString<T> {
+    pub fn new(coords: Vec<Coord<T>>, dim: Dimension) -> Self {
+        LineString { dim, coords }
+    }
+}
 
 impl<T> From<LineString<T>> for Wkt<T>
 where
@@ -61,20 +70,15 @@ impl<T: WktNum> LineStringTrait for LineString<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_coords(&self) -> usize {
-        self.0.len()
+        self.coords.len()
     }
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        self.0.get_unchecked(i)
+        self.coords.get_unchecked(i)
     }
 }
 
@@ -86,20 +90,15 @@ impl<T: WktNum> LineStringTrait for &LineString<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_coords(&self) -> usize {
-        self.0.len()
+        self.coords.len()
     }
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        self.0.get_unchecked(i)
+        self.coords.get_unchecked(i)
     }
 }
 

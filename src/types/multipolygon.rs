@@ -23,7 +23,16 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiPolygon<T: WktNum>(pub Vec<Polygon<T>>);
+pub struct MultiPolygon<T: WktNum> {
+    dim: Dimension,
+    polygons: Vec<Polygon<T>>,
+}
+
+impl<T: WktNum> MultiPolygon<T> {
+    pub fn new(polygons: Vec<Polygon<T>>, dim: Dimension) -> Self {
+        MultiPolygon { dim, polygons }
+    }
+}
 
 impl<T> From<MultiPolygon<T>> for Wkt<T>
 where
@@ -65,20 +74,15 @@ impl<T: WktNum> MultiPolygonTrait for MultiPolygon<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_polygons(&self) -> usize {
-        self.0.len()
+        self.polygons.len()
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
-        self.0.get_unchecked(i)
+        self.polygons.get_unchecked(i)
     }
 }
 
@@ -90,20 +94,15 @@ impl<T: WktNum> MultiPolygonTrait for &MultiPolygon<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_polygons(&self) -> usize {
-        self.0.len()
+        self.polygons.len()
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
-        self.0.get_unchecked(i)
+        self.polygons.get_unchecked(i)
     }
 }
 

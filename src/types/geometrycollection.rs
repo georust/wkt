@@ -22,7 +22,16 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct GeometryCollection<T: WktNum>(pub Vec<Wkt<T>>);
+pub struct GeometryCollection<T: WktNum> {
+    dim: Dimension,
+    geoms: Vec<Wkt<T>>,
+}
+
+impl<T: WktNum> GeometryCollection<T> {
+    pub fn new(geoms: Vec<Wkt<T>>, dim: Dimension) -> Self {
+        GeometryCollection { dim, geoms }
+    }
+}
 
 impl<T> From<GeometryCollection<T>> for Wkt<T>
 where
@@ -84,20 +93,35 @@ impl<T: WktNum> GeometryCollectionTrait for GeometryCollection<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_geometries(&self) -> usize {
-        self.0.len()
+        self.geoms.len()
     }
 
     unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
-        self.0.get_unchecked(i)
+        self.geoms.get_unchecked(i)
+    }
+}
+
+impl<T: WktNum> GeometryCollectionTrait for &GeometryCollection<T> {
+    type T = T;
+    type GeometryType<'a>
+        = &'a Wkt<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.dim.into()
+    }
+
+    fn num_geometries(&self) -> usize {
+        self.geoms.len()
+    }
+
+    unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
+        self.geoms.get_unchecked(i)
     }
 }
 
@@ -113,11 +137,11 @@ mod tests {
         let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4)))")
             .ok()
             .unwrap();
-        let items = match wkt {
-            Wkt::GeometryCollection(GeometryCollection(items)) => items,
+        let geoms = match wkt {
+            Wkt::GeometryCollection(GeometryCollection { geoms, dim: _ }) => geoms,
             _ => unreachable!(),
         };
-        assert_eq!(1, items.len());
+        assert_eq!(1, geoms.len());
     }
 
     #[test]
@@ -125,16 +149,17 @@ mod tests {
         let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4),LINESTRING(4 6,7 10)))")
             .ok()
             .unwrap();
-        let items = match wkt {
-            Wkt::GeometryCollection(GeometryCollection(items)) => items,
+        let geoms = match wkt {
+            Wkt::GeometryCollection(GeometryCollection { geoms, dim: _ }) => geoms,
             _ => unreachable!(),
         };
-        assert_eq!(2, items.len());
+        assert_eq!(2, geoms.len());
     }
 
     #[test]
     fn write_empty_geometry_collection() {
-        let geometry_collection: GeometryCollection<f64> = GeometryCollection(vec![]);
+        let geometry_collection: GeometryCollection<f64> =
+            GeometryCollection::new(vec![], Dimension::XY);
 
         assert_eq!(
             "GEOMETRYCOLLECTION EMPTY",

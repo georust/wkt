@@ -23,7 +23,16 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiLineString<T: WktNum>(pub Vec<LineString<T>>);
+pub struct MultiLineString<T: WktNum> {
+    dim: Dimension,
+    line_strings: Vec<LineString<T>>,
+}
+
+impl<T: WktNum> MultiLineString<T> {
+    pub fn new(line_strings: Vec<LineString<T>>, dim: Dimension) -> Self {
+        MultiLineString { dim, line_strings }
+    }
+}
 
 impl<T> From<MultiLineString<T>> for Wkt<T>
 where
@@ -65,20 +74,15 @@ impl<T: WktNum> MultiLineStringTrait for MultiLineString<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_line_strings(&self) -> usize {
-        self.0.len()
+        self.line_strings.len()
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        self.0.get_unchecked(i)
+        self.line_strings.get_unchecked(i)
     }
 }
 
@@ -90,20 +94,15 @@ impl<T: WktNum> MultiLineStringTrait for &MultiLineString<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_line_strings(&self) -> usize {
-        self.0.len()
+        self.line_strings.len()
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        self.0.get_unchecked(i)
+        self.line_strings.get_unchecked(i)
     }
 }
 
