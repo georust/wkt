@@ -29,6 +29,7 @@ pub struct MultiLineString<T: WktNum> {
 }
 
 impl<T: WktNum> MultiLineString<T> {
+    /// Create a new LineString from a sequence of [LineString] and known [Dimension].
     pub fn new(line_strings: Vec<LineString<T>>, dim: Dimension) -> Self {
         MultiLineString { dim, line_strings }
     }

@@ -29,6 +29,7 @@ pub struct Point<T: WktNum> {
 }
 
 impl<T: WktNum> Point<T> {
+    /// Create a new Point from a coordinate and known [Dimension].
     pub fn new(coord: Option<Coord<T>>, dim: Dimension) -> Self {
         Self { dim, coord }
     }

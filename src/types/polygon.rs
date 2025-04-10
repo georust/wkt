@@ -29,6 +29,7 @@ pub struct Polygon<T: WktNum> {
 }
 
 impl<T: WktNum> Polygon<T> {
+    /// Create a new Polygon from a sequence of [LineString] and known [Dimension].
     pub fn new(rings: Vec<LineString<T>>, dim: Dimension) -> Self {
         Polygon { dim, rings }
     }

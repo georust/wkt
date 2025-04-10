@@ -29,6 +29,7 @@ pub struct LineString<T: WktNum> {
 }
 
 impl<T: WktNum> LineString<T> {
+    /// Create a new LineString from a sequence of [Coord] and known [Dimension].
     pub fn new(coords: Vec<Coord<T>>, dim: Dimension) -> Self {
         LineString { dim, coords }
     }

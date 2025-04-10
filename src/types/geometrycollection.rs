@@ -28,6 +28,7 @@ pub struct GeometryCollection<T: WktNum> {
 }
 
 impl<T: WktNum> GeometryCollection<T> {
+    /// Create a new GeometryCollection from a sequence of [Wkt].
     pub fn new(geoms: Vec<Wkt<T>>, dim: Dimension) -> Self {
         Self { dim, geoms }
     }

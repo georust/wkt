@@ -29,6 +29,7 @@ pub struct MultiPoint<T: WktNum> {
 }
 
 impl<T: WktNum> MultiPoint<T> {
+    /// Create a new MultiPoint from a sequence of [Point] and known [Dimension].
     pub fn new(points: Vec<Point<T>>, dim: Dimension) -> Self {
         MultiPoint { dim, points }
     }

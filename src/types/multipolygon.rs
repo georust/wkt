@@ -29,6 +29,7 @@ pub struct MultiPolygon<T: WktNum> {
 }
 
 impl<T: WktNum> MultiPolygon<T> {
+    /// Create a new MultiPolygon from a sequence of [Polygon] and known [Dimension].
     pub fn new(polygons: Vec<Polygon<T>>, dim: Dimension) -> Self {
         MultiPolygon { dim, polygons }
     }
