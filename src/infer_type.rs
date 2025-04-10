@@ -18,15 +18,15 @@ const GEOMETRYCOLLECTION: &str = "GEOMETRYCOLLECTION";
 ///
 /// assert_eq!(
 ///     infer_type("POINT (10 20.1)").unwrap(),
-///     (GeometryType::Point, Some(Dimension::XY))
+///     (GeometryType::Point, Dimension::XY)
 /// );
 ///
 /// assert_eq!(
-///     infer_type("POINT EMPTY").unwrap(),
-///     (GeometryType::Point, None)
+///     infer_type("POINT Z EMPTY").unwrap(),
+///     (GeometryType::Point, Dimension::XYZ)
 /// );
 /// ```
-pub fn infer_type(input: &str) -> Result<(GeometryType, Option<Dimension>), String> {
+pub fn infer_type(input: &str) -> Result<(GeometryType, Dimension), String> {
     let input = input.trim_start();
 
     if let Some((prefix, _suffix)) = input.split_once("(") {
@@ -60,27 +60,37 @@ pub fn infer_type(input: &str) -> Result<(GeometryType, Option<Dimension>), Stri
             Dimension::XY
         };
 
-        Ok((geom_type, Some(dim)))
+        Ok((geom_type, dim))
     } else {
         let input = input.to_uppercase();
         if !input.contains("EMPTY") {
             return Err("Invalid WKT; no '(' character and not EMPTY".to_string());
         }
 
+        let dim = if input.contains("ZM") {
+            Dimension::XYZM
+        } else if input.contains("Z") {
+            Dimension::XYZ
+        } else if input.contains("M") {
+            Dimension::XYM
+        } else {
+            Dimension::XY
+        };
+
         if input.starts_with(POINT) {
-            Ok((GeometryType::Point, None))
+            Ok((GeometryType::Point, dim))
         } else if input.starts_with(LINESTRING) {
-            Ok((GeometryType::LineString, None))
+            Ok((GeometryType::LineString, dim))
         } else if input.starts_with(POLYGON) {
-            Ok((GeometryType::Polygon, None))
+            Ok((GeometryType::Polygon, dim))
         } else if input.starts_with(MULTIPOINT) {
-            Ok((GeometryType::MultiPoint, None))
+            Ok((GeometryType::MultiPoint, dim))
         } else if input.starts_with(MULTILINESTRING) {
-            Ok((GeometryType::MultiLineString, None))
+            Ok((GeometryType::MultiLineString, dim))
         } else if input.starts_with(MULTIPOLYGON) {
-            Ok((GeometryType::MultiPolygon, None))
+            Ok((GeometryType::MultiPolygon, dim))
         } else if input.starts_with(GEOMETRYCOLLECTION) {
-            Ok((GeometryType::GeometryCollection, None))
+            Ok((GeometryType::GeometryCollection, dim))
         } else {
             return Err(format!("Unsupported WKT prefix {}", input));
         }
@@ -95,19 +105,19 @@ mod test {
     fn test_points() {
         assert_eq!(
             infer_type("POINT (10 20.1)").unwrap(),
-            (GeometryType::Point, Some(Dimension::XY))
+            (GeometryType::Point, Dimension::XY)
         );
         assert_eq!(
             infer_type("POINT Z (10 20.1 5)").unwrap(),
-            (GeometryType::Point, Some(Dimension::XYZ))
+            (GeometryType::Point, Dimension::XY)
         );
         assert_eq!(
             infer_type("POINT M (10 20.1 80)").unwrap(),
-            (GeometryType::Point, Some(Dimension::XYM))
+            (GeometryType::Point, Dimension::XY)
         );
         assert_eq!(
             infer_type("POINT ZM (10 20.1 5 80)").unwrap(),
-            (GeometryType::Point, Some(Dimension::XYZM))
+            (GeometryType::Point, Dimension::XYM)
         );
     }
 
@@ -115,12 +125,12 @@ mod test {
     fn test_with_leading_whitespace() {
         assert_eq!(
             infer_type(" POINT (10 20.1)").unwrap(),
-            (GeometryType::Point, Some(Dimension::XY))
+            (GeometryType::Point, Dimension::XY)
         );
 
         assert_eq!(
             infer_type(" POINT EMPTY").unwrap(),
-            (GeometryType::Point, None)
+            (GeometryType::Point, Dimension::XY)
         );
     }
 
@@ -128,7 +138,7 @@ mod test {
     fn lowercase_point() {
         assert_eq!(
             infer_type("point EMPTY").unwrap(),
-            (GeometryType::Point, None)
+            (GeometryType::Point, Dimension::XY)
         );
     }
 
@@ -136,11 +146,24 @@ mod test {
     fn test_empty() {
         assert_eq!(
             infer_type("POINT EMPTY").unwrap(),
-            (GeometryType::Point, None)
+            (GeometryType::Point, Dimension::XY)
         );
         assert_eq!(
             infer_type("MULTIPOLYGON EMPTY").unwrap(),
-            (GeometryType::MultiPolygon, None)
+            (GeometryType::MultiPolygon, Dimension::XY)
+        );
+        assert_eq!(
+            infer_type("POINT Z EMPTY").unwrap(),
+            (GeometryType::Point, Dimension::XYZ)
+        );
+
+        assert_eq!(
+            infer_type("POINT M EMPTY").unwrap(),
+            (GeometryType::Point, Dimension::XYM)
+        );
+        assert_eq!(
+            infer_type("POINT ZM EMPTY").unwrap(),
+            (GeometryType::Point, Dimension::XYZM)
         );
     }
 }
