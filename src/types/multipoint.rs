@@ -81,7 +81,7 @@ where
             tokens,
             dim,
         );
-        result.map(MultiPoint)
+        result.map(|points| MultiPoint { points, dim })
     }
 }
 

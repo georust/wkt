@@ -73,7 +73,10 @@ where
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
         let result = <Coord<T> as FromTokens<T>>::from_tokens(tokens, dim);
-        result.map(|coord| Point(Some(coord)))
+        result.map(|coord| Point {
+            coord: Some(coord),
+            dim,
+        })
     }
 }
 

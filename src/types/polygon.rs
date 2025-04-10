@@ -81,7 +81,7 @@ where
             tokens,
             dim,
         );
-        result.map(Polygon)
+        result.map(|rings| Polygon { rings, dim })
     }
 }
 

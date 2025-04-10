@@ -81,7 +81,7 @@ where
             tokens,
             dim,
         );
-        result.map(MultiLineString)
+        result.map(|line_strings| MultiLineString { line_strings, dim })
     }
 }
 

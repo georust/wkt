@@ -77,7 +77,7 @@ where
     // Unsure if the dimension should be used in parsing GeometryCollection; is it
     // GEOMETRYCOLLECTION ( POINT Z (...) , POINT ZM (...))
     // or does a geometry collection have a known dimension?
-    fn from_tokens(tokens: &mut PeekableTokens<T>, _dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
         let mut items = Vec::new();
 
         let word = match tokens.next().transpose()? {
@@ -100,7 +100,7 @@ where
             items.push(item);
         }
 
-        Ok(GeometryCollection(items))
+        Ok(GeometryCollection { geoms: items, dim })
     }
 }
 

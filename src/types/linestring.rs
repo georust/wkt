@@ -68,7 +68,7 @@ where
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
         let result = FromTokens::comma_many(<Coord<T> as FromTokens<T>>::from_tokens, tokens, dim);
-        result.map(LineString)
+        result.map(|coords| LineString { coords, dim })
     }
 }
 

@@ -81,7 +81,7 @@ where
             tokens,
             dim,
         );
-        result.map(MultiPolygon)
+        result.map(|polygons| MultiPolygon { polygons, dim })
     }
 }
 
