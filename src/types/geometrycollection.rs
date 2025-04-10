@@ -179,9 +179,29 @@ mod tests {
     fn write_empty_geometry_collection() {
         let geometry_collection: GeometryCollection<f64> =
             GeometryCollection::new(vec![], Dimension::XY);
-
         assert_eq!(
             "GEOMETRYCOLLECTION EMPTY",
+            format!("{}", geometry_collection)
+        );
+
+        let geometry_collection: GeometryCollection<f64> =
+            GeometryCollection::new(vec![], Dimension::XYZ);
+        assert_eq!(
+            "GEOMETRYCOLLECTION Z EMPTY",
+            format!("{}", geometry_collection)
+        );
+
+        let geometry_collection: GeometryCollection<f64> =
+            GeometryCollection::new(vec![], Dimension::XYM);
+        assert_eq!(
+            "GEOMETRYCOLLECTION M EMPTY",
+            format!("{}", geometry_collection)
+        );
+
+        let geometry_collection: GeometryCollection<f64> =
+            GeometryCollection::new(vec![], Dimension::XYZM);
+        assert_eq!(
+            "GEOMETRYCOLLECTION ZM EMPTY",
             format!("{}", geometry_collection)
         );
     }

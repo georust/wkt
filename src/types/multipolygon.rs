@@ -147,8 +147,16 @@ mod tests {
     #[test]
     fn write_empty_multipolygon() {
         let multipolygon: MultiPolygon<f64> = MultiPolygon::empty(Dimension::XY);
-
         assert_eq!("MULTIPOLYGON EMPTY", format!("{}", multipolygon));
+
+        let multipolygon: MultiPolygon<f64> = MultiPolygon::empty(Dimension::XYZ);
+        assert_eq!("MULTIPOLYGON Z EMPTY", format!("{}", multipolygon));
+
+        let multipolygon: MultiPolygon<f64> = MultiPolygon::empty(Dimension::XYM);
+        assert_eq!("MULTIPOLYGON M EMPTY", format!("{}", multipolygon));
+
+        let multipolygon: MultiPolygon<f64> = MultiPolygon::empty(Dimension::XYZM);
+        assert_eq!("MULTIPOLYGON ZM EMPTY", format!("{}", multipolygon));
     }
 
     #[test]

@@ -182,8 +182,16 @@ mod tests {
     #[test]
     fn write_empty_point() {
         let point: Point<f64> = Point::empty(Dimension::XY);
-
         assert_eq!("POINT EMPTY", format!("{}", point));
+
+        let point: Point<f64> = Point::empty(Dimension::XYZ);
+        assert_eq!("POINT Z EMPTY", format!("{}", point));
+
+        let point: Point<f64> = Point::empty(Dimension::XYM);
+        assert_eq!("POINT M EMPTY", format!("{}", point));
+
+        let point: Point<f64> = Point::empty(Dimension::XYZM);
+        assert_eq!("POINT ZM EMPTY", format!("{}", point));
     }
 
     #[test]

@@ -239,8 +239,16 @@ mod tests {
     #[test]
     fn write_empty_linestring() {
         let linestring: LineString<f64> = LineString::empty(Dimension::XY);
-
         assert_eq!("LINESTRING EMPTY", format!("{}", linestring));
+
+        let linestring: LineString<f64> = LineString::empty(Dimension::XYZ);
+        assert_eq!("LINESTRING Z EMPTY", format!("{}", linestring));
+
+        let linestring: LineString<f64> = LineString::empty(Dimension::XYM);
+        assert_eq!("LINESTRING M EMPTY", format!("{}", linestring));
+
+        let linestring: LineString<f64> = LineString::empty(Dimension::XYZM);
+        assert_eq!("LINESTRING ZM EMPTY", format!("{}", linestring));
     }
 
     #[test]

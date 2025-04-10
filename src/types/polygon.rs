@@ -155,8 +155,16 @@ mod tests {
     #[test]
     fn write_empty_polygon() {
         let polygon: Polygon<f64> = Polygon::empty(Dimension::XY);
-
         assert_eq!("POLYGON EMPTY", format!("{}", polygon));
+
+        let polygon: Polygon<f64> = Polygon::empty(Dimension::XYZ);
+        assert_eq!("POLYGON Z EMPTY", format!("{}", polygon));
+
+        let polygon: Polygon<f64> = Polygon::empty(Dimension::XYM);
+        assert_eq!("POLYGON M EMPTY", format!("{}", polygon));
+
+        let polygon: Polygon<f64> = Polygon::empty(Dimension::XYZM);
+        assert_eq!("POLYGON ZM EMPTY", format!("{}", polygon));
     }
 
     #[test]

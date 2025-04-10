@@ -218,8 +218,16 @@ mod tests {
     #[test]
     fn write_empty_multipoint() {
         let multipoint: MultiPoint<f64> = MultiPoint::empty(Dimension::XY);
-
         assert_eq!("MULTIPOINT EMPTY", format!("{}", multipoint));
+
+        let multipoint: MultiPoint<f64> = MultiPoint::empty(Dimension::XYZ);
+        assert_eq!("MULTIPOINT Z EMPTY", format!("{}", multipoint));
+
+        let multipoint: MultiPoint<f64> = MultiPoint::empty(Dimension::XYM);
+        assert_eq!("MULTIPOINT M EMPTY", format!("{}", multipoint));
+
+        let multipoint: MultiPoint<f64> = MultiPoint::empty(Dimension::XYZM);
+        assert_eq!("MULTIPOINT ZM EMPTY", format!("{}", multipoint));
     }
 
     #[test]

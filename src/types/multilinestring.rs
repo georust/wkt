@@ -150,8 +150,16 @@ mod tests {
     #[test]
     fn write_empty_multilinestring() {
         let multilinestring: MultiLineString<f64> = MultiLineString::empty(Dimension::XY);
-
         assert_eq!("MULTILINESTRING EMPTY", format!("{}", multilinestring));
+
+        let multilinestring: MultiLineString<f64> = MultiLineString::empty(Dimension::XYZ);
+        assert_eq!("MULTILINESTRING Z EMPTY", format!("{}", multilinestring));
+
+        let multilinestring: MultiLineString<f64> = MultiLineString::empty(Dimension::XYM);
+        assert_eq!("MULTILINESTRING M EMPTY", format!("{}", multilinestring));
+
+        let multilinestring: MultiLineString<f64> = MultiLineString::empty(Dimension::XYZM);
+        assert_eq!("MULTILINESTRING ZM EMPTY", format!("{}", multilinestring));
     }
 
     #[test]
