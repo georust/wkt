@@ -24,7 +24,6 @@ serde_json = "1.0"
 
 [features]
 default = ["geo-types"]
-geo-types = ["dep:geo-types", "geo-traits/geo-types"]
 
 [[bench]]
 name = "parse"
