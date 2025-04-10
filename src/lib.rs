@@ -114,6 +114,7 @@ use crate::types::{
 
 pub mod to_wkt;
 mod tokenizer;
+mod wkt_macro;
 
 /// Error variant for this crate
 pub mod error;
