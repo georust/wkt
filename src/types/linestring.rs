@@ -237,6 +237,45 @@ mod tests {
     }
 
     #[test]
+    fn parse_empty_linestring() {
+        let wkt: Wkt<f64> = Wkt::from_str("LINESTRING EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert!(coords.is_empty());
+                assert_eq!(dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("LINESTRING Z EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert!(coords.is_empty());
+                assert_eq!(dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("LINESTRING M EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert!(coords.is_empty());
+                assert_eq!(dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("LINESTRING ZM EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert!(coords.is_empty());
+                assert_eq!(dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        };
+    }
+
+    #[test]
     fn write_empty_linestring() {
         let linestring: LineString<f64> = LineString::empty(Dimension::XY);
         assert_eq!("LINESTRING EMPTY", format!("{}", linestring));

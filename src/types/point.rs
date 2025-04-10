@@ -173,6 +173,45 @@ mod tests {
     }
 
     #[test]
+    fn parse_empty_point() {
+        let wkt: Wkt<f64> = Wkt::from_str("POINT EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::Point(Point { coord, dim }) => {
+                assert!(coord.is_none());
+                assert_eq!(dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("POINT Z EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::Point(Point { coord, dim }) => {
+                assert!(coord.is_none());
+                assert_eq!(dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("POINT M EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::Point(Point { coord, dim }) => {
+                assert!(coord.is_none());
+                assert_eq!(dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("POINT ZM EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::Point(Point { coord, dim }) => {
+                assert!(coord.is_none());
+                assert_eq!(dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        };
+    }
+
+    #[test]
     fn invalid_points() {
         <Wkt<f64>>::from_str("POINT ()").err().unwrap();
         <Wkt<f64>>::from_str("POINT (10)").err().unwrap();
