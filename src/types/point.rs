@@ -23,7 +23,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Point<T: WktNum>(pub Option<Coord<T>>);
+pub struct Point<T: WktNum = f64>(pub Option<Coord<T>>);
 
 impl<T> From<Point<T>> for Wkt<T>
 where
