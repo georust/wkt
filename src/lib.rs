@@ -989,7 +989,7 @@ mod tests {
         }));
         assert_eq!(
             format!("{:?}", g),
-            "Point(Point(Some(Coord { x: 1.0, y: 2.0, z: None, m: None })))"
+            "Point(Point { dim: XY, coord: Some(Coord { x: 1.0, y: 2.0, z: None, m: None }) })"
         );
     }
 

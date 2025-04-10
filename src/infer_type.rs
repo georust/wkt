@@ -63,18 +63,32 @@ pub fn infer_type(input: &str) -> Result<(GeometryType, Dimension), String> {
         Ok((geom_type, dim))
     } else {
         let input = input.to_uppercase();
-        if !input.contains("EMPTY") {
-            return Err("Invalid WKT; no '(' character and not EMPTY".to_string());
-        }
 
-        let dim = if input.contains("ZM") {
-            Dimension::XYZM
-        } else if input.contains("Z") {
-            Dimension::XYZ
-        } else if input.contains("M") {
-            Dimension::XYM
+        // Note that we need to split off "EMPTY" or else searching for M will always find the M in
+        // EMPTY
+        let dim = if let Some(prefix_without_empty) = input.split_once("EMPTY") {
+            // We need to split again so that searching for M doesn't match the M in, say,
+            // MultiPoint
+            match prefix_without_empty.0.split_once(' ') {
+                Some((_geom_type, dim_str)) => {
+                    if dim_str.contains("ZM") {
+                        Dimension::XYZM
+                    } else if dim_str.contains("Z") {
+                        Dimension::XYZ
+                    } else if dim_str.contains("M") {
+                        Dimension::XYM
+                    } else {
+                        Dimension::XY
+                    }
+                }
+                None => {
+                    return Err(
+                        "Invalid WKT; no whitespace between geometry type and EMPTY.".to_string(),
+                    )
+                }
+            }
         } else {
-            Dimension::XY
+            return Err("Invalid WKT; no '(' character and not EMPTY".to_string());
         };
 
         if input.starts_with(POINT) {
@@ -109,15 +123,15 @@ mod test {
         );
         assert_eq!(
             infer_type("POINT Z (10 20.1 5)").unwrap(),
-            (GeometryType::Point, Dimension::XY)
+            (GeometryType::Point, Dimension::XYZ)
         );
         assert_eq!(
             infer_type("POINT M (10 20.1 80)").unwrap(),
-            (GeometryType::Point, Dimension::XY)
+            (GeometryType::Point, Dimension::XYM)
         );
         assert_eq!(
             infer_type("POINT ZM (10 20.1 5 80)").unwrap(),
-            (GeometryType::Point, Dimension::XYM)
+            (GeometryType::Point, Dimension::XYZM)
         );
     }
 
