@@ -83,6 +83,10 @@ where
         );
         result.map(|line_strings| MultiLineString { line_strings, dim })
     }
+
+    fn new_empty(dim: Dimension) -> Self {
+        Self::empty(dim)
+    }
 }
 
 impl<T: WktNum> MultiLineStringTrait for MultiLineString<T> {
@@ -145,6 +149,45 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(2, lines.len());
+    }
+
+    #[test]
+    fn parse_empty_multilinestring() {
+        let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                assert!(line_strings.is_empty());
+                assert_eq!(dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING Z EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                assert!(line_strings.is_empty());
+                assert_eq!(dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING M EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                assert!(line_strings.is_empty());
+                assert_eq!(dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING ZM EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                assert!(line_strings.is_empty());
+                assert_eq!(dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        };
     }
 
     #[test]

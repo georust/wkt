@@ -99,6 +99,10 @@ where
 
         Ok(GeometryCollection { geoms: items, dim })
     }
+
+    fn new_empty(dim: Dimension) -> Self {
+        Self::empty(dim)
+    }
 }
 
 impl<T: WktNum> GeometryCollectionTrait for GeometryCollection<T> {
@@ -170,6 +174,45 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(2, geoms.len());
+    }
+
+    #[test]
+    fn parse_empty_geometrycollection() {
+        let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::GeometryCollection(GeometryCollection { geoms, dim }) => {
+                assert!(geoms.is_empty());
+                assert_eq!(dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION Z EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::GeometryCollection(GeometryCollection { geoms, dim }) => {
+                assert!(geoms.is_empty());
+                assert_eq!(dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION M EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::GeometryCollection(GeometryCollection { geoms, dim }) => {
+                assert!(geoms.is_empty());
+                assert_eq!(dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION ZM EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::GeometryCollection(GeometryCollection { geoms, dim }) => {
+                assert!(geoms.is_empty());
+                assert_eq!(dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        };
     }
 
     #[test]

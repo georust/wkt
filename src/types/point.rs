@@ -78,6 +78,10 @@ where
             dim,
         })
     }
+
+    fn new_empty(dim: Dimension) -> Self {
+        Self::empty(dim)
+    }
 }
 
 impl<T: WktNum> PointTrait for Point<T> {

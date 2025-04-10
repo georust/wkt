@@ -70,6 +70,10 @@ where
         let result = FromTokens::comma_many(<Coord<T> as FromTokens<T>>::from_tokens, tokens, dim);
         result.map(|coords| LineString { coords, dim })
     }
+
+    fn new_empty(dim: Dimension) -> Self {
+        Self::empty(dim)
+    }
 }
 
 impl<T> fmt::Display for LineString<T>

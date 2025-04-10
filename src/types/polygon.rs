@@ -83,6 +83,10 @@ where
         );
         result.map(|rings| Polygon { rings, dim })
     }
+
+    fn new_empty(dim: Dimension) -> Self {
+        Self::empty(dim)
+    }
 }
 
 impl<T: WktNum> PolygonTrait for Polygon<T> {
@@ -150,6 +154,45 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(2, rings.len());
+    }
+
+    #[test]
+    fn parse_empty_polygon() {
+        let wkt: Wkt<f64> = Wkt::from_str("POLYGON EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::Polygon(Polygon { rings, dim }) => {
+                assert!(rings.is_empty());
+                assert_eq!(dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("POLYGON Z EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::Polygon(Polygon { rings, dim }) => {
+                assert!(rings.is_empty());
+                assert_eq!(dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("POLYGON M EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::Polygon(Polygon { rings, dim }) => {
+                assert!(rings.is_empty());
+                assert_eq!(dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("POLYGON ZM EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::Polygon(Polygon { rings, dim }) => {
+                assert!(rings.is_empty());
+                assert_eq!(dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        };
     }
 
     #[test]

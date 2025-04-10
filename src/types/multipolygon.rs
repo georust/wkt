@@ -83,6 +83,10 @@ where
         );
         result.map(|polygons| MultiPolygon { polygons, dim })
     }
+
+    fn new_empty(dim: Dimension) -> Self {
+        Self::empty(dim)
+    }
 }
 
 impl<T: WktNum> MultiPolygonTrait for MultiPolygon<T> {
@@ -142,6 +146,45 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(2, polygons.len());
+    }
+
+    #[test]
+    fn parse_empty_multipolygon() {
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                assert!(polygons.is_empty());
+                assert_eq!(dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON Z EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                assert!(polygons.is_empty());
+                assert_eq!(dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON M EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                assert!(polygons.is_empty());
+                assert_eq!(dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON ZM EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                assert!(polygons.is_empty());
+                assert_eq!(dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        };
     }
 
     #[test]

@@ -90,6 +90,10 @@ where
 
         Ok(Coord { x, y, z, m })
     }
+
+    fn new_empty(_dim: Dimension) -> Self {
+        unreachable!("empty coord does not exist in WKT")
+    }
 }
 
 impl<T: WktNum> CoordTrait for Coord<T> {

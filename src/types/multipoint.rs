@@ -83,6 +83,10 @@ where
         );
         result.map(|points| MultiPoint { points, dim })
     }
+
+    fn new_empty(dim: Dimension) -> Self {
+        Self::empty(dim)
+    }
 }
 
 impl<T: WktNum> MultiPointTrait for MultiPoint<T> {
@@ -213,6 +217,45 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(0, points.len());
+    }
+
+    #[test]
+    fn parse_empty_multipoint() {
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPoint(MultiPoint { points, dim }) => {
+                assert!(points.is_empty());
+                assert_eq!(dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT Z EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPoint(MultiPoint { points, dim }) => {
+                assert!(points.is_empty());
+                assert_eq!(dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT M EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPoint(MultiPoint { points, dim }) => {
+                assert!(points.is_empty());
+                assert_eq!(dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT ZM EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPoint(MultiPoint { points, dim }) => {
+                assert!(points.is_empty());
+                assert_eq!(dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        };
     }
 
     #[test]

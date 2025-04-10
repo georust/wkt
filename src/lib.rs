@@ -777,6 +777,8 @@ where
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str>;
 
+    fn new_empty(dim: Dimension) -> Self;
+
     /// The preferred top-level FromTokens API, which additionally checks for the presence of Z, M,
     /// and ZM in the token stream.
     fn from_tokens_with_header(
@@ -798,10 +800,7 @@ where
         match tokens.next().transpose()? {
             Some(Token::ParenOpen) => (),
             Some(Token::Word(ref s)) if s.eq_ignore_ascii_case("EMPTY") => {
-                // TODO: expand this to support Z EMPTY
-                // Maybe create a DefaultXY, DefaultXYZ trait etc for each geometry type, and then
-                // here match on the dim to decide which default trait to use.
-                return Ok(Default::default());
+                return Ok(Self::new_empty(dim));
             }
             _ => return Err("Missing open parenthesis for type"),
         };
