@@ -50,6 +50,15 @@ macro_rules! wkt_internal {
     (LINESTRING $tt: tt) => {
         Wkt::<f64>::LineString(line_string!($tt))
     };
+    (LINESTRING Z $tt: tt) => {
+        Wkt::<f64>::LineString(line_string_z!($tt))
+    };
+    (LINESTRING M $tt: tt) => {
+        Wkt::<f64>::LineString(line_string_m!($tt))
+    };
+    (LINESTRING ZM $tt: tt) => {
+        Wkt::<f64>::LineString(line_string_zm!($tt))
+    };
     (POLYGON $tt:tt) => {
         Wkt::<f64>::Polygon(polygon!($tt))
     };
@@ -182,6 +191,7 @@ macro_rules! point_zm {
         Point::empty(Dimension::XYZM)
     };
 }
+
 #[macro_export]
 #[doc(hidden)]
 macro_rules! line_string {
@@ -191,31 +201,55 @@ macro_rules! line_string {
     (EMPTY) => {
         LineString::empty(Dimension::XY)
     };
-    (Z EMPTY) => {
-        LineString::empty(Dimension::XYZ)
-    };
-    (M EMPTY) => {
-        LineString::empty(Dimension::XYM)
-    };
-    (ZM EMPTY) => {
-        LineString::empty(Dimension::XYZM)
-    };
     (($($x: literal $y: literal),*)) => {
         LineString::from_coords(
             [$($crate::coord_xy!($x $y)),*]
         )
     };
-    (Z ($($x: literal $y: literal $z: literal),*)) => {
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! line_string_z {
+    (()) => {
+        compile_error!("use `LINESTRING EMPTY` for a LineString with no coordinates")
+    };
+    (EMPTY) => {
+        LineString::empty(Dimension::XYZ)
+    };
+    (($($x: literal $y: literal),*)) => {
         LineString::from_coords(
             [$($crate::coord_xyz!($x $y $z)),*]
         )
     };
-    (M ($($x: literal $y: literal $m: literal),*)) => {
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! line_string_m {
+    (()) => {
+        compile_error!("use `LINESTRING EMPTY` for a LineString with no coordinates")
+    };
+    (EMPTY) => {
+        LineString::empty(Dimension::XYM)
+    };
+    (($($x: literal $y: literal),*)) => {
         LineString::from_coords(
             [$($crate::coord_xym!($x $y $m)),*]
         )
     };
-    (ZM ($($x: literal $y: literal $z: literal $m: literal),*)) => {
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! line_string_zm {
+    (()) => {
+        compile_error!("use `LINESTRING EMPTY` for a LineString with no coordinates")
+    };
+    (EMPTY) => {
+        LineString::empty(Dimension::XYZM)
+    };
+    (($($x: literal $y: literal $z: literal $m: literal),*)) => {
         LineString::from_coords(
             [$($crate::coord_xyzm!($x $y $z $m)),*]
         )
@@ -501,7 +535,10 @@ mod test {
             }
             _ => panic!("Expected a Point"),
         }
+    }
 
+    #[test]
+    fn empty_point() {
         let point = wkt! { POINT EMPTY };
         match point {
             Wkt::Point(p) => {
@@ -539,21 +576,60 @@ mod test {
         }
     }
 
-    //     #[test]
-    //     fn empty_line_string() {
-    //         let line_string: LineString<f64> = wkt! { LINESTRING EMPTY };
-    //         assert_eq!(line_string.0.len(), 0);
+    #[test]
+    fn empty_line_string() {
+        let line_string = wkt! { LINESTRING EMPTY };
+        match line_string {
+            Wkt::LineString(l) => {
+                assert!(l.coords.is_empty());
+                assert_eq!(l.dim, Dimension::XY);
+            }
+            _ => panic!("Expected a LineString"),
+        }
 
-    //         // This (rightfully) fails to compile because its invalid wkt
-    //         // wkt! { LINESTRING() }
-    //     }
+        let line_string = wkt! { LINESTRING Z EMPTY };
+        match line_string {
+            Wkt::LineString(l) => {
+                assert!(l.coords.is_empty());
+                assert_eq!(l.dim, Dimension::XYZ);
+            }
+            _ => panic!("Expected a LineString"),
+        }
 
-    //     #[test]
-    //     fn line_string() {
-    //         let line_string = wkt! { LINESTRING(1.0 2.0,3.0 4.0) };
-    //         assert_eq!(line_string.0.len(), 2);
-    //         assert_eq!(line_string[0], coord! { x: 1.0, y: 2.0 });
-    //     }
+        let line_string = wkt! { LINESTRING M EMPTY };
+        match line_string {
+            Wkt::LineString(l) => {
+                assert!(l.coords.is_empty());
+                assert_eq!(l.dim, Dimension::XYM);
+            }
+            _ => panic!("Expected a LineString"),
+        }
+
+        let line_string = wkt! { LINESTRING ZM EMPTY };
+        match line_string {
+            Wkt::LineString(l) => {
+                assert!(l.coords.is_empty());
+                assert_eq!(l.dim, Dimension::XYZM);
+            }
+            _ => panic!("Expected a LineString"),
+        }
+
+        // This (rightfully) fails to compile because its invalid wkt
+        // wkt! { LINESTRING() }
+    }
+
+    #[test]
+    fn line_string() {
+        let line_string = wkt! { LINESTRING(1.0 2.0,3.0 4.0) };
+        match line_string {
+            Wkt::LineString(l) => {
+                assert_eq!(l.coords.len(), 2);
+                assert_eq!(l.coords[0], coord_xy! { 1.0 2.0 });
+                assert_eq!(l.dim, Dimension::XY);
+            }
+            _ => panic!("Expected a Point"),
+        }
+    }
 
     //     #[test]
     //     fn empty_polygon() {
