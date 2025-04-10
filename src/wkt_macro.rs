@@ -38,6 +38,15 @@ macro_rules! wkt_internal {
     (POINT $tt: tt) => {
         Wkt::<f64>::Point(point!($tt))
     };
+    (POINT Z $tt: tt) => {
+        Wkt::<f64>::Point(point_z!($tt))
+    };
+    (POINT M $tt: tt) => {
+        Wkt::<f64>::Point(point_m!($tt))
+    };
+    (POINT ZM $tt: tt) => {
+        Wkt::<f64>::Point(point_zm!($tt))
+    };
     (LINESTRING $tt: tt) => {
         Wkt::<f64>::LineString(line_string!($tt))
     };
@@ -136,29 +145,43 @@ macro_rules! point {
     (($x: literal $y: literal)) => {
         Point::from_coord($crate::coord_xy!($x $y))
     };
-    (Z ($x: literal $y: literal $z: literal)) => {
-        Point::from_coord($crate::coord_xyz!($x $y $z))
-    };
-    (M ($x: literal $y: literal $m: literal)) => {
-        Point::from_coord($crate::coord_xym!($x $y $m))
-    };
-    (ZM ($x: literal $y: literal $z: literal $m: literal)) => {
-        Point::from_coord($crate::coord_xyzm!($x $y $z $m))
-    };
     (EMPTY) => {
         Point::empty(Dimension::XY)
     };
-    (Z EMPTY) => {
+}
+
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
+macro_rules! point_z {
+    (($x: literal $y: literal $z: literal)) => {
+        Point::from_coord($crate::coord_xyz!($x $y $z))
+    };
+    (EMPTY) => {
         Point::empty(Dimension::XYZ)
-    };
-    (M EMPTY) => {
-        Point::empty(Dimension::XYM)
-    };
-    (ZM EMPTY) => {
-        Point::empty(Dimension::XYZM)
     };
 }
 
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
+macro_rules! point_m {
+    (($x: literal $y: literal $m: literal)) => {
+        Point::from_coord($crate::coord_xym!($x $y $m))
+    };
+    (EMPTY) => {
+        Point::empty(Dimension::XYM)
+    };
+}
+
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
+macro_rules! point_zm {
+    (($x: literal $y: literal $z: literal $m: literal)) => {
+        Point::from_coord($crate::coord_xyzm!($x $y $z $m))
+    };
+    (EMPTY) => {
+        Point::empty(Dimension::XYZM)
+    };
+}
 #[macro_export]
 #[doc(hidden)]
 macro_rules! line_string {
@@ -422,26 +445,14 @@ macro_rules! line_string {
 mod test {
     use crate::types::*;
     use crate::Wkt;
-    use geo_traits::*;
-
-    //     fn test() {
-    //         {
-    //     use crate::{
-    //         types::*,Wkt
-    //     };
-    //     Wkt::<f64>::Point(Point::from_coord(Coord {
-    //         x: $ ,y: $y,z:None,m:Some($m),
-    //     }))
-    // }
-    //     }
 
     #[test]
     fn point() {
         let point = wkt! { POINT(1.0 2.0) };
         match point {
             Wkt::Point(p) => {
-                assert_eq!(p.coord.as_ref().unwrap().x(), 1.0);
-                assert_eq!(p.coord.as_ref().unwrap().y(), 2.0);
+                assert_eq!(p.coord.as_ref().unwrap().x, 1.0);
+                assert_eq!(p.coord.as_ref().unwrap().y, 2.0);
                 assert_eq!(p.dim, Dimension::XY);
             }
             _ => panic!("Expected a Point"),
@@ -450,47 +461,82 @@ mod test {
         let point = wkt! { POINT(1.0   2.0) };
         match point {
             Wkt::Point(p) => {
-                assert_eq!(p.coord.as_ref().unwrap().x(), 1.0);
-                assert_eq!(p.coord.as_ref().unwrap().y(), 2.0);
+                assert_eq!(p.coord.as_ref().unwrap().x, 1.0);
+                assert_eq!(p.coord.as_ref().unwrap().y, 2.0);
                 assert_eq!(p.dim, Dimension::XY);
             }
             _ => panic!("Expected a Point"),
         }
 
-        let point = wkt! { POINT Z (1.0 2.0 3.0 4.0) };
-        // match point {
-        //     Wkt::Point(p) => {
-        //         assert_eq!(p.coord.as_ref().unwrap().x(), 1.0);
-        //         assert_eq!(p.coord.as_ref().unwrap().y(), 2.0);
-        //         assert_eq!(p.dim, Dimension::XY);
-        //     }
-        //     _ => panic!("Expected a Point"),
-        // }
+        let point = wkt! { POINT Z (1.0 2.0 3.0) };
+        match point {
+            Wkt::Point(p) => {
+                assert_eq!(p.coord.as_ref().unwrap().x, 1.0);
+                assert_eq!(p.coord.as_ref().unwrap().y, 2.0);
+                assert_eq!(p.coord.as_ref().unwrap().z, Some(3.0));
+                assert_eq!(p.dim, Dimension::XYZ);
+            }
+            _ => panic!("Expected a Point"),
+        }
 
-        let x = coord_xyz!(1 2 3);
-        dbg!(x);
+        let point = wkt! { POINT M (1.0 2.0 3.0) };
+        match point {
+            Wkt::Point(p) => {
+                assert_eq!(p.coord.as_ref().unwrap().x, 1.0);
+                assert_eq!(p.coord.as_ref().unwrap().y, 2.0);
+                assert_eq!(p.coord.as_ref().unwrap().m, Some(3.0));
+                assert_eq!(p.dim, Dimension::XYM);
+            }
+            _ => panic!("Expected a Point"),
+        }
 
-        // let point = wkt! { POINT(1.0 2.0) };
-        // match point {
-        //     Wkt::Point(p) => {
-        //         assert_eq!(p.coord.as_ref().unwrap().x(), 1.0);
-        //         assert_eq!(p.coord.as_ref().unwrap().y(), 2.0);
-        //         assert_eq!(p.dim, Dimension::XY);
-        //     }
-        //     _ => panic!("Expected a Point"),
-        // }
+        let point = wkt! { POINT ZM (1.0 2.0 3.0 4.0) };
+        match point {
+            Wkt::Point(p) => {
+                assert_eq!(p.coord.as_ref().unwrap().x, 1.0);
+                assert_eq!(p.coord.as_ref().unwrap().y, 2.0);
+                assert_eq!(p.coord.as_ref().unwrap().z, Some(3.0));
+                assert_eq!(p.coord.as_ref().unwrap().m, Some(4.0));
+                assert_eq!(p.dim, Dimension::XYZM);
+            }
+            _ => panic!("Expected a Point"),
+        }
 
-        // let point = wkt! { POINT(1.0 2.0) };
-        // match point {
-        //     Wkt::Point(p) => {
-        //         assert_eq!(p.coord.as_ref().unwrap().x(), 1.0);
-        //         assert_eq!(p.coord.as_ref().unwrap().y(), 2.0);
-        //         assert_eq!(p.dim, Dimension::XY);
-        //     }
-        //     _ => panic!("Expected a Point"),
-        // }
+        let point = wkt! { POINT EMPTY };
+        match point {
+            Wkt::Point(p) => {
+                assert!(p.coord.is_none());
+                assert_eq!(p.dim, Dimension::XY);
+            }
+            _ => panic!("Expected a Point"),
+        }
 
-        // let point = wkt! { POINT EMPTY };
+        let point = wkt! { POINT Z EMPTY };
+        match point {
+            Wkt::Point(p) => {
+                assert!(p.coord.is_none());
+                assert_eq!(p.dim, Dimension::XYZ);
+            }
+            _ => panic!("Expected a Point"),
+        }
+
+        let point = wkt! { POINT M EMPTY };
+        match point {
+            Wkt::Point(p) => {
+                assert!(p.coord.is_none());
+                assert_eq!(p.dim, Dimension::XYM);
+            }
+            _ => panic!("Expected a Point"),
+        }
+
+        let point = wkt! { POINT ZM EMPTY };
+        match point {
+            Wkt::Point(p) => {
+                assert!(p.coord.is_none());
+                assert_eq!(p.dim, Dimension::XYZM);
+            }
+            _ => panic!("Expected a Point"),
+        }
     }
 
     //     #[test]
