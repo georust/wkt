@@ -74,9 +74,6 @@ impl<T> FromTokens<T> for GeometryCollection<T>
 where
     T: WktNum + FromStr + Default,
 {
-    // Unsure if the dimension should be used in parsing GeometryCollection; is it
-    // GEOMETRYCOLLECTION ( POINT Z (...) , POINT ZM (...))
-    // or does a geometry collection have a known dimension?
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
         let mut items = Vec::new();
 
@@ -177,29 +174,28 @@ mod tests {
 
     #[test]
     fn write_empty_geometry_collection() {
-        let geometry_collection: GeometryCollection<f64> =
-            GeometryCollection::new(vec![], Dimension::XY);
+        let geometry_collection: GeometryCollection<f64> = GeometryCollection::empty(Dimension::XY);
         assert_eq!(
             "GEOMETRYCOLLECTION EMPTY",
             format!("{}", geometry_collection)
         );
 
         let geometry_collection: GeometryCollection<f64> =
-            GeometryCollection::new(vec![], Dimension::XYZ);
+            GeometryCollection::empty(Dimension::XYZ);
         assert_eq!(
             "GEOMETRYCOLLECTION Z EMPTY",
             format!("{}", geometry_collection)
         );
 
         let geometry_collection: GeometryCollection<f64> =
-            GeometryCollection::new(vec![], Dimension::XYM);
+            GeometryCollection::empty(Dimension::XYM);
         assert_eq!(
             "GEOMETRYCOLLECTION M EMPTY",
             format!("{}", geometry_collection)
         );
 
         let geometry_collection: GeometryCollection<f64> =
-            GeometryCollection::new(vec![], Dimension::XYZM);
+            GeometryCollection::empty(Dimension::XYZM);
         assert_eq!(
             "GEOMETRYCOLLECTION ZM EMPTY",
             format!("{}", geometry_collection)

@@ -36,7 +36,7 @@ impl<T: WktNum> Point<T> {
     /// Create a new point from a valid [Coord].
     ///
     /// This infers the dimension from the coordinate.
-    pub(crate) fn from_coord(coord: Coord<T>) -> Self {
+    pub fn from_coord(coord: Coord<T>) -> Self {
         Self {
             dim: coord.dimension(),
             coord: Some(coord),
