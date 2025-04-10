@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::{GeometryCollectionTrait, GeometryTrait};
+use geo_traits::GeometryCollectionTrait;
 
 use crate::to_wkt::write_geometry_collection;
 use crate::tokenizer::{PeekableTokens, Token};
@@ -23,13 +23,32 @@ use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GeometryCollection<T: WktNum> {
-    dim: Dimension,
-    geoms: Vec<Wkt<T>>,
+    pub(crate) dim: Dimension,
+    pub(crate) geoms: Vec<Wkt<T>>,
 }
 
 impl<T: WktNum> GeometryCollection<T> {
     pub fn new(geoms: Vec<Wkt<T>>, dim: Dimension) -> Self {
-        GeometryCollection { dim, geoms }
+        Self { dim, geoms }
+    }
+
+    /// Create a new empty GeometryCollection.
+    pub fn empty(dim: Dimension) -> Self {
+        Self::new(vec![], dim)
+    }
+
+    /// Create a new GeometryCollection from a non-empty sequence of [Wkt].
+    ///
+    /// This will infer the dimension from the first geometry, and will not validate that all
+    /// geometries have the same dimension.
+    ///
+    /// ## Panics
+    ///
+    /// If the input iterator is empty.
+    pub fn from_geometries(geoms: impl IntoIterator<Item = Wkt<T>>) -> Self {
+        let geoms = geoms.into_iter().collect::<Vec<_>>();
+        let dim = geoms[0].dimension();
+        Self::new(geoms, dim)
     }
 }
 
@@ -169,29 +188,31 @@ mod tests {
 
     #[test]
     fn write_geometry_collection() {
-        let point = Wkt::Point(Point(Some(Coord {
+        let point = Point::from_coord(Coord {
             x: 10.,
             y: 20.,
             z: None,
             m: None,
-        })));
+        })
+        .into();
 
-        let multipoint = Wkt::MultiPoint(MultiPoint(vec![
-            Point(Some(Coord {
+        let multipoint = MultiPoint::from_points([
+            Point::from_coord(Coord {
                 x: 10.1,
                 y: 20.2,
                 z: None,
                 m: None,
-            })),
-            Point(Some(Coord {
+            }),
+            Point::from_coord(Coord {
                 x: 30.3,
                 y: 40.4,
                 z: None,
                 m: None,
-            })),
-        ]));
+            }),
+        ])
+        .into();
 
-        let linestring = Wkt::LineString(LineString(vec![
+        let linestring = LineString::from_coords([
             Coord {
                 x: 10.,
                 y: 20.,
@@ -204,9 +225,10 @@ mod tests {
                 z: None,
                 m: None,
             },
-        ]));
+        ])
+        .into();
 
-        let polygon = Wkt::Polygon(Polygon(vec![LineString(vec![
+        let polygon = Polygon::from_rings([LineString::from_coords([
             Coord {
                 x: 0.,
                 y: 0.,
@@ -231,10 +253,10 @@ mod tests {
                 z: None,
                 m: None,
             },
-        ])]));
+        ])]);
 
-        let multilinestring = Wkt::MultiLineString(MultiLineString(vec![
-            LineString(vec![
+        let multilinestring = MultiLineString::from_line_strings([
+            LineString::from_coords([
                 Coord {
                     x: 10.1,
                     y: 20.2,
@@ -248,7 +270,7 @@ mod tests {
                     m: None,
                 },
             ]),
-            LineString(vec![
+            LineString::from_coords([
                 Coord {
                     x: 50.5,
                     y: 60.6,
@@ -262,10 +284,11 @@ mod tests {
                     m: None,
                 },
             ]),
-        ]));
+        ])
+        .into();
 
-        let multipolygon = Wkt::MultiPolygon(MultiPolygon(vec![
-            Polygon(vec![LineString(vec![
+        let multipolygon = MultiPolygon::from_polygons([
+            Polygon::from_rings([LineString::from_coords([
                 Coord {
                     x: 0.,
                     y: 0.,
@@ -291,7 +314,7 @@ mod tests {
                     m: None,
                 },
             ])]),
-            Polygon(vec![LineString(vec![
+            Polygon::from_rings([LineString::from_coords([
                 Coord {
                     x: 40.,
                     y: 40.,
@@ -317,16 +340,18 @@ mod tests {
                     m: None,
                 },
             ])]),
-        ]));
+        ])
+        .into();
 
-        let geometrycollection = GeometryCollection(vec![
+        let geoms: Vec<Wkt<f64>> = vec![
             point,
             multipoint,
             linestring,
-            polygon,
+            polygon.into(),
             multilinestring,
             multipolygon,
-        ]);
+        ];
+        let geometrycollection = GeometryCollection::from_geometries(geoms);
 
         assert_eq!(
             "GEOMETRYCOLLECTION(\

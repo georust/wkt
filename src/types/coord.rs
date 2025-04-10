@@ -30,6 +30,17 @@ where
     pub m: Option<T>,
 }
 
+impl<T: WktNum> Coord<T> {
+    pub(crate) fn dimension(&self) -> Dimension {
+        match (self.z.is_some(), self.m.is_some()) {
+            (true, true) => Dimension::XYZM,
+            (true, false) => Dimension::XYZ,
+            (false, true) => Dimension::XYM,
+            (false, false) => Dimension::XY,
+        }
+    }
+}
+
 impl<T> FromTokens<T> for Coord<T>
 where
     T: WktNum + FromStr + Default,
@@ -85,12 +96,7 @@ impl<T: WktNum> CoordTrait for Coord<T> {
     type T = T;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match (self.z.is_some(), self.m.is_some()) {
-            (true, true) => geo_traits::Dimensions::Xyzm,
-            (true, false) => geo_traits::Dimensions::Xyz,
-            (false, true) => geo_traits::Dimensions::Xym,
-            (false, false) => geo_traits::Dimensions::Xy,
-        }
+        self.dimension().into()
     }
 
     fn x(&self) -> Self::T {
@@ -132,12 +138,7 @@ impl<T: WktNum> CoordTrait for &Coord<T> {
     type T = T;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match (self.z.is_some(), self.m.is_some()) {
-            (true, true) => geo_traits::Dimensions::Xyzm,
-            (true, false) => geo_traits::Dimensions::Xyz,
-            (false, true) => geo_traits::Dimensions::Xym,
-            (false, false) => geo_traits::Dimensions::Xy,
-        }
+        self.dimension().into()
     }
 
     fn x(&self) -> Self::T {

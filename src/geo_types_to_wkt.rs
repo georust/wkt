@@ -240,7 +240,7 @@ where
     T: CoordNum,
 {
     let coord = g_point_to_w_coord(&g_point.0);
-    Point(Some(coord))
+    Point::from_coord(coord)
 }
 
 fn g_points_to_w_coords<T>(g_points: &[geo_types::Coord<T>]) -> Vec<Coord<T>>
@@ -258,7 +258,7 @@ where
         .iter()
         .map(|p| &p.0)
         .map(g_point_to_w_coord)
-        .map(|c| Point(Some(c)))
+        .map(|c| Point::from_coord(c))
         .collect()
 }
 
@@ -282,7 +282,7 @@ where
     T: CoordNum,
 {
     let w_coords = g_points_to_w_coords(g_coords);
-    LineString(w_coords)
+    LineString::from_coords(w_coords)
 }
 
 fn g_lines_to_w_lines<T>(g_lines: &[geo_types::LineString<T>]) -> Vec<LineString<T>>
@@ -331,7 +331,7 @@ where
     let inner = g_lines_to_w_lines(inner_lines);
     poly_lines.extend(inner);
 
-    Polygon(poly_lines)
+    Polygon::from_rings(poly_lines)
 }
 
 fn g_mpoint_to_w_mpoint<T>(g_mpoint: &geo_types::MultiPoint<T>) -> MultiPoint<T>
@@ -340,7 +340,7 @@ where
 {
     let geo_types::MultiPoint(g_points) = g_mpoint;
     let w_points = g_points_to_w_points(g_points);
-    MultiPoint(w_points)
+    MultiPoint::from_points(w_points)
 }
 
 fn g_mline_to_w_mline<T>(g_mline: &geo_types::MultiLineString<T>) -> MultiLineString<T>
@@ -349,7 +349,7 @@ where
 {
     let geo_types::MultiLineString(g_lines) = g_mline;
     let w_lines = g_lines_to_w_lines(g_lines);
-    MultiLineString(w_lines)
+    MultiLineString::from_line_strings(w_lines)
 }
 
 fn g_polygons_to_w_polygons<T>(g_polygons: &[geo_types::Polygon<T>]) -> Vec<Polygon<T>>
@@ -369,7 +369,7 @@ where
 {
     let geo_types::MultiPolygon(g_polygons) = g_mpolygon;
     let w_polygons = g_polygons_to_w_polygons(g_polygons);
-    MultiPolygon(w_polygons)
+    MultiPolygon::from_polygons(w_polygons)
 }
 
 fn g_geocol_to_w_geocol<T>(g_geocol: &geo_types::GeometryCollection<T>) -> GeometryCollection<T>
@@ -382,7 +382,7 @@ where
         let w_geom = g_geom_to_w_geom(g_geom);
         w_geoms.push(w_geom);
     }
-    GeometryCollection(w_geoms)
+    GeometryCollection::from_geometries(w_geoms)
 }
 
 fn g_geom_to_w_geom<T>(g_geom: &geo_types::Geometry<T>) -> Wkt<T>

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::{LineStringTrait, PolygonTrait};
+use geo_traits::PolygonTrait;
 
 use crate::to_wkt::write_polygon;
 use crate::tokenizer::PeekableTokens;
@@ -24,13 +24,32 @@ use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Polygon<T: WktNum> {
-    dim: Dimension,
-    rings: Vec<LineString<T>>,
+    pub(crate) dim: Dimension,
+    pub(crate) rings: Vec<LineString<T>>,
 }
 
 impl<T: WktNum> Polygon<T> {
     pub fn new(rings: Vec<LineString<T>>, dim: Dimension) -> Self {
         Polygon { dim, rings }
+    }
+
+    /// Create a new empty polygon.
+    pub fn empty(dim: Dimension) -> Self {
+        Self::new(vec![], dim)
+    }
+
+    /// Create a new polygon from a non-empty sequence of [LineString].
+    ///
+    /// This will infer the dimension from the first line string, and will not validate that all
+    /// line strings have the same dimension.
+    ///
+    /// ## Panics
+    ///
+    /// If the input iterator is empty.
+    pub fn from_rings(rings: impl IntoIterator<Item = LineString<T>>) -> Self {
+        let rings = rings.into_iter().collect::<Vec<_>>();
+        let dim = rings[0].dim;
+        Self::new(rings, dim)
     }
 }
 
@@ -117,7 +136,7 @@ impl<T: WktNum> PolygonTrait for &Polygon<T> {
 #[cfg(test)]
 mod tests {
     use super::{LineString, Polygon};
-    use crate::types::Coord;
+    use crate::types::{Coord, Dimension};
     use crate::Wkt;
     use std::str::FromStr;
 
@@ -135,15 +154,15 @@ mod tests {
 
     #[test]
     fn write_empty_polygon() {
-        let polygon: Polygon<f64> = Polygon(vec![]);
+        let polygon: Polygon<f64> = Polygon::empty(Dimension::XY);
 
         assert_eq!("POLYGON EMPTY", format!("{}", polygon));
     }
 
     #[test]
     fn write_polygon() {
-        let polygon = Polygon(vec![
-            LineString(vec![
+        let polygon = Polygon::from_rings([
+            LineString::from_coords([
                 Coord {
                     x: 0.,
                     y: 0.,
@@ -169,7 +188,7 @@ mod tests {
                     m: None,
                 },
             ]),
-            LineString(vec![
+            LineString::from_coords([
                 Coord {
                     x: 5.,
                     y: 5.,
