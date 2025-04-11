@@ -23,7 +23,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Point<T: WktNum> {
+pub struct Point<T: WktNum = f64> {
     pub(crate) dim: Dimension,
     pub(crate) coord: Option<Coord<T>>,
 }

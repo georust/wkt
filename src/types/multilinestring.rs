@@ -23,7 +23,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiLineString<T: WktNum> {
+pub struct MultiLineString<T: WktNum = f64> {
     pub(crate) dim: Dimension,
     pub(crate) line_strings: Vec<LineString<T>>,
 }

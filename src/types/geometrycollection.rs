@@ -22,7 +22,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct GeometryCollection<T: WktNum> {
+pub struct GeometryCollection<T: WktNum = f64> {
     pub(crate) dim: Dimension,
     pub(crate) geoms: Vec<Wkt<T>>,
 }

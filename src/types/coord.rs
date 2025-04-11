@@ -20,10 +20,7 @@ use crate::{FromTokens, WktNum};
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Coord<T>
-where
-    T: WktNum,
-{
+pub struct Coord<T: WktNum = f64> {
     pub x: T,
     pub y: T,
     pub z: Option<T>,

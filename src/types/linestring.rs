@@ -23,7 +23,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct LineString<T: WktNum> {
+pub struct LineString<T: WktNum = f64> {
     pub(crate) dim: Dimension,
     pub(crate) coords: Vec<Coord<T>>,
 }

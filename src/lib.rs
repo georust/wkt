@@ -166,10 +166,7 @@ impl<T> WktFloat for T where T: WktNum + Float {}
 
 #[derive(Clone, Debug, PartialEq)]
 /// All supported WKT geometry [`types`]
-pub enum Wkt<T>
-where
-    T: WktNum,
-{
+pub enum Wkt<T: WktNum = f64> {
     Point(Point<T>),
     LineString(LineString<T>),
     Polygon(Polygon<T>),

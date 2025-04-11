@@ -23,7 +23,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiPoint<T: WktNum> {
+pub struct MultiPoint<T: WktNum = f64> {
     pub(crate) dim: Dimension,
     pub(crate) points: Vec<Point<T>>,
 }

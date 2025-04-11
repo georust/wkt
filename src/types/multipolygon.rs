@@ -23,7 +23,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiPolygon<T: WktNum> {
+pub struct MultiPolygon<T: WktNum = f64> {
     pub(crate) dim: Dimension,
     pub(crate) polygons: Vec<Polygon<T>>,
 }

@@ -23,7 +23,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Polygon<T: WktNum> {
+pub struct Polygon<T: WktNum = f64> {
     pub(crate) dim: Dimension,
     pub(crate) rings: Vec<LineString<T>>,
 }
