@@ -23,7 +23,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiLineString<T: WktNum>(pub Vec<LineString<T>>);
+pub struct MultiLineString<T: WktNum = f64>(pub Vec<LineString<T>>);
 
 impl<T> From<MultiLineString<T>> for Wkt<T>
 where

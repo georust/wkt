@@ -4,6 +4,10 @@
 
 * Your change here.
 
+## 0.13.0 - unreleased
+
+* Default to using `f64` for `WktNum` in WKT types
+
 ## 0.12.0 - 2024-11-27
 
 * Writing WKT is now up to 50% faster by avoiding extra allocations and writing directly to an underlying buffer.

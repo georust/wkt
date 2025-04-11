@@ -23,7 +23,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiPoint<T: WktNum>(pub Vec<Point<T>>);
+pub struct MultiPoint<T: WktNum = f64>(pub Vec<Point<T>>);
 
 impl<T> From<MultiPoint<T>> for Wkt<T>
 where
