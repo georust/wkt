@@ -62,17 +62,62 @@ macro_rules! wkt_internal {
     (POLYGON $tt:tt) => {
         Wkt::<f64>::Polygon(polygon!($tt))
     };
+    (POLYGON Z $tt:tt) => {
+        Wkt::<f64>::Polygon(polygon_z!($tt))
+    };
+    (POLYGON M $tt:tt) => {
+        Wkt::<f64>::Polygon(polygon_m!($tt))
+    };
+    (POLYGON ZM $tt:tt) => {
+        Wkt::<f64>::Polygon(polygon_zm!($tt))
+    };
     (MULTIPOINT $tt: tt) => {
         Wkt::<f64>::MultiPoint(multi_point!($tt))
+    };
+    (MULTIPOINT Z $tt: tt) => {
+        Wkt::<f64>::MultiPoint(multi_point_z!($tt))
+    };
+    (MULTIPOINT M $tt: tt) => {
+        Wkt::<f64>::MultiPoint(multi_point_m!($tt))
+    };
+    (MULTIPOINT ZM $tt: tt) => {
+        Wkt::<f64>::MultiPoint(multi_point_zm!($tt))
     };
     (MULTILINESTRING $tt: tt) => {
         Wkt::<f64>::MultiLineString(multi_line_string!($tt))
     };
+    (MULTILINESTRING Z $tt: tt) => {
+        Wkt::<f64>::MultiLineString(multi_line_string_z!($tt))
+    };
+    (MULTILINESTRING M $tt: tt) => {
+        Wkt::<f64>::MultiLineString(multi_line_string_m!($tt))
+    };
+    (MULTILINESTRING ZM $tt: tt) => {
+        Wkt::<f64>::MultiLineString(multi_line_string_zm!($tt))
+    };
     (MULTIPOLYGON $tt: tt) => {
         Wkt::<f64>::MultiPolygon(multi_polygon!($tt))
     };
+    (MULTIPOLYGON Z $tt: tt) => {
+        Wkt::<f64>::MultiPolygon(multi_polygon_z!($tt))
+    };
+    (MULTIPOLYGON M $tt: tt) => {
+        Wkt::<f64>::MultiPolygon(multi_polygon_m!($tt))
+    };
+    (MULTIPOLYGON ZM $tt: tt) => {
+        Wkt::<f64>::MultiPolygon(multi_polygon_zm!($tt))
+    };
     (GEOMETRYCOLLECTION $tt: tt) => {
         Wkt::<f64>::GeometryCollection(geometry_collection!($tt))
+    };
+    (GEOMETRYCOLLECTION Z $tt: tt) => {
+        Wkt::<f64>::GeometryCollection(geometry_collection_z!($tt))
+    };
+    (GEOMETRYCOLLECTION M $tt: tt) => {
+        Wkt::<f64>::GeometryCollection(geometry_collection_m!($tt))
+    };
+    (GEOMETRYCOLLECTION ZM $tt: tt) => {
+        Wkt::<f64>::GeometryCollection(geometry_collection_zm!($tt))
     };
 }
 
@@ -128,25 +173,16 @@ macro_rules! coord_xyzm {
     };
 }
 
-// #[macro_export(local_inner_macros)]
-// #[doc(hidden)]
-// macro_rules! point_el {
-//     (EMPTY) => {
-//         Point::empty(Dimension::XY)
-//     };
-//     (Z EMPTY) => {
-//         Point::empty(Dimension::XYZ)
-//     };
-//     (M EMPTY) => {
-//         Point::empty(Dimension::XYM)
-//     };
-//     (ZM EMPTY) => {
-//         Point::empty(Dimension::XYZM)
-//     };
-//     ($x: literal $y: literal) => {
-//         Point(Some(coord!($x $y)))
-//     };
-// }
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
+macro_rules! point_el {
+    (EMPTY) => {
+        Point::empty(Dimension::XY)
+    };
+    ($x: literal $y: literal) => {
+        Point::from_coord($crate::coord_xy!($x $y))
+    };
+}
 
 #[macro_export(local_inner_macros)]
 #[doc(hidden)]
@@ -256,45 +292,163 @@ macro_rules! line_string_zm {
     };
 }
 
-// #[macro_export]
-// #[doc(hidden)]
-// macro_rules! polygon {
-//     (()) => {
-//         compile_error!("use `POLYGON EMPTY` for a Polygon with no coordinates")
-//     };
-//     (EMPTY) => {
-//         Polygon::empty(Dimension::XY)
-//     };
-//     (Z EMPTY) => {
-//         Polygon::empty(Dimension::XYZ)
-//     };
-//     (M EMPTY) => {
-//         Polygon::empty(Dimension::XYM)
-//     };
-//     (ZM EMPTY) => {
-//         Polygon::empty(Dimension::XYZM)
-//     };
-//     (( $($line_string_tt: tt),* )) => {
-//         Polygon::from_rings([
-//            $($crate::line_string![$line_string_tt]),*
-//         ])
-//     };
-//     (Z ( $($line_string_tt: tt),* )) => {
-//         Polygon::from_rings([
-//            $($crate::line_string![$line_string_tt]),*
-//         ])
-//     };
-//     (M ( $($line_string_tt: tt),* )) => {
-//         Polygon::from_rings([
-//            $($crate::line_string![$line_string_tt]),*
-//         ])
-//     };
-//     (ZM ( $($line_string_tt: tt),* )) => {
-//         Polygon::from_rings([
-//            $($crate::line_string![$line_string_tt]),*
-//         ])
-//     };
-// }
+#[macro_export]
+#[doc(hidden)]
+macro_rules! polygon {
+    (()) => {
+        compile_error!("use `POLYGON EMPTY` for a Polygon with no coordinates")
+    };
+    (EMPTY) => {
+        Polygon::empty(Dimension::XY)
+    };
+    (( $($line_string_tt: tt),* )) => {
+        Polygon::from_rings([
+           $($crate::line_string![$line_string_tt]),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! polygon_z {
+    (()) => {
+        compile_error!("use `POLYGON EMPTY` for a Polygon with no coordinates")
+    };
+    (EMPTY) => {
+        Polygon::empty(Dimension::XYZ)
+    };
+    (( $($line_string_tt: tt),* )) => {
+        Polygon::from_rings([
+           $($crate::line_string_z![$line_string_tt]),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! polygon_m {
+    (()) => {
+        compile_error!("use `POLYGON EMPTY` for a Polygon with no coordinates")
+    };
+    (EMPTY) => {
+        Polygon::empty(Dimension::XYM)
+    };
+    (( $($line_string_tt: tt),* )) => {
+        Polygon::from_rings([
+           $($crate::line_string_m![$line_string_tt]),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! polygon_zm {
+    (()) => {
+        compile_error!("use `POLYGON EMPTY` for a Polygon with no coordinates")
+    };
+    (EMPTY) => {
+        Polygon::empty(Dimension::XYZM)
+    };
+    (( $($line_string_tt: tt),* )) => {
+        Polygon::from_rings([
+           $($crate::line_string_zm![$line_string_tt]),*
+        ])
+    };
+}
+
+// Inspired by serde_json::json macro
+#[macro_export]
+#[doc(hidden)]
+macro_rules! point_vec {
+    (@points [$($el:expr),*]) => {
+        // done
+        vec![$($el),*]
+    };
+    (@points [$el:expr]) => {
+        // done
+        vec![$el]
+    };
+
+    // Next element is an expression followed by comma.
+    (@points [$($el:expr,)*] EMPTY, $($rest:tt)*) => {
+        $crate::point_vec!(@points [$($el,)* $crate::point_el!(EMPTY),] $($rest)*)
+    };
+    // Next element is an expression followed by comma.
+    (@points [$($el:expr,)*] $x:literal $y:literal, $($rest:tt)*) => {
+        $crate::point_vec!(@points [$($el,)* $crate::point_el!($x $y),] $($rest)*)
+    };
+
+    (@points [$($el:expr,)*] EMPTY) => {
+        $crate::point_vec!(@points [$($el,)* $crate::point_el!(EMPTY)])
+    };
+    (@points [$($el:expr,)*] $x: literal $y:literal) => {
+        $crate::point_vec!(@points [$($el,)* $crate::point_el!($x $y)])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_point {
+    (()) => {
+        compile_error!("use `MULTIPOINT EMPTY` for a MultiPoint with no coordinates")
+    };
+    (EMPTY) => {
+        MultiPoint::empty(Dimension::XY)
+    };
+    (($($tt: tt)*)) => {
+        MultiPoint::from_points(
+            point_vec!(@points [] $($tt)*)
+        )
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_point_z {
+    (()) => {
+        compile_error!("use `MULTIPOINT EMPTY` for a MultiPoint with no coordinates")
+    };
+    (EMPTY) => {
+        MultiPoint::empty(Dimension::XYZ)
+    };
+    (($($tt: tt)*)) => {
+        MultiPoint(
+            point_vec!(@points [] $($tt)*)
+        )
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_point_m {
+    (()) => {
+        compile_error!("use `MULTIPOINT EMPTY` for a MultiPoint with no coordinates")
+    };
+    (EMPTY) => {
+        MultiPoint::empty(Dimension::XYM)
+    };
+    (($($tt: tt)*)) => {
+        MultiPoint(
+            point_vec!(@points [] $($tt)*)
+        )
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_point_zm {
+    (()) => {
+        compile_error!("use `MULTIPOINT EMPTY` for a MultiPoint with no coordinates")
+    };
+    (EMPTY) => {
+        MultiPoint::empty(Dimension::XYZM)
+    };
+    (($($tt: tt)*)) => {
+        MultiPoint(
+            point_vec!(@points [] $($tt)*)
+        )
+    };
+}
 
 // #[macro_export]
 // #[doc(hidden)]
@@ -620,7 +774,7 @@ mod test {
 
     #[test]
     fn line_string() {
-        let line_string = wkt! { LINESTRING(1.0 2.0,3.0 4.0) };
+        let line_string = wkt! { LINESTRING(1.0 2.0, 3.0 4.0) };
         match line_string {
             Wkt::LineString(l) => {
                 assert_eq!(l.coords.len(), 2);
@@ -631,61 +785,141 @@ mod test {
         }
     }
 
-    //     #[test]
-    //     fn empty_polygon() {
-    //         let polygon: Polygon = wkt! { POLYGON EMPTY };
-    //         assert_eq!(polygon.exterior().0.len(), 0);
-    //         assert_eq!(polygon.interiors().len(), 0);
+    #[test]
+    fn empty_polygon() {
+        let polygon = wkt! { POLYGON EMPTY };
+        match polygon {
+            Wkt::Polygon(p) => {
+                assert!(p.rings.is_empty());
+                assert_eq!(p.dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        }
 
-    //         // This (rightfully) fails to compile because its invalid wkt
-    //         // wkt! { POLYGON() }
-    //     }
+        let polygon = wkt! { POLYGON Z EMPTY };
+        match polygon {
+            Wkt::Polygon(p) => {
+                assert!(p.rings.is_empty());
+                assert_eq!(p.dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        }
 
-    //     #[test]
-    //     fn polygon() {
-    //         let polygon = wkt! { POLYGON((1.0 2.0)) };
-    //         assert_eq!(polygon.exterior().0.len(), 1);
-    //         assert_eq!(polygon.exterior().0[0], coord! { x: 1.0, y: 2.0 });
+        let polygon = wkt! { POLYGON M EMPTY };
+        match polygon {
+            Wkt::Polygon(p) => {
+                assert!(p.rings.is_empty());
+                assert_eq!(p.dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        }
 
-    //         let polygon = wkt! { POLYGON((1.0 2.0,3.0 4.0)) };
-    //         // Note: an extra coord is added to close the linestring
-    //         assert_eq!(polygon.exterior().0.len(), 3);
-    //         assert_eq!(polygon.exterior().0[0], coord! { x: 1.0, y: 2.0 });
-    //         assert_eq!(polygon.exterior().0[1], coord! { x: 3.0, y: 4.0 });
-    //         assert_eq!(polygon.exterior().0[2], coord! { x: 1.0, y: 2.0 });
+        let polygon = wkt! { POLYGON ZM EMPTY };
+        match polygon {
+            Wkt::Polygon(p) => {
+                assert!(p.rings.is_empty());
+                assert_eq!(p.dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        }
 
-    //         let polygon = wkt! { POLYGON((1.0 2.0), (1.1 2.1)) };
-    //         assert_eq!(polygon.exterior().0.len(), 1);
-    //         assert_eq!(polygon.interiors().len(), 1);
+        // This (rightfully) fails to compile because its invalid wkt
+        // wkt! { POLYGON() }
+    }
 
-    //         assert_eq!(polygon.exterior().0[0], coord! { x: 1.0, y: 2.0 });
-    //         assert_eq!(polygon.interiors()[0].0[0], coord! { x: 1.1, y: 2.1 });
+    #[test]
+    fn polygon() {
+        let polygon = wkt! { POLYGON((1.0 2.0)) };
+        match polygon {
+            Wkt::Polygon(p) => {
+                assert_eq!(p.rings.len(), 1);
+                assert_eq!(p.rings[0].coords[0], coord_xy! { 1.0 2.0 });
+                assert_eq!(p.dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        }
 
-    //         let polygon = wkt! { POLYGON((1.0 2.0,3.0 4.0), (1.1 2.1,3.1 4.1), (1.2 2.2,3.2 4.2)) };
-    //         assert_eq!(polygon.exterior().0.len(), 3);
-    //         assert_eq!(polygon.interiors().len(), 2);
-    //         assert_eq!(polygon.interiors()[1][1], coord! { x: 3.2, y: 4.2 });
-    //     }
+        // let polygon = wkt! { POLYGON((1.0 2.0,3.0 4.0)) };
+        // // Note: an extra coord is added to close the linestring
+        // assert_eq!(polygon.exterior().0.len(), 3);
+        // assert_eq!(polygon.exterior().0[0], coord! { x: 1.0, y: 2.0 });
+        // assert_eq!(polygon.exterior().0[1], coord! { x: 3.0, y: 4.0 });
+        // assert_eq!(polygon.exterior().0[2], coord! { x: 1.0, y: 2.0 });
 
-    //     #[test]
-    //     fn empty_multi_point() {
-    //         let multipoint: MultiPoint = wkt! { MULTIPOINT EMPTY };
-    //         assert!(multipoint.0.is_empty());
-    //         // This (rightfully) fails to compile because its invalid wkt
-    //         // wkt! { MULTIPOINT() }
-    //     }
+        // let polygon = wkt! { POLYGON((1.0 2.0), (1.1 2.1)) };
+        // assert_eq!(polygon.exterior().0.len(), 1);
+        // assert_eq!(polygon.interiors().len(), 1);
 
-    //     #[test]
-    //     fn multi_point() {
-    //         let multi_point = wkt! { MULTIPOINT(1.0 2.0) };
-    //         assert_eq!(multi_point.0, vec![point! { x: 1.0, y: 2.0}]);
+        // assert_eq!(polygon.exterior().0[0], coord! { x: 1.0, y: 2.0 });
+        // assert_eq!(polygon.interiors()[0].0[0], coord! { x: 1.1, y: 2.1 });
 
-    //         let multi_point = wkt! { MULTIPOINT(1.0 2.0,3.0 4.0) };
-    //         assert_eq!(
-    //             multi_point.0,
-    //             vec![point! { x: 1.0, y: 2.0}, point! { x: 3.0, y: 4.0}]
-    //         );
-    //     }
+        // let polygon = wkt! { POLYGON((1.0 2.0,3.0 4.0), (1.1 2.1,3.1 4.1), (1.2 2.2,3.2 4.2)) };
+        // assert_eq!(polygon.exterior().0.len(), 3);
+        // assert_eq!(polygon.interiors().len(), 2);
+        // assert_eq!(polygon.interiors()[1][1], coord! { x: 3.2, y: 4.2 });
+    }
+
+    #[test]
+    fn empty_multi_point() {
+        let multipoint = wkt! { MULTIPOINT EMPTY };
+        match multipoint {
+            Wkt::MultiPoint(mp) => {
+                assert!(mp.points.is_empty());
+                assert_eq!(mp.dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        }
+
+        let multipoint = wkt! { MULTIPOINT Z EMPTY };
+        match multipoint {
+            Wkt::MultiPoint(mp) => {
+                assert!(mp.points.is_empty());
+                assert_eq!(mp.dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        }
+
+        let multipoint = wkt! { MULTIPOINT M EMPTY };
+        match multipoint {
+            Wkt::MultiPoint(mp) => {
+                assert!(mp.points.is_empty());
+                assert_eq!(mp.dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        }
+
+        let multipoint = wkt! { MULTIPOINT ZM EMPTY };
+        match multipoint {
+            Wkt::MultiPoint(mp) => {
+                assert!(mp.points.is_empty());
+                assert_eq!(mp.dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        }
+
+        // This (rightfully) fails to compile because its invalid wkt
+        // wkt! { MULTIPOINT() }
+    }
+
+    #[test]
+    fn multi_point() {
+        let multi_point = wkt! { MULTIPOINT(1.0 2.0) };
+        match multi_point {
+            Wkt::MultiPoint(mp) => {
+                assert_eq!(mp.points.len(), 1);
+                assert_eq!(mp.points[0], point! { (1.0 2.0) });
+                assert_eq!(mp.dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        }
+        // assert_eq!(multi_point.0, vec![point! { x: 1.0, y: 2.0}]);
+
+        // let multi_point = wkt! { MULTIPOINT(1.0 2.0,3.0 4.0) };
+        // assert_eq!(
+        //     multi_point.0,
+        //     vec![point! { x: 1.0, y: 2.0}, point! { x: 3.0, y: 4.0}]
+        // );
+    }
 
     //     #[test]
     //     fn empty_multi_line_string() {
