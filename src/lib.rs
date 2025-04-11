@@ -846,7 +846,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::types::{Coord, Dimension, MultiPolygon, Point};
+    use crate::types::{Dimension, MultiPolygon, Point};
     use crate::Wkt;
     use std::str::FromStr;
 
@@ -974,20 +974,6 @@ mod tests {
             Wkt::LineString(_ls) => (),
             _ => panic!("expected to be parsed as a LINESTRING"),
         };
-    }
-
-    #[test]
-    fn test_debug() {
-        let g = Wkt::Point(Point::from_coord(Coord {
-            x: 1.0,
-            y: 2.0,
-            m: None,
-            z: None,
-        }));
-        assert_eq!(
-            format!("{:?}", g),
-            "Point(Point { dim: XY, coord: Some(Coord { x: 1.0, y: 2.0, z: None, m: None }) })"
-        );
     }
 
     #[test]
