@@ -114,6 +114,7 @@ use crate::types::{
 
 pub mod to_wkt;
 mod tokenizer;
+mod wkt_macro;
 
 /// Error variant for this crate
 pub mod error;
@@ -145,6 +146,7 @@ pub mod deserialize;
 pub use deserialize::deserialize_wkt;
 
 mod from_wkt;
+
 pub use from_wkt::TryFromWkt;
 
 #[cfg(all(feature = "serde", feature = "geo-types"))]
