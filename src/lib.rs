@@ -180,15 +180,16 @@ impl<T> Wkt<T>
 where
     T: WktNum,
 {
-    pub(crate) fn dimension(&self) -> Dimension {
+    /// Return the dimension of this geometry.
+    pub fn dimension(&self) -> Dimension {
         match self {
-            Self::Point(g) => g.dim,
-            Self::LineString(g) => g.dim,
-            Self::Polygon(g) => g.dim,
-            Self::MultiPoint(g) => g.dim,
-            Self::MultiLineString(g) => g.dim,
-            Self::MultiPolygon(g) => g.dim,
-            Self::GeometryCollection(g) => g.dim,
+            Self::Point(g) => g.dimension(),
+            Self::LineString(g) => g.dimension(),
+            Self::Polygon(g) => g.dimension(),
+            Self::MultiPoint(g) => g.dimension(),
+            Self::MultiLineString(g) => g.dimension(),
+            Self::MultiPolygon(g) => g.dimension(),
+            Self::GeometryCollection(g) => g.dimension(),
         }
     }
 }

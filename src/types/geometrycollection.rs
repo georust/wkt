@@ -21,16 +21,17 @@ use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
+/// A parsed GeometryCollection.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GeometryCollection<T: WktNum = f64> {
-    pub(crate) dim: Dimension,
     pub(crate) geoms: Vec<Wkt<T>>,
+    pub(crate) dim: Dimension,
 }
 
 impl<T: WktNum> GeometryCollection<T> {
     /// Create a new GeometryCollection from a sequence of [Wkt].
     pub fn new(geoms: Vec<Wkt<T>>, dim: Dimension) -> Self {
-        Self { dim, geoms }
+        Self { geoms, dim }
     }
 
     /// Create a new empty GeometryCollection.
@@ -50,6 +51,16 @@ impl<T: WktNum> GeometryCollection<T> {
         let geoms = geoms.into_iter().collect::<Vec<_>>();
         let dim = geoms[0].dimension();
         Self::new(geoms, dim)
+    }
+
+    /// Return the dimension of this geometry.
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
+    /// Consume self and return the inner parts.
+    pub fn into_inner(self) -> (Vec<Wkt<T>>, Dimension) {
+        (self.geoms, self.dim)
     }
 }
 

@@ -22,10 +22,11 @@ use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
+/// A parsed LineString.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LineString<T: WktNum = f64> {
-    pub(crate) dim: Dimension,
     pub(crate) coords: Vec<Coord<T>>,
+    pub(crate) dim: Dimension,
 }
 
 impl<T: WktNum> LineString<T> {
@@ -51,6 +52,16 @@ impl<T: WktNum> LineString<T> {
         let coords = coords.into_iter().collect::<Vec<_>>();
         let dim = coords[0].dimension();
         Self::new(coords, dim)
+    }
+
+    /// Return the dimension of this geometry.
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
+    /// Consume self and return the inner parts.
+    pub fn into_inner(self) -> (Vec<Coord<T>>, Dimension) {
+        (self.coords, self.dim)
     }
 }
 

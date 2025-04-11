@@ -22,10 +22,11 @@ use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
+/// A parsed Polygon.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Polygon<T: WktNum = f64> {
-    pub(crate) dim: Dimension,
     pub(crate) rings: Vec<LineString<T>>,
+    pub(crate) dim: Dimension,
 }
 
 impl<T: WktNum> Polygon<T> {
@@ -49,8 +50,18 @@ impl<T: WktNum> Polygon<T> {
     /// If the input iterator is empty.
     pub fn from_rings(rings: impl IntoIterator<Item = LineString<T>>) -> Self {
         let rings = rings.into_iter().collect::<Vec<_>>();
-        let dim = rings[0].dim;
+        let dim = rings[0].dimension();
         Self::new(rings, dim)
+    }
+
+    /// Return the dimension of this geometry.
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
+    /// Consume self and return the inner parts.
+    pub fn into_inner(self) -> (Vec<LineString<T>>, Dimension) {
+        (self.rings, self.dim)
     }
 }
 
