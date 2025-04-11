@@ -196,12 +196,15 @@ mod tests {
                 .unwrap();
             assert!(matches!(
                 wkt,
-                Wkt::Point(Point(Some(Coord {
-                    x: _, // floating-point types cannot be used in patterns
-                    y: _, // floating-point types cannot be used in patterns
-                    z: None,
-                    m: None,
-                })))
+                Wkt::Point(Point {
+                    coord: Some(Coord {
+                        x: _, // floating-point types cannot be used in patterns
+                        y: _, // floating-point types cannot be used in patterns
+                        z: None,
+                        m: None,
+                    }),
+                    dim: _dim,
+                })
             ));
         }
 
@@ -227,12 +230,15 @@ mod tests {
                 .unwrap();
             assert!(matches!(
                 geometry,
-                Wkt::Point(Point(Some(Coord {
-                    x: _, // floating-point types cannot be used in patterns
-                    y: _, // floating-point types cannot be used in patterns
-                    z: None,
-                    m: None,
-                })))
+                Wkt::Point(Point {
+                    coord: Some(Coord {
+                        x: _, // floating-point types cannot be used in patterns
+                        y: _, // floating-point types cannot be used in patterns
+                        z: None,
+                        m: None,
+                    }),
+                    dim: _dim,
+                })
             ));
         }
 

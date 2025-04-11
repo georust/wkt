@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::{MultiPolygonTrait, PolygonTrait};
+use geo_traits::MultiPolygonTrait;
 
 use crate::to_wkt::write_multi_polygon;
 use crate::tokenizer::PeekableTokens;
@@ -22,8 +22,48 @@ use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
+/// A parsed MultiPolygon.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiPolygon<T: WktNum = f64>(pub Vec<Polygon<T>>);
+pub struct MultiPolygon<T: WktNum = f64> {
+    pub(crate) polygons: Vec<Polygon<T>>,
+    pub(crate) dim: Dimension,
+}
+
+impl<T: WktNum> MultiPolygon<T> {
+    /// Create a new MultiPolygon from a sequence of [Polygon] and known [Dimension].
+    pub fn new(polygons: Vec<Polygon<T>>, dim: Dimension) -> Self {
+        MultiPolygon { dim, polygons }
+    }
+
+    /// Create a new empty MultiPolygon.
+    pub fn empty(dim: Dimension) -> Self {
+        Self::new(vec![], dim)
+    }
+
+    /// Create a new MultiPolygon from a non-empty sequence of [Polygon].
+    ///
+    /// This will infer the dimension from the first polygon, and will not validate that all
+    /// polygons have the same dimension.
+    ///
+    /// ## Panics
+    ///
+    /// If the input iterator is empty.
+    pub fn from_polygons(polygons: impl IntoIterator<Item = Polygon<T>>) -> Self {
+        let polygons = polygons.into_iter().collect::<Vec<_>>();
+        let dim = polygons[0].dimension();
+        Self::new(polygons, dim)
+    }
+
+    /// Return the dimension of this geometry.
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
+    /// Consume self and return the inner parts.
+    pub fn into_inner(self) -> (Vec<Polygon<T>>, Dimension) {
+        (self.polygons, self.dim)
+    }
+}
 
 impl<T> From<MultiPolygon<T>> for Wkt<T>
 where
@@ -53,7 +93,11 @@ where
             tokens,
             dim,
         );
-        result.map(MultiPolygon)
+        result.map(|polygons| MultiPolygon { polygons, dim })
+    }
+
+    fn new_empty(dim: Dimension) -> Self {
+        Self::empty(dim)
     }
 }
 
@@ -65,20 +109,15 @@ impl<T: WktNum> MultiPolygonTrait for MultiPolygon<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_polygons(&self) -> usize {
-        self.0.len()
+        self.polygons.len()
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
-        self.0.get_unchecked(i)
+        self.polygons.get_unchecked(i)
     }
 }
 
@@ -90,27 +129,22 @@ impl<T: WktNum> MultiPolygonTrait for &MultiPolygon<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_polygons(&self) -> usize {
-        self.0.len()
+        self.polygons.len()
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
-        self.0.get_unchecked(i)
+        self.polygons.get_unchecked(i)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{MultiPolygon, Polygon};
-    use crate::types::{Coord, LineString};
+    use crate::types::{Coord, Dimension, LineString};
     use crate::Wkt;
     use std::str::FromStr;
 
@@ -120,24 +154,71 @@ mod tests {
             .ok()
             .unwrap();
         let polygons = match wkt {
-            Wkt::MultiPolygon(MultiPolygon(polygons)) => polygons,
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim: _ }) => polygons,
             _ => unreachable!(),
         };
         assert_eq!(2, polygons.len());
     }
 
     #[test]
-    fn write_empty_multipolygon() {
-        let multipolygon: MultiPolygon<f64> = MultiPolygon(vec![]);
+    fn parse_empty_multipolygon() {
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                assert!(polygons.is_empty());
+                assert_eq!(dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        };
 
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON Z EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                assert!(polygons.is_empty());
+                assert_eq!(dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON M EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                assert!(polygons.is_empty());
+                assert_eq!(dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON ZM EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                assert!(polygons.is_empty());
+                assert_eq!(dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        };
+    }
+
+    #[test]
+    fn write_empty_multipolygon() {
+        let multipolygon: MultiPolygon<f64> = MultiPolygon::empty(Dimension::XY);
         assert_eq!("MULTIPOLYGON EMPTY", format!("{}", multipolygon));
+
+        let multipolygon: MultiPolygon<f64> = MultiPolygon::empty(Dimension::XYZ);
+        assert_eq!("MULTIPOLYGON Z EMPTY", format!("{}", multipolygon));
+
+        let multipolygon: MultiPolygon<f64> = MultiPolygon::empty(Dimension::XYM);
+        assert_eq!("MULTIPOLYGON M EMPTY", format!("{}", multipolygon));
+
+        let multipolygon: MultiPolygon<f64> = MultiPolygon::empty(Dimension::XYZM);
+        assert_eq!("MULTIPOLYGON ZM EMPTY", format!("{}", multipolygon));
     }
 
     #[test]
     fn write_multipolygon() {
-        let multipolygon = MultiPolygon(vec![
-            Polygon(vec![
-                LineString(vec![
+        let multipolygon = MultiPolygon::from_polygons([
+            Polygon::from_rings([
+                LineString::from_coords([
                     Coord {
                         x: 0.,
                         y: 0.,
@@ -163,7 +244,7 @@ mod tests {
                         m: None,
                     },
                 ]),
-                LineString(vec![
+                LineString::from_coords([
                     Coord {
                         x: 5.,
                         y: 5.,
@@ -190,7 +271,7 @@ mod tests {
                     },
                 ]),
             ]),
-            Polygon(vec![LineString(vec![
+            Polygon::from_rings([LineString::from_coords([
                 Coord {
                     x: 40.,
                     y: 40.,
