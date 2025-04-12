@@ -20,7 +20,7 @@ use crate::{FromTokens, WktNum};
 use std::str::FromStr;
 
 /// A parsed coordinate.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Coord<T: WktNum = f64> {
     pub x: T,
     pub y: T,

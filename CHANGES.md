@@ -7,6 +7,7 @@
 ## 0.13.0 - unreleased
 
 * Default to using `f64` for `WktNum` in WKT types
+* Add `Copy` impl to `Coord`
 
 ## 0.12.0 - 2024-11-27
 
