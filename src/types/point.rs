@@ -22,16 +22,17 @@ use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
+/// A parsed Point.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Point<T: WktNum> {
-    pub(crate) dim: Dimension,
+pub struct Point<T: WktNum = f64> {
     pub(crate) coord: Option<Coord<T>>,
+    pub(crate) dim: Dimension,
 }
 
 impl<T: WktNum> Point<T> {
     /// Create a new Point from a coordinate and known [Dimension].
     pub fn new(coord: Option<Coord<T>>, dim: Dimension) -> Self {
-        Self { dim, coord }
+        Self { coord, dim }
     }
 
     /// Create a new point from a valid [Coord].
@@ -47,6 +48,16 @@ impl<T: WktNum> Point<T> {
     /// Create a new empty point.
     pub fn empty(dim: Dimension) -> Self {
         Self::new(None, dim)
+    }
+
+    /// Return the dimension of this geometry.
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
+    /// Consume self and return the inner parts.
+    pub fn into_inner(self) -> (Option<Coord<T>>, Dimension) {
+        (self.coord, self.dim)
     }
 }
 

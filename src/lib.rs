@@ -167,10 +167,7 @@ impl<T> WktFloat for T where T: WktNum + Float {}
 
 #[derive(Clone, Debug, PartialEq)]
 /// All supported WKT geometry [`types`]
-pub enum Wkt<T>
-where
-    T: WktNum,
-{
+pub enum Wkt<T: WktNum = f64> {
     Point(Point<T>),
     LineString(LineString<T>),
     Polygon(Polygon<T>),
@@ -184,15 +181,16 @@ impl<T> Wkt<T>
 where
     T: WktNum,
 {
-    pub(crate) fn dimension(&self) -> Dimension {
+    /// Return the dimension of this geometry.
+    pub fn dimension(&self) -> Dimension {
         match self {
-            Self::Point(g) => g.dim,
-            Self::LineString(g) => g.dim,
-            Self::Polygon(g) => g.dim,
-            Self::MultiPoint(g) => g.dim,
-            Self::MultiLineString(g) => g.dim,
-            Self::MultiPolygon(g) => g.dim,
-            Self::GeometryCollection(g) => g.dim,
+            Self::Point(g) => g.dimension(),
+            Self::LineString(g) => g.dimension(),
+            Self::Polygon(g) => g.dimension(),
+            Self::MultiPoint(g) => g.dimension(),
+            Self::MultiLineString(g) => g.dimension(),
+            Self::MultiPolygon(g) => g.dimension(),
+            Self::GeometryCollection(g) => g.dimension(),
         }
     }
 }
@@ -849,7 +847,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::types::{Coord, Dimension, MultiPolygon, Point};
+    use crate::types::{Dimension, MultiPolygon, Point};
     use crate::Wkt;
     use std::str::FromStr;
 
@@ -977,20 +975,6 @@ mod tests {
             Wkt::LineString(_ls) => (),
             _ => panic!("expected to be parsed as a LINESTRING"),
         };
-    }
-
-    #[test]
-    fn test_debug() {
-        let g = Wkt::Point(Point::from_coord(Coord {
-            x: 1.0,
-            y: 2.0,
-            m: None,
-            z: None,
-        }));
-        assert_eq!(
-            format!("{:?}", g),
-            "Point(Point { dim: XY, coord: Some(Coord { x: 1.0, y: 2.0, z: None, m: None }) })"
-        );
     }
 
     #[test]

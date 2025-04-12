@@ -22,10 +22,11 @@ use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
+/// A parsed MultiPoint.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiPoint<T: WktNum> {
-    pub(crate) dim: Dimension,
+pub struct MultiPoint<T: WktNum = f64> {
     pub(crate) points: Vec<Point<T>>,
+    pub(crate) dim: Dimension,
 }
 
 impl<T: WktNum> MultiPoint<T> {
@@ -49,8 +50,18 @@ impl<T: WktNum> MultiPoint<T> {
     /// If the input iterator is empty.
     pub fn from_points(points: impl IntoIterator<Item = Point<T>>) -> Self {
         let points = points.into_iter().collect::<Vec<_>>();
-        let dim = points[0].dim;
+        let dim = points[0].dimension();
         Self::new(points, dim)
+    }
+
+    /// Return the dimension of this geometry.
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
+    /// Consume self and return the inner parts.
+    pub fn into_inner(self) -> (Vec<Point<T>>, Dimension) {
+        (self.points, self.dim)
     }
 }
 

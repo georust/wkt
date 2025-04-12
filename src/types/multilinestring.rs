@@ -22,10 +22,11 @@ use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
+/// A parsed MultiLineString.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiLineString<T: WktNum> {
-    pub(crate) dim: Dimension,
+pub struct MultiLineString<T: WktNum = f64> {
     pub(crate) line_strings: Vec<LineString<T>>,
+    pub(crate) dim: Dimension,
 }
 
 impl<T: WktNum> MultiLineString<T> {
@@ -49,8 +50,18 @@ impl<T: WktNum> MultiLineString<T> {
     /// If the input iterator is empty.
     pub fn from_line_strings(line_strings: impl IntoIterator<Item = LineString<T>>) -> Self {
         let line_strings = line_strings.into_iter().collect::<Vec<_>>();
-        let dim = line_strings[0].dim;
+        let dim = line_strings[0].dimension();
         Self::new(line_strings, dim)
+    }
+
+    /// Return the dimension of this geometry.
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
+    /// Consume self and return the inner parts.
+    pub fn into_inner(self) -> (Vec<LineString<T>>, Dimension) {
+        (self.line_strings, self.dim)
     }
 }
 

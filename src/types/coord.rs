@@ -19,11 +19,9 @@ use crate::types::Dimension;
 use crate::{FromTokens, WktNum};
 use std::str::FromStr;
 
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct Coord<T>
-where
-    T: WktNum,
-{
+/// A parsed coordinate.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Coord<T: WktNum = f64> {
     pub x: T,
     pub y: T,
     pub z: Option<T>,
@@ -31,7 +29,8 @@ where
 }
 
 impl<T: WktNum> Coord<T> {
-    pub(crate) fn dimension(&self) -> Dimension {
+    /// Return the dimension of this coord.
+    pub fn dimension(&self) -> Dimension {
         match (self.z.is_some(), self.m.is_some()) {
             (true, true) => Dimension::XYZM,
             (true, false) => Dimension::XYZ,
