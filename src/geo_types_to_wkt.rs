@@ -289,12 +289,7 @@ fn g_lines_to_w_lines<T>(g_lines: &[geo_types::LineString<T>]) -> Vec<LineString
 where
     T: CoordNum,
 {
-    let mut w_lines = vec![];
-    for g_line in g_lines {
-        let geo_types::LineString(g_points) = g_line;
-        w_lines.push(g_points_to_w_linestring(g_points));
-    }
-    w_lines
+    g_lines.iter().map(g_linestring_to_w_linestring).collect()
 }
 
 fn g_triangle_to_w_polygon<T>(g_triangle: &geo_types::Triangle<T>) -> Polygon<T>
@@ -319,17 +314,19 @@ where
 {
     let outer_line = g_polygon.exterior();
     let inner_lines = g_polygon.interiors();
-    let mut poly_lines = vec![];
 
     // Outer
     let geo_types::LineString(outer_points) = outer_line;
-    if !outer_points.is_empty() {
-        poly_lines.push(g_points_to_w_linestring(outer_points));
-    }
-
-    // Inner
-    let inner = g_lines_to_w_lines(inner_lines);
-    poly_lines.extend(inner);
+    let poly_lines = std::iter::once_with(|| {
+        if !outer_points.is_empty() {
+            Some(g_points_to_w_linestring(outer_points))
+        } else {
+            None
+        }
+    })
+    .flatten()
+    .chain(inner_lines.iter().map(g_linestring_to_w_linestring))
+    .collect();
 
     Polygon(poly_lines)
 }
@@ -356,11 +353,7 @@ fn g_polygons_to_w_polygons<T>(g_polygons: &[geo_types::Polygon<T>]) -> Vec<Poly
 where
     T: CoordNum,
 {
-    let mut w_polygons = vec![];
-    for g_polygon in g_polygons {
-        w_polygons.push(g_polygon_to_w_polygon(g_polygon));
-    }
-    w_polygons
+    g_polygons.iter().map(g_polygon_to_w_polygon).collect()
 }
 
 fn g_mpolygon_to_w_mpolygon<T>(g_mpolygon: &geo_types::MultiPolygon<T>) -> MultiPolygon<T>
@@ -377,11 +370,7 @@ where
     T: CoordNum,
 {
     let geo_types::GeometryCollection(g_geoms) = g_geocol;
-    let mut w_geoms = vec![];
-    for g_geom in g_geoms {
-        let w_geom = g_geom_to_w_geom(g_geom);
-        w_geoms.push(w_geom);
-    }
+    let w_geoms = g_geoms.iter().map(g_geom_to_w_geom).collect();
     GeometryCollection(w_geoms)
 }
 
