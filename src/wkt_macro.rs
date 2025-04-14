@@ -26,7 +26,7 @@ macro_rules! wkt {
     // Hide distracting implementation details from the generated rustdoc.
     ($($wkt:tt)+) => {
         {
-            use $crate::{types::*, Wkt};
+            use $crate::types::*;
             $crate::wkt_internal!($($wkt)+)
         }
     };
@@ -36,88 +36,88 @@ macro_rules! wkt {
 #[doc(hidden)]
 macro_rules! wkt_internal {
     (POINT $tt: tt) => {
-        Wkt::<f64>::Point(point!($tt))
+        point!($tt)
     };
     (POINT Z $tt: tt) => {
-        Wkt::<f64>::Point(point_z!($tt))
+        point_z!($tt)
     };
     (POINT M $tt: tt) => {
-        Wkt::<f64>::Point(point_m!($tt))
+        point_m!($tt)
     };
     (POINT ZM $tt: tt) => {
-        Wkt::<f64>::Point(point_zm!($tt))
+        point_zm!($tt)
     };
     (LINESTRING $tt: tt) => {
-        Wkt::<f64>::LineString(line_string!($tt))
+        line_string!($tt)
     };
     (LINESTRING Z $tt: tt) => {
-        Wkt::<f64>::LineString(line_string_z!($tt))
+        line_string_z!($tt)
     };
     (LINESTRING M $tt: tt) => {
-        Wkt::<f64>::LineString(line_string_m!($tt))
+        line_string_m!($tt)
     };
     (LINESTRING ZM $tt: tt) => {
-        Wkt::<f64>::LineString(line_string_zm!($tt))
+        line_string_zm!($tt)
     };
     (POLYGON $tt:tt) => {
-        Wkt::<f64>::Polygon(polygon!($tt))
+        polygon!($tt)
     };
     (POLYGON Z $tt:tt) => {
-        Wkt::<f64>::Polygon(polygon_z!($tt))
+        polygon_z!($tt)
     };
     (POLYGON M $tt:tt) => {
-        Wkt::<f64>::Polygon(polygon_m!($tt))
+        polygon_m!($tt)
     };
     (POLYGON ZM $tt:tt) => {
-        Wkt::<f64>::Polygon(polygon_zm!($tt))
+        polygon_zm!($tt)
     };
     (MULTIPOINT $tt: tt) => {
-        Wkt::<f64>::MultiPoint(multi_point!($tt))
+        multi_point!($tt)
     };
     (MULTIPOINT Z $tt: tt) => {
-        Wkt::<f64>::MultiPoint(multi_point_z!($tt))
+        multi_point_z!($tt)
     };
     (MULTIPOINT M $tt: tt) => {
-        Wkt::<f64>::MultiPoint(multi_point_m!($tt))
+        multi_point_m!($tt)
     };
     (MULTIPOINT ZM $tt: tt) => {
-        Wkt::<f64>::MultiPoint(multi_point_zm!($tt))
+        multi_point_zm!($tt)
     };
     (MULTILINESTRING $tt: tt) => {
-        Wkt::<f64>::MultiLineString(multi_line_string!($tt))
+        multi_line_string!($tt)
     };
     (MULTILINESTRING Z $tt: tt) => {
-        Wkt::<f64>::MultiLineString(multi_line_string_z!($tt))
+        multi_line_string_z!($tt)
     };
     (MULTILINESTRING M $tt: tt) => {
-        Wkt::<f64>::MultiLineString(multi_line_string_m!($tt))
+        multi_line_string_m!($tt)
     };
     (MULTILINESTRING ZM $tt: tt) => {
-        Wkt::<f64>::MultiLineString(multi_line_string_zm!($tt))
+        multi_line_string_zm!($tt)
     };
     (MULTIPOLYGON $tt: tt) => {
-        Wkt::<f64>::MultiPolygon(multi_polygon!($tt))
+        multi_polygon!($tt)
     };
     (MULTIPOLYGON Z $tt: tt) => {
-        Wkt::<f64>::MultiPolygon(multi_polygon_z!($tt))
+        multi_polygon_z!($tt)
     };
     (MULTIPOLYGON M $tt: tt) => {
-        Wkt::<f64>::MultiPolygon(multi_polygon_m!($tt))
+        multi_polygon_m!($tt)
     };
     (MULTIPOLYGON ZM $tt: tt) => {
-        Wkt::<f64>::MultiPolygon(multi_polygon_zm!($tt))
+        multi_polygon_zm!($tt)
     };
     (GEOMETRYCOLLECTION $tt: tt) => {
-        Wkt::<f64>::GeometryCollection(geometry_collection!($tt))
+        geometry_collection!($tt)
     };
     (GEOMETRYCOLLECTION Z $tt: tt) => {
-        Wkt::<f64>::GeometryCollection(geometry_collection_z!($tt))
+        geometry_collection_z!($tt)
     };
     (GEOMETRYCOLLECTION M $tt: tt) => {
-        Wkt::<f64>::GeometryCollection(geometry_collection_m!($tt))
+        geometry_collection_m!($tt)
     };
     (GEOMETRYCOLLECTION ZM $tt: tt) => {
-        Wkt::<f64>::GeometryCollection(geometry_collection_zm!($tt))
+        geometry_collection_zm!($tt)
     };
 }
 
@@ -632,141 +632,75 @@ macro_rules! multi_point_zm {
 #[cfg(test)]
 mod test {
     use crate::types::*;
-    use crate::Wkt;
 
     #[test]
     fn point() {
         let point = wkt! { POINT(1.0 2.0) };
-        match point {
-            Wkt::Point(p) => {
-                assert_eq!(p.coord.as_ref().unwrap().x, 1.0);
-                assert_eq!(p.coord.as_ref().unwrap().y, 2.0);
-                assert_eq!(p.dim, Dimension::XY);
-            }
-            _ => panic!("Expected a Point"),
-        }
+        assert_eq!(point.coord.as_ref().unwrap().x, 1.0);
+        assert_eq!(point.coord.as_ref().unwrap().y, 2.0);
+        assert_eq!(point.dim, Dimension::XY);
 
         let point = wkt! { POINT(1.0   2.0) };
-        match point {
-            Wkt::Point(p) => {
-                assert_eq!(p.coord.as_ref().unwrap().x, 1.0);
-                assert_eq!(p.coord.as_ref().unwrap().y, 2.0);
-                assert_eq!(p.dim, Dimension::XY);
-            }
-            _ => panic!("Expected a Point"),
-        }
+        assert_eq!(point.coord.as_ref().unwrap().x, 1.0);
+        assert_eq!(point.coord.as_ref().unwrap().y, 2.0);
+        assert_eq!(point.dim, Dimension::XY);
 
         let point = wkt! { POINT Z (1.0 2.0 3.0) };
-        match point {
-            Wkt::Point(p) => {
-                assert_eq!(p.coord.as_ref().unwrap().x, 1.0);
-                assert_eq!(p.coord.as_ref().unwrap().y, 2.0);
-                assert_eq!(p.coord.as_ref().unwrap().z, Some(3.0));
-                assert_eq!(p.dim, Dimension::XYZ);
-            }
-            _ => panic!("Expected a Point"),
-        }
+        assert_eq!(point.coord.as_ref().unwrap().x, 1.0);
+        assert_eq!(point.coord.as_ref().unwrap().y, 2.0);
+        assert_eq!(point.coord.as_ref().unwrap().z, Some(3.0));
+        assert_eq!(point.dim, Dimension::XYZ);
 
         let point = wkt! { POINT M (1.0 2.0 3.0) };
-        match point {
-            Wkt::Point(p) => {
-                assert_eq!(p.coord.as_ref().unwrap().x, 1.0);
-                assert_eq!(p.coord.as_ref().unwrap().y, 2.0);
-                assert_eq!(p.coord.as_ref().unwrap().m, Some(3.0));
-                assert_eq!(p.dim, Dimension::XYM);
-            }
-            _ => panic!("Expected a Point"),
-        }
+        assert_eq!(point.coord.as_ref().unwrap().x, 1.0);
+        assert_eq!(point.coord.as_ref().unwrap().y, 2.0);
+        assert_eq!(point.coord.as_ref().unwrap().m, Some(3.0));
+        assert_eq!(point.dim, Dimension::XYM);
 
         let point = wkt! { POINT ZM (1.0 2.0 3.0 4.0) };
-        match point {
-            Wkt::Point(p) => {
-                assert_eq!(p.coord.as_ref().unwrap().x, 1.0);
-                assert_eq!(p.coord.as_ref().unwrap().y, 2.0);
-                assert_eq!(p.coord.as_ref().unwrap().z, Some(3.0));
-                assert_eq!(p.coord.as_ref().unwrap().m, Some(4.0));
-                assert_eq!(p.dim, Dimension::XYZM);
-            }
-            _ => panic!("Expected a Point"),
-        }
+        assert_eq!(point.coord.as_ref().unwrap().x, 1.0);
+        assert_eq!(point.coord.as_ref().unwrap().y, 2.0);
+        assert_eq!(point.coord.as_ref().unwrap().z, Some(3.0));
+        assert_eq!(point.coord.as_ref().unwrap().m, Some(4.0));
+        assert_eq!(point.dim, Dimension::XYZM);
     }
 
     #[test]
     fn empty_point() {
-        let point = wkt! { POINT EMPTY };
-        match point {
-            Wkt::Point(p) => {
-                assert!(p.coord.is_none());
-                assert_eq!(p.dim, Dimension::XY);
-            }
-            _ => panic!("Expected a Point"),
-        }
+        let point: Point<f64> = wkt! { POINT EMPTY };
+        assert!(point.coord.is_none());
+        assert_eq!(point.dim, Dimension::XY);
 
-        let point = wkt! { POINT Z EMPTY };
-        match point {
-            Wkt::Point(p) => {
-                assert!(p.coord.is_none());
-                assert_eq!(p.dim, Dimension::XYZ);
-            }
-            _ => panic!("Expected a Point"),
-        }
+        let point: Point<f64> = wkt! { POINT Z EMPTY };
+        assert!(point.coord.is_none());
+        assert_eq!(point.dim, Dimension::XYZ);
 
-        let point = wkt! { POINT M EMPTY };
-        match point {
-            Wkt::Point(p) => {
-                assert!(p.coord.is_none());
-                assert_eq!(p.dim, Dimension::XYM);
-            }
-            _ => panic!("Expected a Point"),
-        }
+        let point: Point<f64> = wkt! { POINT M EMPTY };
+        assert!(point.coord.is_none());
+        assert_eq!(point.dim, Dimension::XYM);
 
-        let point = wkt! { POINT ZM EMPTY };
-        match point {
-            Wkt::Point(p) => {
-                assert!(p.coord.is_none());
-                assert_eq!(p.dim, Dimension::XYZM);
-            }
-            _ => panic!("Expected a Point"),
-        }
+        let point: Point<f64> = wkt! { POINT ZM EMPTY };
+        assert!(point.coord.is_none());
+        assert_eq!(point.dim, Dimension::XYZM);
     }
 
     #[test]
     fn empty_line_string() {
-        let line_string = wkt! { LINESTRING EMPTY };
-        match line_string {
-            Wkt::LineString(l) => {
-                assert!(l.coords.is_empty());
-                assert_eq!(l.dim, Dimension::XY);
-            }
-            _ => panic!("Expected a LineString"),
-        }
+        let line_string: LineString<f64> = wkt! { LINESTRING EMPTY };
+        assert!(line_string.coords.is_empty());
+        assert_eq!(line_string.dim, Dimension::XY);
 
-        let line_string = wkt! { LINESTRING Z EMPTY };
-        match line_string {
-            Wkt::LineString(l) => {
-                assert!(l.coords.is_empty());
-                assert_eq!(l.dim, Dimension::XYZ);
-            }
-            _ => panic!("Expected a LineString"),
-        }
+        let line_string: LineString<f64> = wkt! { LINESTRING Z EMPTY };
+        assert!(line_string.coords.is_empty());
+        assert_eq!(line_string.dim, Dimension::XYZ);
 
-        let line_string = wkt! { LINESTRING M EMPTY };
-        match line_string {
-            Wkt::LineString(l) => {
-                assert!(l.coords.is_empty());
-                assert_eq!(l.dim, Dimension::XYM);
-            }
-            _ => panic!("Expected a LineString"),
-        }
+        let line_string: LineString<f64> = wkt! { LINESTRING M EMPTY };
+        assert!(line_string.coords.is_empty());
+        assert_eq!(line_string.dim, Dimension::XYM);
 
-        let line_string = wkt! { LINESTRING ZM EMPTY };
-        match line_string {
-            Wkt::LineString(l) => {
-                assert!(l.coords.is_empty());
-                assert_eq!(l.dim, Dimension::XYZM);
-            }
-            _ => panic!("Expected a LineString"),
-        }
+        let line_string: LineString<f64> = wkt! { LINESTRING ZM EMPTY };
+        assert!(line_string.coords.is_empty());
+        assert_eq!(line_string.dim, Dimension::XYZM);
 
         // This (rightfully) fails to compile because its invalid wkt
         // wkt! { LINESTRING() }
@@ -775,53 +709,28 @@ mod test {
     #[test]
     fn line_string() {
         let line_string = wkt! { LINESTRING(1.0 2.0, 3.0 4.0) };
-        match line_string {
-            Wkt::LineString(l) => {
-                assert_eq!(l.coords.len(), 2);
-                assert_eq!(l.coords[0], coord_xy! { 1.0 2.0 });
-                assert_eq!(l.dim, Dimension::XY);
-            }
-            _ => panic!("Expected a Point"),
-        }
+        assert_eq!(line_string.coords.len(), 2);
+        assert_eq!(line_string.coords[0], coord_xy! { 1.0 2.0 });
+        assert_eq!(line_string.dim, Dimension::XY);
     }
 
     #[test]
     fn empty_polygon() {
-        let polygon = wkt! { POLYGON EMPTY };
-        match polygon {
-            Wkt::Polygon(p) => {
-                assert!(p.rings.is_empty());
-                assert_eq!(p.dim, Dimension::XY);
-            }
-            _ => unreachable!(),
-        }
+        let polygon: Polygon<f64> = wkt! { POLYGON EMPTY };
+        assert!(polygon.rings.is_empty());
+        assert_eq!(polygon.dim, Dimension::XY);
 
-        let polygon = wkt! { POLYGON Z EMPTY };
-        match polygon {
-            Wkt::Polygon(p) => {
-                assert!(p.rings.is_empty());
-                assert_eq!(p.dim, Dimension::XYZ);
-            }
-            _ => unreachable!(),
-        }
+        let polygon: Polygon<f64> = wkt! { POLYGON Z EMPTY };
+        assert!(polygon.rings.is_empty());
+        assert_eq!(polygon.dim, Dimension::XYZ);
 
-        let polygon = wkt! { POLYGON M EMPTY };
-        match polygon {
-            Wkt::Polygon(p) => {
-                assert!(p.rings.is_empty());
-                assert_eq!(p.dim, Dimension::XYM);
-            }
-            _ => unreachable!(),
-        }
+        let polygon: Polygon<f64> = wkt! { POLYGON M EMPTY };
+        assert!(polygon.rings.is_empty());
+        assert_eq!(polygon.dim, Dimension::XYM);
 
-        let polygon = wkt! { POLYGON ZM EMPTY };
-        match polygon {
-            Wkt::Polygon(p) => {
-                assert!(p.rings.is_empty());
-                assert_eq!(p.dim, Dimension::XYZM);
-            }
-            _ => unreachable!(),
-        }
+        let polygon: Polygon<f64> = wkt! { POLYGON ZM EMPTY };
+        assert!(polygon.rings.is_empty());
+        assert_eq!(polygon.dim, Dimension::XYZM);
 
         // This (rightfully) fails to compile because its invalid wkt
         // wkt! { POLYGON() }
@@ -830,14 +739,9 @@ mod test {
     #[test]
     fn polygon() {
         let polygon = wkt! { POLYGON((1.0 2.0)) };
-        match polygon {
-            Wkt::Polygon(p) => {
-                assert_eq!(p.rings.len(), 1);
-                assert_eq!(p.rings[0].coords[0], coord_xy! { 1.0 2.0 });
-                assert_eq!(p.dim, Dimension::XY);
-            }
-            _ => unreachable!(),
-        }
+        assert_eq!(polygon.rings.len(), 1);
+        assert_eq!(polygon.rings[0].coords[0], coord_xy! { 1.0 2.0 });
+        assert_eq!(polygon.dim, Dimension::XY);
 
         // let polygon = wkt! { POLYGON((1.0 2.0,3.0 4.0)) };
         // // Note: an extra coord is added to close the linestring
@@ -861,41 +765,21 @@ mod test {
 
     #[test]
     fn empty_multi_point() {
-        let multipoint = wkt! { MULTIPOINT EMPTY };
-        match multipoint {
-            Wkt::MultiPoint(mp) => {
-                assert!(mp.points.is_empty());
-                assert_eq!(mp.dim, Dimension::XY);
-            }
-            _ => unreachable!(),
-        }
+        let multipoint: MultiPoint<f64> = wkt! { MULTIPOINT EMPTY };
+        assert!(multipoint.points.is_empty());
+        assert_eq!(multipoint.dim, Dimension::XY);
 
-        let multipoint = wkt! { MULTIPOINT Z EMPTY };
-        match multipoint {
-            Wkt::MultiPoint(mp) => {
-                assert!(mp.points.is_empty());
-                assert_eq!(mp.dim, Dimension::XYZ);
-            }
-            _ => unreachable!(),
-        }
+        let multipoint: MultiPoint<f64> = wkt! { MULTIPOINT Z EMPTY };
+        assert!(multipoint.points.is_empty());
+        assert_eq!(multipoint.dim, Dimension::XYZ);
 
-        let multipoint = wkt! { MULTIPOINT M EMPTY };
-        match multipoint {
-            Wkt::MultiPoint(mp) => {
-                assert!(mp.points.is_empty());
-                assert_eq!(mp.dim, Dimension::XYM);
-            }
-            _ => unreachable!(),
-        }
+        let multipoint: MultiPoint<f64> = wkt! { MULTIPOINT M EMPTY };
+        assert!(multipoint.points.is_empty());
+        assert_eq!(multipoint.dim, Dimension::XYM);
 
-        let multipoint = wkt! { MULTIPOINT ZM EMPTY };
-        match multipoint {
-            Wkt::MultiPoint(mp) => {
-                assert!(mp.points.is_empty());
-                assert_eq!(mp.dim, Dimension::XYZM);
-            }
-            _ => unreachable!(),
-        }
+        let multipoint: MultiPoint<f64> = wkt! { MULTIPOINT ZM EMPTY };
+        assert!(multipoint.points.is_empty());
+        assert_eq!(multipoint.dim, Dimension::XYZM);
 
         // This (rightfully) fails to compile because its invalid wkt
         // wkt! { MULTIPOINT() }
@@ -904,17 +788,15 @@ mod test {
     #[test]
     fn multi_point() {
         let multi_point = wkt! { MULTIPOINT(1.0 2.0) };
-        match multi_point {
-            Wkt::MultiPoint(mp) => {
-                assert_eq!(mp.points.len(), 1);
-                assert_eq!(mp.points[0], point! { (1.0 2.0) });
-                assert_eq!(mp.dim, Dimension::XY);
-            }
-            _ => unreachable!(),
-        }
+        assert_eq!(multi_point.points.len(), 1);
+        assert_eq!(multi_point.points[0], point! { (1.0 2.0) });
+        assert_eq!(multi_point.dim, Dimension::XY);
         // assert_eq!(multi_point.0, vec![point! { x: 1.0, y: 2.0}]);
 
-        // let multi_point = wkt! { MULTIPOINT(1.0 2.0,3.0 4.0) };
+        let multi_point = wkt! { MULTIPOINT(1.0 2.0,3.0 4.0) };
+        assert_eq!(multi_point.points.len(), 1);
+        assert_eq!(multi_point.points[0], point! { (1.0 2.0) });
+        assert_eq!(multi_point.dim, Dimension::XY);
         // assert_eq!(
         //     multi_point.0,
         //     vec![point! { x: 1.0, y: 2.0}, point! { x: 3.0, y: 4.0}]
