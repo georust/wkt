@@ -8,17 +8,26 @@
 /// - Creates a concrete type. So `wkt! { POINT(1.0 2.0) }` will create a
 ///   [`Point`][crate::types::Point], not a [`Wkt`][crate::Wkt].
 /// - Empty geometries, including `POINT EMPTY` **are** supported.
-/// - All dimensions, including `Z`, `M`, and `ZM` are supported.
+/// - All dimensions, including `Z`, `M`, and `ZM` are supported. You must
 /// - Extended geometry types like `Curve`, `PolyhedralSurface`, or `CircularString` are **not**
 ///   supported.
 ///
 /// ```
 /// use wkt::wkt;
-/// use geo_traits::{PointTrait, CoordTrait, GeometryCollectionTrait};
+/// use wkt::types::Dimension;
+/// use geo_traits::{PointTrait, CoordTrait, LineStringTrait, GeometryCollectionTrait};
 ///
 /// let point = wkt! { POINT(1.0 2.0) };
 /// assert_eq!(point.coord().unwrap().x(), 1.0);
 /// assert_eq!(point.coord().unwrap().y(), 2.0);
+///
+/// let line_string = wkt! { LINESTRING ZM (1.0 2.0 3.0 4.0, 3.0 4.0 5.0 6.0) };
+/// assert_eq!(line_string.num_coords(), 2);
+/// assert_eq!(line_string.coord(0).unwrap().nth_or_panic(0), 1.0);
+/// assert_eq!(line_string.coord(0).unwrap().nth_or_panic(1), 2.0);
+/// assert_eq!(line_string.coord(0).unwrap().nth_or_panic(2), 3.0);
+/// assert_eq!(line_string.coord(0).unwrap().nth_or_panic(3), 4.0);
+/// assert_eq!(line_string.dimension(), Dimension::XYZM);
 ///
 /// let geometry_collection = wkt! {
 ///     GEOMETRYCOLLECTION(
@@ -774,6 +783,8 @@ macro_rules! geometry_collection_zm {
 
 #[cfg(test)]
 mod test {
+    use geo_traits::{CoordTrait, LineStringTrait};
+
     use crate::types::*;
 
     #[test]
@@ -855,6 +866,21 @@ mod test {
         assert_eq!(line_string.coords.len(), 2);
         assert_eq!(line_string.coords[0], coord_xy! { 1.0 2.0 });
         assert_eq!(line_string.dim, Dimension::XY);
+
+        let line_string = wkt! { LINESTRING Z (1.0 2.0 3.0, 3.0 4.0 5.0) };
+        assert_eq!(line_string.coords.len(), 2);
+        assert_eq!(line_string.coords[0], coord_xyz! { 1.0 2.0 3.0 });
+        assert_eq!(line_string.dim, Dimension::XYZ);
+
+        let line_string = wkt! { LINESTRING M (1.0 2.0 3.0, 3.0 4.0 5.0) };
+        assert_eq!(line_string.coords.len(), 2);
+        assert_eq!(line_string.coords[0], coord_xym! { 1.0 2.0 3.0 });
+        assert_eq!(line_string.dim, Dimension::XYM);
+
+        let line_string = wkt! { LINESTRING ZM (1.0 2.0 3.0 4.0, 3.0 4.0 5.0 6.0) };
+        assert_eq!(line_string.coords.len(), 2);
+        assert_eq!(line_string.coords[0], coord_xyzm! { 1.0 2.0 3.0 4.0 });
+        assert_eq!(line_string.dim, Dimension::XYZM);
     }
 
     #[test]
