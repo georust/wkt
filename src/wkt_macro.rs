@@ -1,11 +1,12 @@
-/// Creates a [`crate::geometry`] from a
-/// [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) literal.
+/// Creates a geometry from a [WKT] literal.
 ///
 /// This is evaluated at compile time, so you don't need to worry about runtime errors from invalid
 /// WKT syntax.
 ///
 /// Notes:
 ///
+/// - Creates a concrete type. So `wkt! { POINT(1.0 2.0) }` will create a
+///   [`Point`][crate::types::Point], not a [`Wkt`][crate::Wkt].
 /// - Empty geometries, including `POINT EMPTY` **are** supported.
 /// - All dimensions, including `Z`, `M`, and `ZM` are supported.
 /// - Extended geometry types like `Curve`, `PolyhedralSurface`, or `CircularString` are **not**
@@ -28,6 +29,8 @@
 /// };
 /// assert_eq!(geometry_collection.geometries().len(), 3);
 /// ```
+///
+/// [WKT]: https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
 #[macro_export]
 macro_rules! wkt {
     // Hide distracting implementation details from the generated rustdoc.
