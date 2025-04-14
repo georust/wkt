@@ -698,6 +698,70 @@ macro_rules! multi_polygon_zm {
     };
 }
 
+#[macro_export]
+#[doc(hidden)]
+macro_rules! geometry_collection {
+    (EMPTY) => {
+        GeometryCollection::empty(Dimension::XY)
+    };
+    (()) => {
+        compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
+    };
+    (( $($el_type:tt $el_tt: tt),* )) => {
+        GeometryCollection::from_geometries(vec![
+           $($crate::wkt_internal!($el_type $el_tt).into()),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! geometry_collection_z {
+    (EMPTY) => {
+        GeometryCollection::empty(Dimension::XYZ)
+    };
+    (()) => {
+        compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
+    };
+    (( $($el_type:tt $el_tt: tt),* )) => {
+        GeometryCollection::from_geometries(vec![
+           $($crate::wkt_internal!($el_type $el_tt).into()),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! geometry_collection_m {
+    (EMPTY) => {
+        GeometryCollection::empty(Dimension::XYM)
+    };
+    (()) => {
+        compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
+    };
+    (( $($el_type:tt $el_tt: tt),* )) => {
+        GeometryCollection::from_geometries(vec![
+           $($crate::wkt_internal!($el_type $el_tt).into()),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! geometry_collection_zm {
+    (EMPTY) => {
+        GeometryCollection::empty(Dimension::XYZM)
+    };
+    (()) => {
+        compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
+    };
+    (( $($el_type:tt $el_tt: tt),* )) => {
+        GeometryCollection::from_geometries(vec![
+           $($crate::wkt_internal!($el_type $el_tt).into()),*
+        ])
+    };
+}
+
 // #[macro_export]
 // #[doc(hidden)]
 // macro_rules! wkt_internal {
@@ -1262,35 +1326,59 @@ mod test {
         assert_eq!(multi_polygon.dim, Dimension::XYZM);
     }
 
-    //     #[test]
-    //     fn empty_geometry_collection() {
-    //         let geometry_collection: GeometryCollection = wkt! { GEOMETRYCOLLECTION EMPTY };
-    //         assert!(geometry_collection.is_empty());
+    #[test]
+    fn empty_geometry_collection() {
+        let geometry_collection: GeometryCollection = wkt! { GEOMETRYCOLLECTION EMPTY };
+        assert!(geometry_collection.geoms.is_empty());
+        assert_eq!(geometry_collection.dim, Dimension::XY);
 
-    //         // This (rightfully) fails to compile because its invalid wkt
-    //         // wkt! { MULTIPOLYGON() }
-    //     }
+        let geometry_collection: GeometryCollection = wkt! { GEOMETRYCOLLECTION Z EMPTY };
+        assert!(geometry_collection.geoms.is_empty());
+        assert_eq!(geometry_collection.dim, Dimension::XYZ);
 
-    //     #[test]
-    //     fn geometry_collection() {
-    //         let geometry_collection = wkt! {
-    //             GEOMETRYCOLLECTION (
-    //                 POINT (40.0 10.0),
-    //                 LINESTRING (10.0 10.0, 20.0 20.0, 10.0 40.0),
-    //                 POLYGON ((40.0 40.0, 20.0 45.0, 45.0 30.0, 40.0 40.0))
-    //             )
-    //         };
-    //         assert_eq!(geometry_collection.len(), 3);
+        let geometry_collection: GeometryCollection = wkt! { GEOMETRYCOLLECTION M EMPTY };
+        assert!(geometry_collection.geoms.is_empty());
+        assert_eq!(geometry_collection.dim, Dimension::XYM);
 
-    //         let line_string = match &geometry_collection[1] {
-    //             Geometry::LineString(line_string) => line_string,
-    //             _ => panic!(
-    //                 "unexpected geometry: {geometry:?}",
-    //                 geometry = geometry_collection[1]
-    //             ),
-    //         };
-    //         assert_eq!(line_string.0[1], coord! {x: 20.0, y: 20.0 });
-    //     }
+        let geometry_collection: GeometryCollection = wkt! { GEOMETRYCOLLECTION ZM EMPTY };
+        assert!(geometry_collection.geoms.is_empty());
+        assert_eq!(geometry_collection.dim, Dimension::XYZM);
+
+        // This (rightfully) fails to compile because its invalid wkt
+        // wkt! { MULTIPOLYGON() }
+    }
+
+    #[test]
+    fn geometry_collection() {
+        let geometry_collection: GeometryCollection = wkt! {
+            GEOMETRYCOLLECTION (
+                POINT (40.0 10.0),
+                LINESTRING (10.0 10.0, 20.0 20.0, 10.0 40.0),
+                POLYGON ((40.0 40.0, 20.0 45.0, 45.0 30.0, 40.0 40.0))
+            )
+        };
+        assert_eq!(geometry_collection.geoms.len(), 3);
+        assert_eq!(geometry_collection.dim, Dimension::XY);
+
+        // let line_string = match &geometry_collection[1] {
+        //     Geometry::LineString(line_string) => line_string,
+        //     _ => panic!(
+        //         "unexpected geometry: {geometry:?}",
+        //         geometry = geometry_collection[1]
+        //     ),
+        // };
+        // assert_eq!(line_string.0[1], coord! {x: 20.0, y: 20.0 });
+
+        let geometry_collection: GeometryCollection = wkt! {
+            GEOMETRYCOLLECTION Z (
+                POINT Z (40.0 10.0 50.0),
+                LINESTRING (10.0 10.0, 20.0 20.0, 10.0 40.0),
+                POLYGON ((40.0 40.0, 20.0 45.0, 45.0 30.0, 40.0 40.0))
+            )
+        };
+        assert_eq!(geometry_collection.geoms.len(), 3);
+        assert_eq!(geometry_collection.dim, Dimension::XY);
+    }
 
     //     #[test]
     //     fn other_numeric_types() {
