@@ -4,13 +4,20 @@
 /// This is evaluated at compile time, so you don't need to worry about runtime errors from invalid
 /// WKT syntax.
 ///
-/// Note that `POINT EMPTY` is not accepted because it is not representable as a `geo_types::Point`.
+/// Notes:
+///
+/// - Empty geometries, including `POINT EMPTY` **are** supported.
+/// - All dimensions, including `Z`, `M`, and `ZM` are supported.
+/// - Extended geometry types like `Curve`, `PolyhedralSurface`, or `CircularString` are **not**
+///   supported.
 ///
 /// ```
-/// use geo_types::wkt;
+/// use wkt::wkt;
+/// use geo_traits::{PointTrait, CoordTrait, GeometryCollectionTrait};
+///
 /// let point = wkt! { POINT(1.0 2.0) };
-/// assert_eq!(point.x(), 1.0);
-/// assert_eq!(point.y(), 2.0);
+/// assert_eq!(point.coord().unwrap().x(), 1.0);
+/// assert_eq!(point.coord().unwrap().y(), 2.0);
 ///
 /// let geometry_collection = wkt! {
 ///     GEOMETRYCOLLECTION(
@@ -19,7 +26,7 @@
 ///         POLYGON((0.0 0.0,1.0 0.0,1.0 1.0,0.0 0.0))
 ///     )
 /// };
-/// assert_eq!(geometry_collection.len(), 3);
+/// assert_eq!(geometry_collection.geometries().len(), 3);
 /// ```
 #[macro_export]
 macro_rules! wkt {
