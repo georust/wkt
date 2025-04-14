@@ -723,9 +723,9 @@ macro_rules! geometry_collection_z {
     (()) => {
         compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
     };
-    (( $($el_type:tt $el_tt: tt),* )) => {
+    (( $($el_type:tt Z $el_tt: tt),* )) => {
         GeometryCollection::from_geometries(vec![
-           $($crate::wkt_internal!($el_type $el_tt).into()),*
+           $($crate::wkt_internal!($el_type Z $el_tt).into()),*
         ])
     };
 }
@@ -739,9 +739,9 @@ macro_rules! geometry_collection_m {
     (()) => {
         compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
     };
-    (( $($el_type:tt $el_tt: tt),* )) => {
+    (( $($el_type:tt M $el_tt: tt),* )) => {
         GeometryCollection::from_geometries(vec![
-           $($crate::wkt_internal!($el_type $el_tt).into()),*
+           $($crate::wkt_internal!($el_type M $el_tt).into()),*
         ])
     };
 }
@@ -755,9 +755,9 @@ macro_rules! geometry_collection_zm {
     (()) => {
         compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
     };
-    (( $($el_type:tt $el_tt: tt),* )) => {
+    (( $($el_type:tt ZM $el_tt: tt),* )) => {
         GeometryCollection::from_geometries(vec![
-           $($crate::wkt_internal!($el_type $el_tt).into()),*
+           $($crate::wkt_internal!($el_type ZM $el_tt).into()),*
         ])
     };
 }
@@ -1372,26 +1372,46 @@ mod test {
         let geometry_collection: GeometryCollection = wkt! {
             GEOMETRYCOLLECTION Z (
                 POINT Z (40.0 10.0 50.0),
-                LINESTRING (10.0 10.0, 20.0 20.0, 10.0 40.0),
-                POLYGON ((40.0 40.0, 20.0 45.0, 45.0 30.0, 40.0 40.0))
+                LINESTRING Z (10.0 10.0 20.0, 20.0 20.0 30.0, 10.0 40.0 50.0),
+                POLYGON Z ((40.0 40.0 50.0, 20.0 45.0 55.0, 45.0 30.0 60.0, 40.0 40.0 50.0))
             )
         };
         assert_eq!(geometry_collection.geoms.len(), 3);
-        assert_eq!(geometry_collection.dim, Dimension::XY);
+        assert_eq!(geometry_collection.dim, Dimension::XYZ);
+
+        let geometry_collection: GeometryCollection = wkt! {
+            GEOMETRYCOLLECTION M (
+                POINT M (40.0 10.0 50.0),
+                LINESTRING M (10.0 10.0 20.0, 20.0 20.0 30.0, 10.0 40.0 50.0),
+                POLYGON M ((40.0 40.0 50.0, 20.0 45.0 55.0, 45.0 30.0 60.0, 40.0 40.0 50.0))
+            )
+        };
+        assert_eq!(geometry_collection.geoms.len(), 3);
+        assert_eq!(geometry_collection.dim, Dimension::XYM);
+
+        let geometry_collection: GeometryCollection = wkt! {
+            GEOMETRYCOLLECTION ZM (
+                POINT ZM (40.0 10.0 50.0 60.0),
+                LINESTRING ZM (10.0 10.0 20.0 30.0, 20.0 20.0 30.0 40.0, 10.0 40.0 50.0 60.0),
+                POLYGON ZM ((40.0 40.0 50.0 60.0, 20.0 45.0 55.0 65.0, 45.0 30.0 60.0 70.0, 40.0 40.0 50.0 60.0))
+            )
+        };
+        assert_eq!(geometry_collection.geoms.len(), 3);
+        assert_eq!(geometry_collection.dim, Dimension::XYZM);
     }
 
-    //     #[test]
-    //     fn other_numeric_types() {
-    //         let point: Point<i32> = wkt!(POINT(1 2));
-    //         assert_eq!(point.x(), 1i32);
-    //         assert_eq!(point.y(), 2i32);
+    #[test]
+    fn other_numeric_types() {
+        let point: Point<i32> = wkt!(POINT(1 2));
+        assert_eq!(point.coord.unwrap().x, 1i32);
+        assert_eq!(point.coord.unwrap().y, 2i32);
 
-    //         let point: Point<u64> = wkt!(POINT(1 2));
-    //         assert_eq!(point.x(), 1u64);
-    //         assert_eq!(point.y(), 2u64);
+        let point: Point<u64> = wkt!(POINT(1 2));
+        assert_eq!(point.coord.unwrap().x, 1u64);
+        assert_eq!(point.coord.unwrap().y, 2u64);
 
-    //         let point: Point<f32> = wkt!(POINT(1.0 2.0));
-    //         assert_eq!(point.x(), 1.0f32);
-    //         assert_eq!(point.y(), 2.0f32);
-    //     }
+        let point: Point<f32> = wkt!(POINT(1.0 2.0));
+        assert_eq!(point.coord.unwrap().x, 1f32);
+        assert_eq!(point.coord.unwrap().y, 2f32);
+    }
 }
