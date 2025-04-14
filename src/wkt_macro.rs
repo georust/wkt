@@ -288,7 +288,7 @@ macro_rules! line_string {
 #[doc(hidden)]
 macro_rules! line_string_z {
     (()) => {
-        compile_error!("use `LINESTRING EMPTY` for a LineString with no coordinates")
+        compile_error!("use `LINESTRING Z EMPTY` for a LineString with no coordinates")
     };
     (EMPTY) => {
         LineString::empty(Dimension::XYZ)
@@ -304,7 +304,7 @@ macro_rules! line_string_z {
 #[doc(hidden)]
 macro_rules! line_string_m {
     (()) => {
-        compile_error!("use `LINESTRING EMPTY` for a LineString with no coordinates")
+        compile_error!("use `LINESTRING M EMPTY` for a LineString with no coordinates")
     };
     (EMPTY) => {
         LineString::empty(Dimension::XYM)
@@ -320,7 +320,7 @@ macro_rules! line_string_m {
 #[doc(hidden)]
 macro_rules! line_string_zm {
     (()) => {
-        compile_error!("use `LINESTRING EMPTY` for a LineString with no coordinates")
+        compile_error!("use `LINESTRING ZM EMPTY` for a LineString with no coordinates")
     };
     (EMPTY) => {
         LineString::empty(Dimension::XYZM)
@@ -352,7 +352,7 @@ macro_rules! polygon {
 #[doc(hidden)]
 macro_rules! polygon_z {
     (()) => {
-        compile_error!("use `POLYGON EMPTY` for a Polygon with no coordinates")
+        compile_error!("use `POLYGON Z EMPTY` for a Polygon with no coordinates")
     };
     (EMPTY) => {
         Polygon::empty(Dimension::XYZ)
@@ -368,7 +368,7 @@ macro_rules! polygon_z {
 #[doc(hidden)]
 macro_rules! polygon_m {
     (()) => {
-        compile_error!("use `POLYGON EMPTY` for a Polygon with no coordinates")
+        compile_error!("use `POLYGON M EMPTY` for a Polygon with no coordinates")
     };
     (EMPTY) => {
         Polygon::empty(Dimension::XYM)
@@ -384,7 +384,7 @@ macro_rules! polygon_m {
 #[doc(hidden)]
 macro_rules! polygon_zm {
     (()) => {
-        compile_error!("use `POLYGON EMPTY` for a Polygon with no coordinates")
+        compile_error!("use `POLYGON ZM EMPTY` for a Polygon with no coordinates")
     };
     (EMPTY) => {
         Polygon::empty(Dimension::XYZM)
@@ -533,7 +533,7 @@ macro_rules! multi_point {
 #[doc(hidden)]
 macro_rules! multi_point_z {
     (()) => {
-        compile_error!("use `MULTIPOINT EMPTY` for a MultiPoint with no coordinates")
+        compile_error!("use `MULTIPOINT Z EMPTY` for a MultiPoint with no coordinates")
     };
     (EMPTY) => {
         MultiPoint::empty(Dimension::XYZ)
@@ -549,7 +549,7 @@ macro_rules! multi_point_z {
 #[doc(hidden)]
 macro_rules! multi_point_m {
     (()) => {
-        compile_error!("use `MULTIPOINT EMPTY` for a MultiPoint with no coordinates")
+        compile_error!("use `MULTIPOINT M EMPTY` for a MultiPoint with no coordinates")
     };
     (EMPTY) => {
         MultiPoint::empty(Dimension::XYM)
@@ -565,7 +565,7 @@ macro_rules! multi_point_m {
 #[doc(hidden)]
 macro_rules! multi_point_zm {
     (()) => {
-        compile_error!("use `MULTIPOINT EMPTY` for a MultiPoint with no coordinates")
+        compile_error!("use `MULTIPOINT ZM EMPTY` for a MultiPoint with no coordinates")
     };
     (EMPTY) => {
         MultiPoint::empty(Dimension::XYZM)
@@ -597,7 +597,7 @@ macro_rules! multi_line_string {
 #[doc(hidden)]
 macro_rules! multi_line_string_z {
     (()) => {
-        compile_error!("use `MULTILINESTRING EMPTY` for a MultiLineString with no coordinates")
+        compile_error!("use `MULTILINESTRING Z EMPTY` for a MultiLineString with no coordinates")
     };
     (EMPTY) => {
         MultiLineString::empty(Dimension::XYZ)
@@ -613,7 +613,7 @@ macro_rules! multi_line_string_z {
 #[doc(hidden)]
 macro_rules! multi_line_string_m {
     (()) => {
-        compile_error!("use `MULTILINESTRING EMPTY` for a MultiLineString with no coordinates")
+        compile_error!("use `MULTILINESTRING M EMPTY` for a MultiLineString with no coordinates")
     };
     (EMPTY) => {
         MultiLineString::empty(Dimension::XYM)
@@ -629,7 +629,7 @@ macro_rules! multi_line_string_m {
 #[doc(hidden)]
 macro_rules! multi_line_string_zm {
     (()) => {
-        compile_error!("use `MULTILINESTRING EMPTY` for a MultiLineString with no coordinates")
+        compile_error!("use `MULTILINESTRING ZM EMPTY` for a MultiLineString with no coordinates")
     };
     (EMPTY) => {
         MultiLineString::empty(Dimension::XYZM)
@@ -661,7 +661,7 @@ macro_rules! multi_polygon {
 #[doc(hidden)]
 macro_rules! multi_polygon_z {
     (()) => {
-        compile_error!("use `MULTIPOLYGON EMPTY` for a MultiPolygon with no coordinates")
+        compile_error!("use `MULTIPOLYGON Z EMPTY` for a MultiPolygon with no coordinates")
     };
     (EMPTY) => {
         MultiPolygon::empty(Dimension::XYZ)
@@ -677,7 +677,7 @@ macro_rules! multi_polygon_z {
 #[doc(hidden)]
 macro_rules! multi_polygon_m {
     (()) => {
-        compile_error!("use `MULTIPOLYGON EMPTY` for a MultiPolygon with no coordinates")
+        compile_error!("use `MULTIPOLYGON M EMPTY` for a MultiPolygon with no coordinates")
     };
     (EMPTY) => {
         MultiPolygon::empty(Dimension::XYM)
@@ -693,7 +693,7 @@ macro_rules! multi_polygon_m {
 #[doc(hidden)]
 macro_rules! multi_polygon_zm {
     (()) => {
-        compile_error!("use `MULTIPOLYGON EMPTY` for a MultiPolygon with no coordinates")
+        compile_error!("use `MULTIPOLYGON ZM EMPTY` for a MultiPolygon with no coordinates")
     };
     (EMPTY) => {
         MultiPolygon::empty(Dimension::XYZM)
@@ -728,7 +728,7 @@ macro_rules! geometry_collection_z {
         GeometryCollection::empty(Dimension::XYZ)
     };
     (()) => {
-        compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
+        compile_error!("use `GEOMETRYCOLLECTION Z EMPTY` for an empty collection")
     };
     (( $($el_type:tt Z $el_tt: tt),* )) => {
         GeometryCollection::from_geometries(vec![
@@ -744,7 +744,7 @@ macro_rules! geometry_collection_m {
         GeometryCollection::empty(Dimension::XYM)
     };
     (()) => {
-        compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
+        compile_error!("use `GEOMETRYCOLLECTION M EMPTY` for an empty collection")
     };
     (( $($el_type:tt M $el_tt: tt),* )) => {
         GeometryCollection::from_geometries(vec![
@@ -760,7 +760,7 @@ macro_rules! geometry_collection_zm {
         GeometryCollection::empty(Dimension::XYZM)
     };
     (()) => {
-        compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
+        compile_error!("use `GEOMETRYCOLLECTION ZM EMPTY` for an empty collection")
     };
     (( $($el_type:tt ZM $el_tt: tt),* )) => {
         GeometryCollection::from_geometries(vec![
