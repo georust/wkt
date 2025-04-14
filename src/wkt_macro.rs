@@ -175,12 +175,45 @@ macro_rules! coord_xyzm {
 
 #[macro_export(local_inner_macros)]
 #[doc(hidden)]
-macro_rules! point_el {
+macro_rules! point_el_xy {
     (EMPTY) => {
         Point::empty(Dimension::XY)
     };
     ($x: literal $y: literal) => {
         Point::from_coord($crate::coord_xy!($x $y))
+    };
+}
+
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
+macro_rules! point_el_xyz {
+    (EMPTY) => {
+        Point::empty(Dimension::XYZ)
+    };
+    ($x: literal $y: literal $z:literal) => {
+        Point::from_coord($crate::coord_xyz!($x $y $z))
+    };
+}
+
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
+macro_rules! point_el_xym {
+    (EMPTY) => {
+        Point::empty(Dimension::XYM)
+    };
+    ($x: literal $y: literal $m:literal) => {
+        Point::from_coord($crate::coord_xym!($x $y $m))
+    };
+}
+
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
+macro_rules! point_el_xyzm {
+    (EMPTY) => {
+        Point::empty(Dimension::XYZM)
+    };
+    ($x: literal $y: literal $z:literal $m:literal) => {
+        Point::from_coord($crate::coord_xyzm!($x $y $z $m))
     };
 }
 
@@ -371,18 +404,105 @@ macro_rules! point_vec {
 
     // Next element is an expression followed by comma.
     (@points [$($el:expr,)*] EMPTY, $($rest:tt)*) => {
-        $crate::point_vec!(@points [$($el,)* $crate::point_el!(EMPTY),] $($rest)*)
+        $crate::point_vec!(@points [$($el,)* $crate::point_el_xy!(EMPTY),] $($rest)*)
     };
     // Next element is an expression followed by comma.
     (@points [$($el:expr,)*] $x:literal $y:literal, $($rest:tt)*) => {
-        $crate::point_vec!(@points [$($el,)* $crate::point_el!($x $y),] $($rest)*)
+        $crate::point_vec!(@points [$($el,)* $crate::point_el_xy!($x $y),] $($rest)*)
     };
 
     (@points [$($el:expr,)*] EMPTY) => {
-        $crate::point_vec!(@points [$($el,)* $crate::point_el!(EMPTY)])
+        $crate::point_vec!(@points [$($el,)* $crate::point_el_xy!(EMPTY)])
     };
     (@points [$($el:expr,)*] $x: literal $y:literal) => {
-        $crate::point_vec!(@points [$($el,)* $crate::point_el!($x $y)])
+        $crate::point_vec!(@points [$($el,)* $crate::point_el_xy!($x $y)])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! point_vec_xyz {
+    (@points [$($el:expr),*]) => {
+        // done
+        vec![$($el),*]
+    };
+    (@points [$el:expr]) => {
+        // done
+        vec![$el]
+    };
+
+    // Next element is an expression followed by comma.
+    (@points [$($el:expr,)*] EMPTY, $($rest:tt)*) => {
+        $crate::point_vec_xyz!(@points [$($el,)* $crate::point_el_xyz!(EMPTY),] $($rest)*)
+    };
+    // Next element is an expression followed by comma.
+    (@points [$($el:expr,)*] $x:literal $y:literal $z:literal, $($rest:tt)*) => {
+        $crate::point_vec_xyz!(@points [$($el,)* $crate::point_el_xyz!($x $y $z),] $($rest)*)
+    };
+
+    (@points [$($el:expr,)*] EMPTY) => {
+        $crate::point_vec_xyz!(@points [$($el,)* $crate::point_el_xyz!(EMPTY)])
+    };
+    (@points [$($el:expr,)*] $x: literal $y:literal $z:literal) => {
+        $crate::point_vec_xyz!(@points [$($el,)* $crate::point_el_xyz!($x $y $z)])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! point_vec_xym {
+    (@points [$($el:expr),*]) => {
+        // done
+        vec![$($el),*]
+    };
+    (@points [$el:expr]) => {
+        // done
+        vec![$el]
+    };
+
+    // Next element is an expression followed by comma.
+    (@points [$($el:expr,)*] EMPTY, $($rest:tt)*) => {
+        $crate::point_vec_xym!(@points [$($el,)* $crate::point_el_xym!(EMPTY),] $($rest)*)
+    };
+    // Next element is an expression followed by comma.
+    (@points [$($el:expr,)*] $x:literal $y:literal $m:literal, $($rest:tt)*) => {
+        $crate::point_vec_xym!(@points [$($el,)* $crate::point_el_xym!($x $y $m),] $($rest)*)
+    };
+
+    (@points [$($el:expr,)*] EMPTY) => {
+        $crate::point_vec_xym!(@points [$($el,)* $crate::point_el_xym!(EMPTY)])
+    };
+    (@points [$($el:expr,)*] $x: literal $y:literal $m:literal) => {
+        $crate::point_vec_xym!(@points [$($el,)* $crate::point_el_xym!($x $y $m)])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! point_vec_xyzm {
+    (@points [$($el:expr),*]) => {
+        // done
+        vec![$($el),*]
+    };
+    (@points [$el:expr]) => {
+        // done
+        vec![$el]
+    };
+
+    // Next element is an expression followed by comma.
+    (@points [$($el:expr,)*] EMPTY, $($rest:tt)*) => {
+        $crate::point_vec_xyzm!(@points [$($el,)* $crate::point_el_xyzm!(EMPTY),] $($rest)*)
+    };
+    // Next element is an expression followed by comma.
+    (@points [$($el:expr,)*] $x:literal $y:literal $z:literal $m:literal, $($rest:tt)*) => {
+        $crate::point_vec_xyzm!(@points [$($el,)* $crate::point_el_xyzm!($x $y $z $m),] $($rest)*)
+    };
+
+    (@points [$($el:expr,)*] EMPTY) => {
+        $crate::point_vec_xyzm!(@points [$($el,)* $crate::point_el_xyzm!(EMPTY)])
+    };
+    (@points [$($el:expr,)*] $x: literal $y:literal $z:literal $m:literal) => {
+        $crate::point_vec_xyzm!(@points [$($el,)* $crate::point_el_xyzm!($x $y $z $m)])
     };
 }
 
@@ -412,8 +532,8 @@ macro_rules! multi_point_z {
         MultiPoint::empty(Dimension::XYZ)
     };
     (($($tt: tt)*)) => {
-        MultiPoint(
-            point_vec!(@points [] $($tt)*)
+        MultiPoint::from_points(
+            point_vec_xyz!(@points [] $($tt)*)
         )
     };
 }
@@ -428,8 +548,8 @@ macro_rules! multi_point_m {
         MultiPoint::empty(Dimension::XYM)
     };
     (($($tt: tt)*)) => {
-        MultiPoint(
-            point_vec!(@points [] $($tt)*)
+        MultiPoint::from_points(
+            point_vec_xym!(@points [] $($tt)*)
         )
     };
 }
@@ -444,8 +564,8 @@ macro_rules! multi_point_zm {
         MultiPoint::empty(Dimension::XYZM)
     };
     (($($tt: tt)*)) => {
-        MultiPoint(
-            point_vec!(@points [] $($tt)*)
+        MultiPoint::from_points(
+            point_vec_xyzm!(@points [] $($tt)*)
         )
     };
 }
@@ -750,12 +870,11 @@ mod test {
         // assert_eq!(polygon.exterior().0[1], coord! { x: 3.0, y: 4.0 });
         // assert_eq!(polygon.exterior().0[2], coord! { x: 1.0, y: 2.0 });
 
-        // let polygon = wkt! { POLYGON((1.0 2.0), (1.1 2.1)) };
-        // assert_eq!(polygon.exterior().0.len(), 1);
-        // assert_eq!(polygon.interiors().len(), 1);
-
-        // assert_eq!(polygon.exterior().0[0], coord! { x: 1.0, y: 2.0 });
-        // assert_eq!(polygon.interiors()[0].0[0], coord! { x: 1.1, y: 2.1 });
+        let polygon = wkt! { POLYGON((1.0 2.0), (1.1 2.1)) };
+        assert_eq!(polygon.rings[0].coords.len(), 1);
+        assert_eq!(polygon.rings[1].coords.len(), 1);
+        assert_eq!(polygon.rings[0].coords[0], coord_xy! { 1.0 2.0 });
+        assert_eq!(polygon.rings[1].coords[0], coord_xy! { 1.1 2.1 });
 
         // let polygon = wkt! { POLYGON((1.0 2.0,3.0 4.0), (1.1 2.1,3.1 4.1), (1.2 2.2,3.2 4.2)) };
         // assert_eq!(polygon.exterior().0.len(), 3);
@@ -794,13 +913,42 @@ mod test {
         // assert_eq!(multi_point.0, vec![point! { x: 1.0, y: 2.0}]);
 
         let multi_point = wkt! { MULTIPOINT(1.0 2.0,3.0 4.0) };
-        assert_eq!(multi_point.points.len(), 1);
+        assert_eq!(multi_point.points.len(), 2);
         assert_eq!(multi_point.points[0], point! { (1.0 2.0) });
         assert_eq!(multi_point.dim, Dimension::XY);
-        // assert_eq!(
-        //     multi_point.0,
-        //     vec![point! { x: 1.0, y: 2.0}, point! { x: 3.0, y: 4.0}]
-        // );
+
+        let multi_point = wkt! { MULTIPOINT Z (1.0 2.0 3.0) };
+        assert_eq!(multi_point.points.len(), 1);
+        assert_eq!(multi_point.points[0], point_z! { (1.0 2.0 3.0) });
+        assert_eq!(multi_point.dim, Dimension::XYZ);
+
+        let multi_point = wkt! { MULTIPOINT Z (1.0 2.0 3.0, 4.0 5.0 6.0) };
+        assert_eq!(multi_point.points.len(), 2);
+        assert_eq!(multi_point.points[0], point_z! { (1.0 2.0 3.0) });
+        assert_eq!(multi_point.points[1], point_z! { (4.0 5.0 6.0) });
+        assert_eq!(multi_point.dim, Dimension::XYZ);
+
+        let multi_point = wkt! { MULTIPOINT M (1.0 2.0 3.0) };
+        assert_eq!(multi_point.points.len(), 1);
+        assert_eq!(multi_point.points[0], point_m! { (1.0 2.0 3.0) });
+        assert_eq!(multi_point.dim, Dimension::XYM);
+
+        let multi_point = wkt! { MULTIPOINT M (1.0 2.0 3.0, 4.0 5.0 6.0) };
+        assert_eq!(multi_point.points.len(), 2);
+        assert_eq!(multi_point.points[0], point_m! { (1.0 2.0 3.0) });
+        assert_eq!(multi_point.points[1], point_m! { (4.0 5.0 6.0) });
+        assert_eq!(multi_point.dim, Dimension::XYM);
+
+        let multi_point = wkt! { MULTIPOINT ZM (1.0 2.0 3.0 4.0) };
+        assert_eq!(multi_point.points.len(), 1);
+        assert_eq!(multi_point.points[0], point_zm! { (1.0 2.0 3.0 4.0) });
+        assert_eq!(multi_point.dim, Dimension::XYZM);
+
+        let multi_point = wkt! { MULTIPOINT ZM (1.0 2.0 3.0 4.0, 4.0 5.0 6.0 7.0) };
+        assert_eq!(multi_point.points.len(), 2);
+        assert_eq!(multi_point.points[0], point_zm! { (1.0 2.0 3.0 4.0) });
+        assert_eq!(multi_point.points[1], point_zm! { (4.0 5.0 6.0 7.0) });
+        assert_eq!(multi_point.dim, Dimension::XYZM);
     }
 
     //     #[test]
