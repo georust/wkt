@@ -286,7 +286,7 @@ macro_rules! line_string_z {
     (EMPTY) => {
         LineString::empty(Dimension::XYZ)
     };
-    (($($x: literal $y: literal),*)) => {
+    (($($x: literal $y: literal $z:literal),*)) => {
         LineString::from_coords(
             [$($crate::coord_xyz!($x $y $z)),*]
         )
@@ -302,7 +302,7 @@ macro_rules! line_string_m {
     (EMPTY) => {
         LineString::empty(Dimension::XYM)
     };
-    (($($x: literal $y: literal),*)) => {
+    (($($x: literal $y: literal $m:literal),*)) => {
         LineString::from_coords(
             [$($crate::coord_xym!($x $y $m)),*]
         )
@@ -567,6 +567,70 @@ macro_rules! multi_point_zm {
         MultiPoint::from_points(
             point_vec_xyzm!(@points [] $($tt)*)
         )
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_line_string {
+    (()) => {
+        compile_error!("use `MULTILINESTRING EMPTY` for a MultiLineString with no coordinates")
+    };
+    (EMPTY) => {
+        MultiLineString::empty(Dimension::XY)
+    };
+    (( $($line_string_tt: tt),* )) => {
+        MultiLineString::from_line_strings(vec![
+           $($crate::line_string![$line_string_tt]),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_line_string_z {
+    (()) => {
+        compile_error!("use `MULTILINESTRING EMPTY` for a MultiLineString with no coordinates")
+    };
+    (EMPTY) => {
+        MultiLineString::empty(Dimension::XYZ)
+    };
+    (( $($line_string_tt: tt),* )) => {
+        MultiLineString::from_line_strings(vec![
+           $($crate::line_string_z![$line_string_tt]),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_line_string_m {
+    (()) => {
+        compile_error!("use `MULTILINESTRING EMPTY` for a MultiLineString with no coordinates")
+    };
+    (EMPTY) => {
+        MultiLineString::empty(Dimension::XYM)
+    };
+    (( $($line_string_tt: tt),* )) => {
+        MultiLineString::from_line_strings(vec![
+           $($crate::line_string_m![$line_string_tt]),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_line_string_zm {
+    (()) => {
+        compile_error!("use `MULTILINESTRING EMPTY` for a MultiLineString with no coordinates")
+    };
+    (EMPTY) => {
+        MultiLineString::empty(Dimension::XYZM)
+    };
+    (( $($line_string_tt: tt),* )) => {
+        MultiLineString::from_line_strings(vec![
+           $($crate::line_string_zm![$line_string_tt]),*
+        ])
     };
 }
 
@@ -910,7 +974,6 @@ mod test {
         assert_eq!(multi_point.points.len(), 1);
         assert_eq!(multi_point.points[0], point! { (1.0 2.0) });
         assert_eq!(multi_point.dim, Dimension::XY);
-        // assert_eq!(multi_point.0, vec![point! { x: 1.0, y: 2.0}]);
 
         let multi_point = wkt! { MULTIPOINT(1.0 2.0,3.0 4.0) };
         assert_eq!(multi_point.points.len(), 2);
@@ -951,26 +1014,100 @@ mod test {
         assert_eq!(multi_point.dim, Dimension::XYZM);
     }
 
-    //     #[test]
-    //     fn empty_multi_line_string() {
-    //         let multi_line_string: MultiLineString = wkt! { MULTILINESTRING EMPTY };
-    //         assert_eq!(multi_line_string.0, vec![]);
-    //         // This (rightfully) fails to compile because its invalid wkt
-    //         // wkt! { MULTILINESTRING() }
-    //     }
-    //     #[test]
-    //     fn multi_line_string() {
-    //         let multi_line_string = wkt! { MULTILINESTRING ((1.0 2.0,3.0 4.0)) };
-    //         assert_eq!(multi_line_string.0.len(), 1);
-    //         assert_eq!(multi_line_string.0[0].0[1], coord! { x: 3.0, y: 4.0 });
-    //         let multi_line_string = wkt! { MULTILINESTRING ((1.0 2.0,3.0 4.0),(5.0 6.0,7.0 8.0)) };
-    //         assert_eq!(multi_line_string.0.len(), 2);
-    //         assert_eq!(multi_line_string.0[1].0[1], coord! { x: 7.0, y: 8.0 });
+    #[test]
+    fn empty_multi_line_string() {
+        let multi_line_string: MultiLineString = wkt! { MULTILINESTRING EMPTY };
+        assert!(multi_line_string.line_strings.is_empty());
+        assert_eq!(multi_line_string.dim, Dimension::XY);
 
-    //         let multi_line_string = wkt! { MULTILINESTRING ((1.0 2.0,3.0 4.0),EMPTY) };
-    //         assert_eq!(multi_line_string.0.len(), 2);
-    //         assert_eq!(multi_line_string.0[1].0.len(), 0);
-    //     }
+        let multi_line_string: MultiLineString = wkt! { MULTILINESTRING Z EMPTY };
+        assert!(multi_line_string.line_strings.is_empty());
+        assert_eq!(multi_line_string.dim, Dimension::XYZ);
+
+        let multi_line_string: MultiLineString = wkt! { MULTILINESTRING M EMPTY };
+        assert!(multi_line_string.line_strings.is_empty());
+        assert_eq!(multi_line_string.dim, Dimension::XYM);
+
+        let multi_line_string: MultiLineString = wkt! { MULTILINESTRING ZM EMPTY };
+        assert!(multi_line_string.line_strings.is_empty());
+        assert_eq!(multi_line_string.dim, Dimension::XYZM);
+
+        // This (rightfully) fails to compile because its invalid wkt
+        // wkt! { MULTILINESTRING() }
+    }
+
+    #[test]
+    fn multi_line_string() {
+        let multi_line_string = wkt! { MULTILINESTRING ((1.0 2.0,3.0 4.0)) };
+        assert_eq!(multi_line_string.line_strings.len(), 1);
+        assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
+        assert_eq!(
+            multi_line_string.line_strings[0].coords[1],
+            coord_xy! { 3.0 4.0 }
+        );
+        assert_eq!(multi_line_string.dim, Dimension::XY);
+
+        let multi_line_string = wkt! { MULTILINESTRING ((1.0 2.0,3.0 4.0),(5.0 6.0,7.0 8.0)) };
+        assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
+        assert_eq!(
+            multi_line_string.line_strings[1].coords[1],
+            coord_xy! { 7.0 8.0 }
+        );
+        assert_eq!(multi_line_string.dim, Dimension::XY);
+
+        let multi_line_string = wkt! { MULTILINESTRING Z ((1.0 2.0 3.0,3.0 4.0 5.0)) };
+        assert_eq!(multi_line_string.line_strings.len(), 1);
+        assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
+        assert_eq!(
+            multi_line_string.line_strings[0].coords[1],
+            coord_xyz! { 3.0 4.0 5.0 }
+        );
+        assert_eq!(multi_line_string.dim, Dimension::XYZ);
+
+        let multi_line_string =
+            wkt! { MULTILINESTRING Z ((1.0 2.0 3.0,3.0 4.0 5.0),(5.0 6.0 7.0,7.0 8.0 9.0)) };
+        assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
+        assert_eq!(
+            multi_line_string.line_strings[1].coords[1],
+            coord_xyz! { 7.0 8.0 9.0 }
+        );
+        assert_eq!(multi_line_string.dim, Dimension::XYZ);
+
+        let multi_line_string = wkt! { MULTILINESTRING M ((1.0 2.0 3.0,3.0 4.0 5.0)) };
+        assert_eq!(multi_line_string.line_strings.len(), 1);
+        assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
+        assert_eq!(
+            multi_line_string.line_strings[0].coords[1],
+            coord_xym! { 3.0 4.0 5.0 }
+        );
+        assert_eq!(multi_line_string.dim, Dimension::XYM);
+
+        let multi_line_string =
+            wkt! { MULTILINESTRING M ((1.0 2.0 3.0,3.0 4.0 5.0),(5.0 6.0 7.0,7.0 8.0 9.0)) };
+        assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
+        assert_eq!(
+            multi_line_string.line_strings[1].coords[1],
+            coord_xym! { 7.0 8.0 9.0 }
+        );
+        assert_eq!(multi_line_string.dim, Dimension::XYM);
+
+        let multi_line_string = wkt! { MULTILINESTRING ZM ((1.0 2.0 3.0 4.0,3.0 4.0 5.0 6.0)) };
+        assert_eq!(multi_line_string.line_strings.len(), 1);
+        assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
+        assert_eq!(
+            multi_line_string.line_strings[0].coords[1],
+            coord_xyzm! { 3.0 4.0 5.0 6.0 }
+        );
+        assert_eq!(multi_line_string.dim, Dimension::XYZM);
+
+        let multi_line_string = wkt! { MULTILINESTRING ZM ((1.0 2.0 3.0 4.0,3.0 4.0 5.0 6.0),(5.0 6.0 7.0 8.0,7.0 8.0 9.0 10.0)) };
+        assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
+        assert_eq!(
+            multi_line_string.line_strings[1].coords[1],
+            coord_xyzm! { 7.0 8.0 9.0 10.0 }
+        );
+        assert_eq!(multi_line_string.dim, Dimension::XYZM);
+    }
 
     //     #[test]
     //     fn empty_multi_polygon() {
