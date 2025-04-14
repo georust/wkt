@@ -783,8 +783,6 @@ macro_rules! geometry_collection_zm {
 
 #[cfg(test)]
 mod test {
-    use geo_traits::{CoordTrait, LineStringTrait};
-
     use crate::types::*;
 
     #[test]
