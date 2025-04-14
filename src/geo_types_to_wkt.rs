@@ -1,5 +1,10 @@
 use geo_types::CoordNum;
 
+use crate::to_wkt::{
+    write_geometry, write_geometry_collection, write_line, write_linestring,
+    write_multi_linestring, write_multi_point, write_multi_polygon, write_point, write_polygon,
+    write_rect, write_triangle, WriterWrapper,
+};
 use crate::types::{
     Coord, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
     Polygon,
@@ -33,6 +38,11 @@ where
             geo_types::Geometry::Triangle(g) => g.to_wkt(),
         }
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_geometry(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -50,6 +60,11 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         Wkt::Point(g_point_to_w_point(self))
+    }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_point(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 
@@ -69,6 +84,11 @@ where
     fn to_wkt(&self) -> Wkt<T> {
         g_line_to_w_linestring(self).into()
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_line(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -86,6 +106,11 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_linestring_to_w_linestring(self).into()
+    }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_linestring(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 
@@ -105,6 +130,11 @@ where
     fn to_wkt(&self) -> Wkt<T> {
         g_polygon_to_w_polygon(self).into()
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_polygon(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -122,6 +152,11 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_mpoint_to_w_mpoint(self).into()
+    }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_multi_point(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 
@@ -142,6 +177,12 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_mline_to_w_mline(self).into()
+    }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_multi_linestring(&mut writer_wrapper, self)
+            .map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 
@@ -165,6 +206,12 @@ where
     fn to_wkt(&self) -> Wkt<T> {
         g_mpolygon_to_w_mpolygon(self).into()
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_multi_polygon(&mut writer_wrapper, self)
+            .map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -185,6 +232,12 @@ where
     fn to_wkt(&self) -> Wkt<T> {
         g_geocol_to_w_geocol(self).into()
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_geometry_collection(&mut writer_wrapper, self)
+            .map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -203,6 +256,11 @@ where
     fn to_wkt(&self) -> Wkt<T> {
         g_rect_to_w_polygon(self).into()
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_rect(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -220,6 +278,11 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_triangle_to_w_polygon(self).into()
+    }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_triangle(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 

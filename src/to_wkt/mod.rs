@@ -15,16 +15,27 @@ use std::io;
 
 /// A wrapper around something that implements std::io::Write to be used with our writer traits,
 /// which require std::fmt::Write
-struct WriterWrapper<W: io::Write> {
+pub(crate) struct WriterWrapper<W: io::Write> {
     writer: W,
     most_recent_err: Option<io::Error>,
 }
 
 impl<W: io::Write> WriterWrapper<W> {
-    fn new(writer: W) -> Self {
+    pub(crate) fn new(writer: W) -> Self {
         Self {
             writer,
             most_recent_err: None,
+        }
+    }
+
+    pub(crate) fn into_io_err(self, err: Error) -> std::io::Error {
+        match (err, self.most_recent_err) {
+            (Error::FmtError(_), Some(io_err)) => io_err,
+            (Error::FmtError(fmt_err), None) => {
+                debug_assert!(false, "FmtError without setting an error on WriterWrapper");
+                io::Error::new(io::ErrorKind::Other, fmt_err.to_string())
+            }
+            (other, _) => io::Error::new(io::ErrorKind::Other, other.to_string()),
         }
     }
 }
@@ -82,16 +93,8 @@ where
     /// ```
     fn write_wkt(&self, writer: impl io::Write) -> io::Result<()> {
         let mut writer_wrapper = WriterWrapper::new(writer);
-        write_geometry(&mut writer_wrapper, &self.to_wkt()).map_err(|err| {
-            match (err, writer_wrapper.most_recent_err) {
-                (Error::FmtError(_), Some(io_err)) => io_err,
-                (Error::FmtError(fmt_err), None) => {
-                    debug_assert!(false, "FmtError without setting an error on WriterWrapper");
-                    io::Error::new(io::ErrorKind::Other, fmt_err.to_string())
-                }
-                (other, _) => io::Error::new(io::ErrorKind::Other, other.to_string()),
-            }
-        })
+        write_geometry(&mut writer_wrapper, &self.to_wkt())
+            .map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 
