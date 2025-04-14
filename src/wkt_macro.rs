@@ -634,6 +634,70 @@ macro_rules! multi_line_string_zm {
     };
 }
 
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_polygon {
+    (()) => {
+        compile_error!("use `MULTIPOLYGON EMPTY` for a MultiPolygon with no coordinates")
+    };
+    (EMPTY) => {
+        MultiPolygon::empty(Dimension::XY)
+    };
+    (( $($polygon_tt: tt),* )) => {
+        MultiPolygon::from_polygons(vec![
+           $($crate::polygon![$polygon_tt]),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_polygon_z {
+    (()) => {
+        compile_error!("use `MULTIPOLYGON EMPTY` for a MultiPolygon with no coordinates")
+    };
+    (EMPTY) => {
+        MultiPolygon::empty(Dimension::XYZ)
+    };
+    (( $($polygon_tt: tt),* )) => {
+        MultiPolygon::from_polygons(vec![
+           $($crate::polygon_z![$polygon_tt]),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_polygon_m {
+    (()) => {
+        compile_error!("use `MULTIPOLYGON EMPTY` for a MultiPolygon with no coordinates")
+    };
+    (EMPTY) => {
+        MultiPolygon::empty(Dimension::XYM)
+    };
+    (( $($polygon_tt: tt),* )) => {
+        MultiPolygon::from_polygons(vec![
+           $($crate::polygon_m![$polygon_tt]),*
+        ])
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! multi_polygon_zm {
+    (()) => {
+        compile_error!("use `MULTIPOLYGON EMPTY` for a MultiPolygon with no coordinates")
+    };
+    (EMPTY) => {
+        MultiPolygon::empty(Dimension::XYZM)
+    };
+    (( $($polygon_tt: tt),* )) => {
+        MultiPolygon::from_polygons(vec![
+           $($crate::polygon_zm![$polygon_tt]),*
+        ])
+    };
+}
+
 // #[macro_export]
 // #[doc(hidden)]
 // macro_rules! wkt_internal {
@@ -1109,36 +1173,94 @@ mod test {
         assert_eq!(multi_line_string.dim, Dimension::XYZM);
     }
 
-    //     #[test]
-    //     fn empty_multi_polygon() {
-    //         let multi_polygon: MultiPolygon = wkt! { MULTIPOLYGON EMPTY };
-    //         assert!(multi_polygon.0.is_empty());
+    #[test]
+    fn empty_multi_polygon() {
+        let multi_polygon: MultiPolygon = wkt! { MULTIPOLYGON EMPTY };
+        assert!(multi_polygon.polygons.is_empty());
+        assert_eq!(multi_polygon.dim, Dimension::XY);
 
-    //         // This (rightfully) fails to compile because its invalid wkt
-    //         // wkt! { MULTIPOLYGON() }
-    //     }
+        let multi_polygon: MultiPolygon = wkt! { MULTIPOLYGON Z EMPTY };
+        assert!(multi_polygon.polygons.is_empty());
+        assert_eq!(multi_polygon.dim, Dimension::XYZ);
 
-    //     #[test]
-    //     fn multi_line_polygon() {
-    //         let multi_polygon = wkt! { MULTIPOLYGON (((1.0 2.0))) };
-    //         assert_eq!(multi_polygon.0.len(), 1);
-    //         assert_eq!(multi_polygon.0[0].exterior().0[0], coord! { x: 1.0, y: 2.0});
+        let multi_polygon: MultiPolygon = wkt! { MULTIPOLYGON M EMPTY };
+        assert!(multi_polygon.polygons.is_empty());
+        assert_eq!(multi_polygon.dim, Dimension::XYM);
 
-    //         let multi_polygon = wkt! { MULTIPOLYGON (((1.0 2.0,3.0 4.0), (1.1 2.1,3.1 4.1), (1.2 2.2,3.2 4.2)),((1.0 2.0))) };
-    //         assert_eq!(multi_polygon.0.len(), 2);
-    //         assert_eq!(
-    //             multi_polygon.0[0].interiors()[1].0[0],
-    //             coord! { x: 1.2, y: 2.2}
-    //         );
+        let multi_polygon: MultiPolygon = wkt! { MULTIPOLYGON ZM EMPTY };
+        assert!(multi_polygon.polygons.is_empty());
+        assert_eq!(multi_polygon.dim, Dimension::XYZM);
 
-    //         let multi_polygon = wkt! { MULTIPOLYGON (((1.0 2.0,3.0 4.0), (1.1 2.1,3.1 4.1), (1.2 2.2,3.2 4.2)), EMPTY) };
-    //         assert_eq!(multi_polygon.0.len(), 2);
-    //         assert_eq!(
-    //             multi_polygon.0[0].interiors()[1].0[0],
-    //             coord! { x: 1.2, y: 2.2}
-    //         );
-    //         assert!(multi_polygon.0[1].exterior().0.is_empty());
-    //     }
+        // This (rightfully) fails to compile because its invalid wkt
+        // wkt! { MULTIPOLYGON() }
+    }
+
+    #[test]
+    fn multi_line_polygon() {
+        let multi_polygon = wkt! { MULTIPOLYGON (((1.0 2.0))) };
+        assert_eq!(multi_polygon.polygons.len(), 1);
+        assert_eq!(
+            multi_polygon.polygons[0].rings[0].coords[0],
+            coord_xy! { 1.0 2.0}
+        );
+        assert_eq!(multi_polygon.dim, Dimension::XY);
+
+        let multi_polygon = wkt! { MULTIPOLYGON (((1.0 2.0,3.0 4.0), (1.1 2.1,3.1 4.1), (1.2 2.2,3.2 4.2)),((1.0 2.0))) };
+        assert_eq!(multi_polygon.polygons.len(), 2);
+        assert_eq!(
+            multi_polygon.polygons[0].rings[2].coords[0],
+            coord_xy! { 1.2 2.2}
+        );
+        assert_eq!(multi_polygon.dim, Dimension::XY);
+
+        let multi_polygon = wkt! { MULTIPOLYGON Z (((1.0 2.0 3.0))) };
+        assert_eq!(multi_polygon.polygons.len(), 1);
+        assert_eq!(
+            multi_polygon.polygons[0].rings[0].coords[0],
+            coord_xyz! { 1.0 2.0 3.0 }
+        );
+        assert_eq!(multi_polygon.dim, Dimension::XYZ);
+
+        let multi_polygon = wkt! { MULTIPOLYGON Z (((1.0 2.0 3.0,3.0 4.0 5.0), (1.1 2.1 3.1,3.1 4.1 5.1), (1.2 2.2 3.2,3.2 4.2 5.2)),((1.0 2.0 3.0))) };
+        assert_eq!(multi_polygon.polygons.len(), 2);
+        assert_eq!(
+            multi_polygon.polygons[0].rings[2].coords[0],
+            coord_xyz! { 1.2 2.2 3.2}
+        );
+        assert_eq!(multi_polygon.dim, Dimension::XYZ);
+
+        let multi_polygon = wkt! { MULTIPOLYGON M (((1.0 2.0 3.0))) };
+        assert_eq!(multi_polygon.polygons.len(), 1);
+        assert_eq!(
+            multi_polygon.polygons[0].rings[0].coords[0],
+            coord_xym! { 1.0 2.0 3.0 }
+        );
+        assert_eq!(multi_polygon.dim, Dimension::XYM);
+
+        let multi_polygon = wkt! { MULTIPOLYGON M (((1.0 2.0 3.0,3.0 4.0 5.0), (1.1 2.1 3.1,3.1 4.1 5.1), (1.2 2.2 3.2,3.2 4.2 5.2)),((1.0 2.0 3.0))) };
+        assert_eq!(multi_polygon.polygons.len(), 2);
+        assert_eq!(
+            multi_polygon.polygons[0].rings[2].coords[0],
+            coord_xym! { 1.2 2.2 3.2}
+        );
+        assert_eq!(multi_polygon.dim, Dimension::XYM);
+
+        let multi_polygon = wkt! { MULTIPOLYGON ZM (((1.0 2.0 3.0 4.0))) };
+        assert_eq!(multi_polygon.polygons.len(), 1);
+        assert_eq!(
+            multi_polygon.polygons[0].rings[0].coords[0],
+            coord_xyzm! { 1.0 2.0 3.0 4.0 }
+        );
+        assert_eq!(multi_polygon.dim, Dimension::XYZM);
+
+        let multi_polygon = wkt! { MULTIPOLYGON ZM (((1.0 2.0 3.0 4.0,3.0 4.0 5.0 6.0), (1.1 2.1 3.1 4.1,3.1 4.1 5.1 6.1), (1.2 2.2 3.2 4.2,3.2 4.2 5.2 6.2)),((1.0 2.0 3.0 4.0))) };
+        assert_eq!(multi_polygon.polygons.len(), 2);
+        assert_eq!(
+            multi_polygon.polygons[0].rings[2].coords[0],
+            coord_xyzm! { 1.2 2.2 3.2 4.2}
+        );
+        assert_eq!(multi_polygon.dim, Dimension::XYZM);
+    }
 
     //     #[test]
     //     fn empty_geometry_collection() {
