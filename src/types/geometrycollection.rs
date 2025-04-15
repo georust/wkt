@@ -14,6 +14,7 @@
 
 use geo_traits::GeometryCollectionTrait;
 
+use crate::error::Error;
 use crate::to_wkt::write_geometry_collection;
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
@@ -44,13 +45,20 @@ impl<T: WktNum> GeometryCollection<T> {
     /// This will infer the dimension from the first geometry, and will not validate that all
     /// geometries have the same dimension.
     ///
-    /// ## Panics
+    /// ## Errors
     ///
     /// If the input iterator is empty.
-    pub fn from_geometries(geoms: impl IntoIterator<Item = Wkt<T>>) -> Self {
+    ///
+    /// To handle empty input iterators, consider calling `unwrap_or` on the result and defaulting
+    /// to an [empty][Self::empty] geometry with specified dimension.
+    pub fn from_geometries(geoms: impl IntoIterator<Item = Wkt<T>>) -> Result<Self, Error> {
         let geoms = geoms.into_iter().collect::<Vec<_>>();
-        let dim = geoms[0].dimension();
-        Self::new(geoms, dim)
+        if geoms.is_empty() {
+            Err(Error::UnknownDimension)
+        } else {
+            let dim = geoms[0].dimension();
+            Ok(Self::new(geoms, dim))
+        }
     }
 
     /// Return the [Dimension] of this geometry.
@@ -292,6 +300,7 @@ mod tests {
                 m: None,
             }),
         ])
+        .unwrap()
         .into();
 
         let linestring = LineString::from_coords([
@@ -308,6 +317,7 @@ mod tests {
                 m: None,
             },
         ])
+        .unwrap()
         .into();
 
         let polygon = Polygon::from_rings([LineString::from_coords([
@@ -335,7 +345,9 @@ mod tests {
                 z: None,
                 m: None,
             },
-        ])]);
+        ])
+        .unwrap()])
+        .unwrap();
 
         let multilinestring = MultiLineString::from_line_strings([
             LineString::from_coords([
@@ -351,7 +363,8 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
+            ])
+            .unwrap(),
             LineString::from_coords([
                 Coord {
                     x: 50.5,
@@ -365,8 +378,10 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
+            ])
+            .unwrap(),
         ])
+        .unwrap()
         .into();
 
         let multipolygon = MultiPolygon::from_polygons([
@@ -395,7 +410,9 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ])]),
+            ])
+            .unwrap()])
+            .unwrap(),
             Polygon::from_rings([LineString::from_coords([
                 Coord {
                     x: 40.,
@@ -421,8 +438,11 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ])]),
+            ])
+            .unwrap()])
+            .unwrap(),
         ])
+        .unwrap()
         .into();
 
         let geoms: Vec<Wkt<f64>> = vec![
@@ -433,7 +453,7 @@ mod tests {
             multilinestring,
             multipolygon,
         ];
-        let geometrycollection = GeometryCollection::from_geometries(geoms);
+        let geometrycollection = GeometryCollection::from_geometries(geoms).unwrap();
 
         assert_eq!(
             "GEOMETRYCOLLECTION(\

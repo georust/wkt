@@ -6,8 +6,8 @@ use crate::to_wkt::{
     write_rect, write_triangle, WriterWrapper,
 };
 use crate::types::{
-    Coord, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
-    Polygon,
+    Coord, Dimension, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon,
+    Point, Polygon,
 };
 use crate::{ToWkt, Wkt};
 
@@ -345,7 +345,7 @@ where
     T: CoordNum,
 {
     let w_coords = g_points_to_w_coords(g_coords);
-    LineString::from_coords(w_coords)
+    LineString::from_coords(w_coords).unwrap_or(LineString::empty(Dimension::XY))
 }
 
 fn g_lines_to_w_lines<T>(g_lines: &[geo_types::LineString<T>]) -> Vec<LineString<T>>
@@ -391,7 +391,7 @@ where
     .chain(inner_lines.iter().map(g_linestring_to_w_linestring))
     .collect::<Vec<_>>();
 
-    Polygon::from_rings(poly_lines)
+    Polygon::from_rings(poly_lines).unwrap_or(Polygon::empty(Dimension::XY))
 }
 
 fn g_mpoint_to_w_mpoint<T>(g_mpoint: &geo_types::MultiPoint<T>) -> MultiPoint<T>
@@ -400,7 +400,7 @@ where
 {
     let geo_types::MultiPoint(g_points) = g_mpoint;
     let w_points = g_points_to_w_points(g_points);
-    MultiPoint::from_points(w_points)
+    MultiPoint::from_points(w_points).unwrap_or(MultiPoint::empty(Dimension::XY))
 }
 
 fn g_mline_to_w_mline<T>(g_mline: &geo_types::MultiLineString<T>) -> MultiLineString<T>
@@ -409,7 +409,7 @@ where
 {
     let geo_types::MultiLineString(g_lines) = g_mline;
     let w_lines = g_lines_to_w_lines(g_lines);
-    MultiLineString::from_line_strings(w_lines)
+    MultiLineString::from_line_strings(w_lines).unwrap_or(MultiLineString::empty(Dimension::XY))
 }
 
 fn g_polygons_to_w_polygons<T>(g_polygons: &[geo_types::Polygon<T>]) -> Vec<Polygon<T>>
@@ -425,7 +425,7 @@ where
 {
     let geo_types::MultiPolygon(g_polygons) = g_mpolygon;
     let w_polygons = g_polygons_to_w_polygons(g_polygons);
-    MultiPolygon::from_polygons(w_polygons)
+    MultiPolygon::from_polygons(w_polygons).unwrap_or(MultiPolygon::empty(Dimension::XY))
 }
 
 fn g_geocol_to_w_geocol<T>(g_geocol: &geo_types::GeometryCollection<T>) -> GeometryCollection<T>
@@ -434,7 +434,7 @@ where
 {
     let geo_types::GeometryCollection(g_geoms) = g_geocol;
     let w_geoms = g_geoms.iter().map(g_geom_to_w_geom).collect::<Vec<_>>();
-    GeometryCollection::from_geometries(w_geoms)
+    GeometryCollection::from_geometries(w_geoms).unwrap_or(GeometryCollection::empty(Dimension::XY))
 }
 
 fn g_geom_to_w_geom<T>(g_geom: &geo_types::Geometry<T>) -> Wkt<T>
