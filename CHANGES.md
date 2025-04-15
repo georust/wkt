@@ -6,6 +6,7 @@
 
 ## 0.13.0 - unreleased
 
+* Remove allocation to `Wkt` when writing geo-types via `write_wkt` (#140)
 * Default to using `f64` for `WktNum` in WKT types
 * Add `Copy` impl to `Coord`
 
