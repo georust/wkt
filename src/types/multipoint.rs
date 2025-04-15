@@ -54,9 +54,14 @@ impl<T: WktNum> MultiPoint<T> {
         Self::new(points, dim)
     }
 
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Access the inner points.
+    pub fn points(&self) -> &[Point<T>] {
+        &self.points
     }
 
     /// Consume self and return the inner parts.

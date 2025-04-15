@@ -54,9 +54,14 @@ impl<T: WktNum> LineString<T> {
         Self::new(coords, dim)
     }
 
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Access the coordinates of this LineString.
+    pub fn coords(&self) -> &[Coord<T>] {
+        &self.coords
     }
 
     /// Consume self and return the inner parts.

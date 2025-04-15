@@ -50,9 +50,14 @@ impl<T: WktNum> Point<T> {
         Self::new(None, dim)
     }
 
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Access the coordinate of this point.
+    pub fn coord(&self) -> Option<&Coord<T>> {
+        self.coord.as_ref()
     }
 
     /// Consume self and return the inner parts.

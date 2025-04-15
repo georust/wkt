@@ -54,9 +54,16 @@ impl<T: WktNum> Polygon<T> {
         Self::new(rings, dim)
     }
 
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Access the inner rings.
+    ///
+    /// The first ring is defined to be the exterior ring, and the rest are interior rings.
+    pub fn rings(&self) -> &[LineString<T>] {
+        &self.rings
     }
 
     /// Consume self and return the inner parts.

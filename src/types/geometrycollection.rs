@@ -53,9 +53,14 @@ impl<T: WktNum> GeometryCollection<T> {
         Self::new(geoms, dim)
     }
 
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Access the underlying [Wkt] geometries.
+    pub fn geometries(&self) -> &[Wkt<T>] {
+        &self.geoms
     }
 
     /// Consume self and return the inner parts.

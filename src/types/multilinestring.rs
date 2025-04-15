@@ -54,9 +54,14 @@ impl<T: WktNum> MultiLineString<T> {
         Self::new(line_strings, dim)
     }
 
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Access the inner line strings.
+    pub fn line_strings(&self) -> &[LineString<T>] {
+        &self.line_strings
     }
 
     /// Consume self and return the inner parts.

@@ -54,9 +54,14 @@ impl<T: WktNum> MultiPolygon<T> {
         Self::new(polygons, dim)
     }
 
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Access the inner polygons.
+    pub fn polygons(&self) -> &[Polygon<T>] {
+        &self.polygons
     }
 
     /// Consume self and return the inner parts.
