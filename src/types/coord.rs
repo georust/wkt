@@ -19,12 +19,25 @@ use crate::types::Dimension;
 use crate::{FromTokens, WktNum};
 use std::str::FromStr;
 
+/// A parsed coordinate.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Coord<T: WktNum = f64> {
     pub x: T,
     pub y: T,
     pub z: Option<T>,
     pub m: Option<T>,
+}
+
+impl<T: WktNum> Coord<T> {
+    /// Return the [Dimension] of this coord.
+    pub fn dimension(&self) -> Dimension {
+        match (self.z.is_some(), self.m.is_some()) {
+            (true, true) => Dimension::XYZM,
+            (true, false) => Dimension::XYZ,
+            (false, true) => Dimension::XYM,
+            (false, false) => Dimension::XY,
+        }
+    }
 }
 
 impl<T> FromTokens<T> for Coord<T>
@@ -76,18 +89,17 @@ where
 
         Ok(Coord { x, y, z, m })
     }
+
+    fn new_empty(_dim: Dimension) -> Self {
+        unreachable!("empty coord does not exist in WKT")
+    }
 }
 
 impl<T: WktNum> CoordTrait for Coord<T> {
     type T = T;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match (self.z.is_some(), self.m.is_some()) {
-            (true, true) => geo_traits::Dimensions::Xyzm,
-            (true, false) => geo_traits::Dimensions::Xyz,
-            (false, true) => geo_traits::Dimensions::Xym,
-            (false, false) => geo_traits::Dimensions::Xy,
-        }
+        self.dimension().into()
     }
 
     fn x(&self) -> Self::T {
@@ -129,12 +141,7 @@ impl<T: WktNum> CoordTrait for &Coord<T> {
     type T = T;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        match (self.z.is_some(), self.m.is_some()) {
-            (true, true) => geo_traits::Dimensions::Xyzm,
-            (true, false) => geo_traits::Dimensions::Xyz,
-            (false, true) => geo_traits::Dimensions::Xym,
-            (false, false) => geo_traits::Dimensions::Xy,
-        }
+        self.dimension().into()
     }
 
     fn x(&self) -> Self::T {

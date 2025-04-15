@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::{CoordTrait, LineStringTrait};
+use geo_traits::LineStringTrait;
 
+use crate::error::Error;
 use crate::to_wkt::write_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
@@ -22,8 +23,60 @@ use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
+/// A parsed LineString.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct LineString<T: WktNum = f64>(pub Vec<Coord<T>>);
+pub struct LineString<T: WktNum = f64> {
+    pub(crate) coords: Vec<Coord<T>>,
+    pub(crate) dim: Dimension,
+}
+
+impl<T: WktNum> LineString<T> {
+    /// Create a new LineString from a sequence of [Coord] and known [Dimension].
+    pub fn new(coords: Vec<Coord<T>>, dim: Dimension) -> Self {
+        LineString { dim, coords }
+    }
+
+    /// Create a new empty LineString.
+    pub fn empty(dim: Dimension) -> Self {
+        Self::new(vec![], dim)
+    }
+
+    /// Create a new LineString from a non-empty sequence of [Coord].
+    ///
+    /// This will infer the dimension from the first coordinate, and will not validate that all
+    /// coordinates have the same dimension.
+    ///
+    /// ## Errors
+    ///
+    /// If the input iterator is empty.
+    ///
+    /// To handle empty input iterators, consider calling `unwrap_or` on the result and defaulting
+    /// to an [empty][Self::empty] geometry with specified dimension.
+    pub fn from_coords(coords: impl IntoIterator<Item = Coord<T>>) -> Result<Self, Error> {
+        let coords = coords.into_iter().collect::<Vec<_>>();
+        if coords.is_empty() {
+            Err(Error::UnknownDimension)
+        } else {
+            let dim = coords[0].dimension();
+            Ok(Self::new(coords, dim))
+        }
+    }
+
+    /// Return the [Dimension] of this geometry.
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
+    /// Access the coordinates of this LineString.
+    pub fn coords(&self) -> &[Coord<T>] {
+        &self.coords
+    }
+
+    /// Consume self and return the inner parts.
+    pub fn into_inner(self) -> (Vec<Coord<T>>, Dimension) {
+        (self.coords, self.dim)
+    }
+}
 
 impl<T> From<LineString<T>> for Wkt<T>
 where
@@ -40,7 +93,11 @@ where
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
         let result = FromTokens::comma_many(<Coord<T> as FromTokens<T>>::from_tokens, tokens, dim);
-        result.map(LineString)
+        result.map(|coords| LineString { coords, dim })
+    }
+
+    fn new_empty(dim: Dimension) -> Self {
+        Self::empty(dim)
     }
 }
 
@@ -61,20 +118,15 @@ impl<T: WktNum> LineStringTrait for LineString<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_coords(&self) -> usize {
-        self.0.len()
+        self.coords.len()
     }
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        self.0.get_unchecked(i)
+        self.coords.get_unchecked(i)
     }
 }
 
@@ -86,34 +138,33 @@ impl<T: WktNum> LineStringTrait for &LineString<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_coords(&self) -> usize {
-        self.0.len()
+        self.coords.len()
     }
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        self.0.get_unchecked(i)
+        self.coords.get_unchecked(i)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{Coord, LineString};
+    use crate::types::Dimension;
     use crate::Wkt;
     use std::str::FromStr;
 
     #[test]
     fn basic_linestring() {
-        let wkt = Wkt::from_str("LINESTRING (10 -20, -0 -0.5)").ok().unwrap();
+        let wkt: Wkt<f64> = Wkt::from_str("LINESTRING (10 -20, -0 -0.5)").ok().unwrap();
         let coords = match wkt {
-            Wkt::LineString(LineString(coords)) => coords,
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert_eq!(dim, Dimension::XY);
+                coords
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());
@@ -135,7 +186,10 @@ mod tests {
             .ok()
             .unwrap();
         let coords = match wkt {
-            Wkt::LineString(LineString(coords)) => coords,
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert_eq!(dim, Dimension::XYZ);
+                coords
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());
@@ -157,7 +211,10 @@ mod tests {
             .ok()
             .unwrap();
         let coords = match wkt {
-            Wkt::LineString(LineString(coords)) => coords,
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert_eq!(dim, Dimension::XYM);
+                coords
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());
@@ -179,7 +236,10 @@ mod tests {
             .ok()
             .unwrap();
         let coords = match wkt {
-            Wkt::LineString(LineString(coords)) => coords,
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert_eq!(dim, Dimension::XYZM);
+                coords
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());
@@ -201,7 +261,10 @@ mod tests {
             .ok()
             .unwrap();
         let coords = match wkt {
-            Wkt::LineString(LineString(coords)) => coords,
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert_eq!(dim, Dimension::XYZM);
+                coords
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, coords.len());
@@ -218,15 +281,62 @@ mod tests {
     }
 
     #[test]
-    fn write_empty_linestring() {
-        let linestring: LineString<f64> = LineString(vec![]);
+    fn parse_empty_linestring() {
+        let wkt: Wkt<f64> = Wkt::from_str("LINESTRING EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert!(coords.is_empty());
+                assert_eq!(dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        };
 
+        let wkt: Wkt<f64> = Wkt::from_str("LINESTRING Z EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert!(coords.is_empty());
+                assert_eq!(dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("LINESTRING M EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert!(coords.is_empty());
+                assert_eq!(dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("LINESTRING ZM EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::LineString(LineString { coords, dim }) => {
+                assert!(coords.is_empty());
+                assert_eq!(dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        };
+    }
+
+    #[test]
+    fn write_empty_linestring() {
+        let linestring: LineString<f64> = LineString::empty(Dimension::XY);
         assert_eq!("LINESTRING EMPTY", format!("{}", linestring));
+
+        let linestring: LineString<f64> = LineString::empty(Dimension::XYZ);
+        assert_eq!("LINESTRING Z EMPTY", format!("{}", linestring));
+
+        let linestring: LineString<f64> = LineString::empty(Dimension::XYM);
+        assert_eq!("LINESTRING M EMPTY", format!("{}", linestring));
+
+        let linestring: LineString<f64> = LineString::empty(Dimension::XYZM);
+        assert_eq!("LINESTRING ZM EMPTY", format!("{}", linestring));
     }
 
     #[test]
     fn write_linestring() {
-        let linestring = LineString(vec![
+        let linestring = LineString::from_coords([
             Coord {
                 x: 10.1,
                 y: 20.2,
@@ -239,7 +349,8 @@ mod tests {
                 z: None,
                 m: None,
             },
-        ]);
+        ])
+        .unwrap();
 
         assert_eq!("LINESTRING(10.1 20.2,30.3 40.4)", format!("{}", linestring));
     }

@@ -178,6 +178,24 @@ pub enum Wkt<T: WktNum = f64> {
 
 impl<T> Wkt<T>
 where
+    T: WktNum,
+{
+    /// Return the [Dimension] of this geometry.
+    pub fn dimension(&self) -> Dimension {
+        match self {
+            Self::Point(g) => g.dimension(),
+            Self::LineString(g) => g.dimension(),
+            Self::Polygon(g) => g.dimension(),
+            Self::MultiPoint(g) => g.dimension(),
+            Self::MultiLineString(g) => g.dimension(),
+            Self::MultiPolygon(g) => g.dimension(),
+            Self::GeometryCollection(g) => g.dimension(),
+        }
+    }
+}
+
+impl<T> Wkt<T>
+where
     T: WktNum + FromStr + Default,
 {
     fn from_word_and_tokens(
@@ -757,6 +775,8 @@ where
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str>;
 
+    fn new_empty(dim: Dimension) -> Self;
+
     /// The preferred top-level FromTokens API, which additionally checks for the presence of Z, M,
     /// and ZM in the token stream.
     fn from_tokens_with_header(
@@ -778,10 +798,7 @@ where
         match tokens.next().transpose()? {
             Some(Token::ParenOpen) => (),
             Some(Token::Word(ref s)) if s.eq_ignore_ascii_case("EMPTY") => {
-                // TODO: expand this to support Z EMPTY
-                // Maybe create a DefaultXY, DefaultXYZ trait etc for each geometry type, and then
-                // here match on the dim to decide which default trait to use.
-                return Ok(Default::default());
+                return Ok(Self::new_empty(dim));
             }
             _ => return Err("Missing open parenthesis for type"),
         };
@@ -829,7 +846,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::types::{Coord, MultiPolygon, Point};
+    use crate::types::{Dimension, MultiPolygon, Point};
     use crate::Wkt;
     use std::str::FromStr;
 
@@ -843,13 +860,19 @@ mod tests {
     fn empty_items() {
         let wkt: Wkt<f64> = Wkt::from_str("POINT EMPTY").ok().unwrap();
         match wkt {
-            Wkt::Point(Point(None)) => (),
+            Wkt::Point(Point { coord, dim }) => {
+                assert_eq!(coord, None);
+                assert_eq!(dim, Dimension::XY);
+            }
             _ => unreachable!(),
         };
 
         let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON EMPTY").ok().unwrap();
         match wkt {
-            Wkt::MultiPolygon(MultiPolygon(polygons)) => assert_eq!(polygons.len(), 0),
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                assert_eq!(polygons.len(), 0);
+                assert_eq!(dim, Dimension::XY);
+            }
             _ => unreachable!(),
         };
     }
@@ -858,7 +881,10 @@ mod tests {
     fn lowercase_point() {
         let wkt: Wkt<f64> = Wkt::from_str("point EMPTY").ok().unwrap();
         match wkt {
-            Wkt::Point(Point(None)) => (),
+            Wkt::Point(Point { coord, dim }) => {
+                assert_eq!(coord, None);
+                assert_eq!(dim, Dimension::XY);
+            }
             _ => unreachable!(),
         };
     }
@@ -877,11 +903,15 @@ mod tests {
         // point(x, y)
         let wkt = <Wkt<f64>>::from_str("POINT (10 20.1)").ok().unwrap();
         match wkt {
-            Wkt::Point(Point(Some(coord))) => {
+            Wkt::Point(Point {
+                coord: Some(coord),
+                dim,
+            }) => {
                 assert_eq!(coord.x, 10.0);
                 assert_eq!(coord.y, 20.1);
                 assert_eq!(coord.z, None);
                 assert_eq!(coord.m, None);
+                assert_eq!(dim, Dimension::XY);
             }
             _ => panic!("excepted to be parsed as a POINT"),
         }
@@ -889,11 +919,15 @@ mod tests {
         // point(x, y, z)
         let wkt = <Wkt<f64>>::from_str("POINT Z (10 20.1 5)").ok().unwrap();
         match wkt {
-            Wkt::Point(Point(Some(coord))) => {
+            Wkt::Point(Point {
+                coord: Some(coord),
+                dim,
+            }) => {
                 assert_eq!(coord.x, 10.0);
                 assert_eq!(coord.y, 20.1);
                 assert_eq!(coord.z, Some(5.0));
                 assert_eq!(coord.m, None);
+                assert_eq!(dim, Dimension::XYZ);
             }
             _ => panic!("excepted to be parsed as a POINT"),
         }
@@ -901,11 +935,15 @@ mod tests {
         // point(x, y, m)
         let wkt = <Wkt<f64>>::from_str("POINT M (10 20.1 80)").ok().unwrap();
         match wkt {
-            Wkt::Point(Point(Some(coord))) => {
+            Wkt::Point(Point {
+                coord: Some(coord),
+                dim,
+            }) => {
                 assert_eq!(coord.x, 10.0);
                 assert_eq!(coord.y, 20.1);
                 assert_eq!(coord.z, None);
                 assert_eq!(coord.m, Some(80.0));
+                assert_eq!(dim, Dimension::XYM);
             }
             _ => panic!("excepted to be parsed as a POINT"),
         }
@@ -915,11 +953,15 @@ mod tests {
             .ok()
             .unwrap();
         match wkt {
-            Wkt::Point(Point(Some(coord))) => {
+            Wkt::Point(Point {
+                coord: Some(coord),
+                dim,
+            }) => {
                 assert_eq!(coord.x, 10.0);
                 assert_eq!(coord.y, 20.1);
                 assert_eq!(coord.z, Some(5.0));
                 assert_eq!(coord.m, Some(80.0));
+                assert_eq!(dim, Dimension::XYZM);
             }
             _ => panic!("excepted to be parsed as a POINT"),
         }
@@ -932,20 +974,6 @@ mod tests {
             Wkt::LineString(_ls) => (),
             _ => panic!("expected to be parsed as a LINESTRING"),
         };
-    }
-
-    #[test]
-    fn test_debug() {
-        let g = Wkt::Point(Point(Some(Coord {
-            x: 1.0,
-            y: 2.0,
-            m: None,
-            z: None,
-        })));
-        assert_eq!(
-            format!("{:?}", g),
-            "Point(Point(Some(Coord { x: 1.0, y: 2.0, z: None, m: None })))"
-        );
     }
 
     #[test]

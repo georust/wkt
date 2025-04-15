@@ -6,6 +6,10 @@
 
 ## 0.13.0 - unreleased
 
+* BREAKING: Store dimension in wkt types (#135)
+  * This removes the publicly-accessible tuple member for each struct in `wkt::types`. Use public constructors to construct new objects and new public accessors to access internal data.
+  * WKT dimension is now always correctly inferred from the WKT string, even for empty geometries.
+  * `infer_type` now never returns `None`.
 * Remove allocation to `Wkt` when writing geo-types via `write_wkt` (#140)
 * Default to using `f64` for `WktNum` in WKT types
 * Add `Copy` impl to `Coord`

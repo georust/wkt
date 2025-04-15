@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::{LineStringTrait, MultiLineStringTrait};
+use geo_traits::MultiLineStringTrait;
 
+use crate::error::Error;
 use crate::to_wkt::write_multi_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
@@ -22,8 +23,62 @@ use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
 
+/// A parsed MultiLineString.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct MultiLineString<T: WktNum = f64>(pub Vec<LineString<T>>);
+pub struct MultiLineString<T: WktNum = f64> {
+    pub(crate) line_strings: Vec<LineString<T>>,
+    pub(crate) dim: Dimension,
+}
+
+impl<T: WktNum> MultiLineString<T> {
+    /// Create a new LineString from a sequence of [LineString] and known [Dimension].
+    pub fn new(line_strings: Vec<LineString<T>>, dim: Dimension) -> Self {
+        MultiLineString { dim, line_strings }
+    }
+
+    /// Create a new empty MultiLineString.
+    pub fn empty(dim: Dimension) -> Self {
+        Self::new(vec![], dim)
+    }
+
+    /// Create a new MultiLineString from a non-empty sequence of [LineString].
+    ///
+    /// This will infer the dimension from the first line string, and will not validate that all
+    /// line strings have the same dimension.
+    ///
+    /// ## Errors
+    ///
+    /// If the input iterator is empty.
+    ///
+    /// To handle empty input iterators, consider calling `unwrap_or` on the result and defaulting
+    /// to an [empty][Self::empty] geometry with specified dimension.
+    pub fn from_line_strings(
+        line_strings: impl IntoIterator<Item = LineString<T>>,
+    ) -> Result<Self, Error> {
+        let line_strings = line_strings.into_iter().collect::<Vec<_>>();
+        if line_strings.is_empty() {
+            Err(Error::UnknownDimension)
+        } else {
+            let dim = line_strings[0].dimension();
+            Ok(Self::new(line_strings, dim))
+        }
+    }
+
+    /// Return the [Dimension] of this geometry.
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
+    /// Access the inner line strings.
+    pub fn line_strings(&self) -> &[LineString<T>] {
+        &self.line_strings
+    }
+
+    /// Consume self and return the inner parts.
+    pub fn into_inner(self) -> (Vec<LineString<T>>, Dimension) {
+        (self.line_strings, self.dim)
+    }
+}
 
 impl<T> From<MultiLineString<T>> for Wkt<T>
 where
@@ -53,7 +108,11 @@ where
             tokens,
             dim,
         );
-        result.map(MultiLineString)
+        result.map(|line_strings| MultiLineString { line_strings, dim })
+    }
+
+    fn new_empty(dim: Dimension) -> Self {
+        Self::empty(dim)
     }
 }
 
@@ -65,20 +124,15 @@ impl<T: WktNum> MultiLineStringTrait for MultiLineString<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_line_strings(&self) -> usize {
-        self.0.len()
+        self.line_strings.len()
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        self.0.get_unchecked(i)
+        self.line_strings.get_unchecked(i)
     }
 }
 
@@ -90,27 +144,22 @@ impl<T: WktNum> MultiLineStringTrait for &MultiLineString<T> {
         Self: 'a;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        // TODO: infer dimension from empty WKT
-        if self.0.is_empty() {
-            geo_traits::Dimensions::Xy
-        } else {
-            self.0[0].dim()
-        }
+        self.dim.into()
     }
 
     fn num_line_strings(&self) -> usize {
-        self.0.len()
+        self.line_strings.len()
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        self.0.get_unchecked(i)
+        self.line_strings.get_unchecked(i)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{LineString, MultiLineString};
-    use crate::types::Coord;
+    use crate::types::{Coord, Dimension};
     use crate::Wkt;
     use std::str::FromStr;
 
@@ -120,23 +169,73 @@ mod tests {
             .ok()
             .unwrap();
         let lines = match wkt {
-            Wkt::MultiLineString(MultiLineString(lines)) => lines,
+            Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                assert_eq!(dim, Dimension::XY);
+                line_strings
+            }
             _ => unreachable!(),
         };
         assert_eq!(2, lines.len());
     }
 
     #[test]
-    fn write_empty_multilinestring() {
-        let multilinestring: MultiLineString<f64> = MultiLineString(vec![]);
+    fn parse_empty_multilinestring() {
+        let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                assert!(line_strings.is_empty());
+                assert_eq!(dim, Dimension::XY);
+            }
+            _ => unreachable!(),
+        };
 
+        let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING Z EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                assert!(line_strings.is_empty());
+                assert_eq!(dim, Dimension::XYZ);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING M EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                assert!(line_strings.is_empty());
+                assert_eq!(dim, Dimension::XYM);
+            }
+            _ => unreachable!(),
+        };
+
+        let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING ZM EMPTY").ok().unwrap();
+        match wkt {
+            Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                assert!(line_strings.is_empty());
+                assert_eq!(dim, Dimension::XYZM);
+            }
+            _ => unreachable!(),
+        };
+    }
+
+    #[test]
+    fn write_empty_multilinestring() {
+        let multilinestring: MultiLineString<f64> = MultiLineString::empty(Dimension::XY);
         assert_eq!("MULTILINESTRING EMPTY", format!("{}", multilinestring));
+
+        let multilinestring: MultiLineString<f64> = MultiLineString::empty(Dimension::XYZ);
+        assert_eq!("MULTILINESTRING Z EMPTY", format!("{}", multilinestring));
+
+        let multilinestring: MultiLineString<f64> = MultiLineString::empty(Dimension::XYM);
+        assert_eq!("MULTILINESTRING M EMPTY", format!("{}", multilinestring));
+
+        let multilinestring: MultiLineString<f64> = MultiLineString::empty(Dimension::XYZM);
+        assert_eq!("MULTILINESTRING ZM EMPTY", format!("{}", multilinestring));
     }
 
     #[test]
     fn write_multilinestring() {
-        let multilinestring = MultiLineString(vec![
-            LineString(vec![
+        let multilinestring = MultiLineString::from_line_strings([
+            LineString::from_coords([
                 Coord {
                     x: 10.1,
                     y: 20.2,
@@ -149,8 +248,9 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
-            LineString(vec![
+            ])
+            .unwrap(),
+            LineString::from_coords([
                 Coord {
                     x: 50.5,
                     y: 60.6,
@@ -163,8 +263,10 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
-        ]);
+            ])
+            .unwrap(),
+        ])
+        .unwrap();
 
         assert_eq!(
             "MULTILINESTRING((10.1 20.2,30.3 40.4),(50.5 60.6,70.7 80.8))",

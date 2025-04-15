@@ -90,8 +90,11 @@ impl<T: CoordNum> TryFrom<Wkt<T>> for geo_types::GeometryCollection<T> {
     fn try_from(wkt: Wkt<T>) -> Result<Self, Self::Error> {
         match wkt {
             Wkt::GeometryCollection(collection) => {
-                let geometries: Result<Vec<geo_types::Geometry<T>>, _> =
-                    collection.0.into_iter().map(TryFrom::try_from).collect();
+                let geometries: Result<Vec<geo_types::Geometry<T>>, _> = collection
+                    .geoms
+                    .into_iter()
+                    .map(TryFrom::try_from)
+                    .collect();
                 Ok(geo_types::GeometryCollection(geometries?))
             }
             // geo_types doesn't implement `Geometry::try_from(geom_collec)` yet
@@ -143,7 +146,7 @@ where
 
     /// Fallibly convert from a WKT `POINT` to a [`geo_types::Point`]
     fn try_from(point: Point<T>) -> Result<Self, Self::Error> {
-        match point.0 {
+        match point.coord {
             Some(coord) => Ok(Self::new(coord.x, coord.y)),
             None => Err(Error::PointConversionError),
         }
@@ -174,7 +177,7 @@ where
     /// Convert from a WKT `LINESTRING` to a [`geo_types::LineString`]
     fn from(line_string: LineString<T>) -> Self {
         let coords = line_string
-            .0
+            .coords
             .into_iter()
             .map(geo_types::Coord::from)
             .collect();
@@ -199,7 +202,7 @@ where
     /// Convert from a WKT `MULTILINESTRING` to a [`geo_types::MultiLineString`]
     fn from(multi_line_string: MultiLineString<T>) -> geo_types::MultiLineString<T> {
         let geo_line_strings: Vec<geo_types::LineString<T>> = multi_line_string
-            .0
+            .line_strings
             .into_iter()
             .map(geo_types::LineString::from)
             .collect();
@@ -223,7 +226,7 @@ where
 {
     /// Convert from a WKT `POLYGON` to a [`geo_types::Polygon`]
     fn from(polygon: Polygon<T>) -> Self {
-        let mut iter = polygon.0.into_iter().map(geo_types::LineString::from);
+        let mut iter = polygon.rings.into_iter().map(geo_types::LineString::from);
         match iter.next() {
             Some(interior) => geo_types::Polygon::new(interior, iter.collect()),
             None => geo_types::Polygon::new(geo_types::LineString(vec![]), vec![]),
@@ -250,7 +253,7 @@ where
     /// Fallibly convert from a WKT `MULTIPOINT` to a [`geo_types::MultiPoint`]
     fn try_from(multi_point: MultiPoint<T>) -> Result<Self, Self::Error> {
         let points: Vec<geo_types::Point<T>> = multi_point
-            .0
+            .points
             .into_iter()
             .map(geo_types::Point::try_from)
             .collect::<Result<Vec<_>, _>>()?;
@@ -275,7 +278,7 @@ where
     /// Convert from a WKT `MULTIPOLYGON` to a [`geo_types::MultiPolygon`]
     fn from(multi_polygon: MultiPolygon<T>) -> Self {
         let geo_polygons: Vec<geo_types::Polygon<T>> = multi_polygon
-            .0
+            .polygons
             .into_iter()
             .map(geo_types::Polygon::from)
             .collect();
@@ -304,7 +307,7 @@ where
 
     fn try_from(geometry_collection: GeometryCollection<T>) -> Result<Self, Self::Error> {
         let geo_geometries = geometry_collection
-            .0
+            .geoms
             .into_iter()
             .map(Wkt::try_into)
             .collect::<Result<_, _>>()?;
@@ -323,7 +326,7 @@ where
         Ok(match geometry {
             Wkt::Point(g) => {
                 // Special case as `geo::Point` can't be empty
-                if g.0.is_some() {
+                if g.coord.is_some() {
                     geo_types::Point::try_from(g)?.into()
                 } else {
                     geo_types::MultiPoint(vec![]).into()
@@ -386,12 +389,12 @@ mod tests {
 
     #[test]
     fn convert_single_item_wkt() {
-        let wkt = Wkt::from(Point(Some(Coord {
+        let wkt = Wkt::from(Point::from_coord(Coord {
             x: 1.0,
             y: 2.0,
             z: None,
             m: None,
-        })));
+        }));
 
         let converted = geo_types::Geometry::try_from(wkt).unwrap();
         let g_point: geo_types::Point<f64> = geo_types::Point::new(1.0, 2.0);
@@ -401,19 +404,19 @@ mod tests {
 
     #[test]
     fn convert_empty_point() {
-        let point = Point(None);
+        let point = Point::empty(Dimension::XY);
         let res: Result<geo_types::Point<f64>, Error> = point.try_into();
         assert!(res.is_err());
     }
 
     #[test]
     fn convert_point() {
-        let point = Wkt::from(Point(Some(Coord {
+        let point = Wkt::from(Point::from_coord(Coord {
             x: 10.,
             y: 20.,
             z: None,
             m: None,
-        })));
+        }));
 
         let g_point: geo_types::Point<f64> = (10., 20.).into();
         assert_eq!(
@@ -424,7 +427,7 @@ mod tests {
 
     #[test]
     fn convert_empty_linestring() {
-        let w_linestring = Wkt::from(LineString(vec![]));
+        let w_linestring = Wkt::from(LineString::empty(Dimension::XY));
         let g_linestring: geo_types::LineString<f64> = geo_types::LineString(vec![]);
         assert_eq!(
             geo_types::Geometry::LineString(g_linestring),
@@ -434,7 +437,7 @@ mod tests {
 
     #[test]
     fn convert_linestring() {
-        let w_linestring: Wkt = LineString(vec![
+        let w_linestring: Wkt = LineString::from_coords([
             Coord {
                 x: 10.,
                 y: 20.,
@@ -448,6 +451,7 @@ mod tests {
                 m: None,
             },
         ])
+        .unwrap()
         .into();
         let g_linestring: geo_types::LineString<f64> = vec![(10., 20.), (30., 40.)].into();
         assert_eq!(
@@ -458,7 +462,7 @@ mod tests {
 
     #[test]
     fn convert_empty_polygon() {
-        let w_polygon: Wkt = Polygon(vec![]).into();
+        let w_polygon: Wkt = Polygon::empty(Dimension::XY).into();
         let g_polygon: geo_types::Polygon<f64> =
             geo_types::Polygon::new(geo_types::LineString(vec![]), vec![]);
         assert_eq!(
@@ -469,8 +473,8 @@ mod tests {
 
     #[test]
     fn convert_polygon() {
-        let w_polygon: Wkt = Polygon(vec![
-            LineString(vec![
+        let w_polygon: Wkt = Polygon::from_rings([
+            LineString::from_coords([
                 Coord {
                     x: 0.,
                     y: 0.,
@@ -495,8 +499,9 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
-            LineString(vec![
+            ])
+            .unwrap(),
+            LineString::from_coords([
                 Coord {
                     x: 5.,
                     y: 5.,
@@ -521,8 +526,10 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
+            ])
+            .unwrap(),
         ])
+        .unwrap()
         .into();
         let g_polygon: geo_types::Polygon<f64> = geo_types::Polygon::new(
             vec![(0., 0.), (20., 40.), (40., 0.), (0., 0.)].into(),
@@ -536,7 +543,7 @@ mod tests {
 
     #[test]
     fn convert_empty_multilinestring() {
-        let w_multilinestring: Wkt = MultiLineString(vec![]).into();
+        let w_multilinestring: Wkt = MultiLineString::empty(Dimension::XY).into();
         let g_multilinestring: geo_types::MultiLineString<f64> = geo_types::MultiLineString(vec![]);
         assert_eq!(
             geo_types::Geometry::MultiLineString(g_multilinestring),
@@ -546,8 +553,8 @@ mod tests {
 
     #[test]
     fn convert_multilinestring() {
-        let w_multilinestring: Wkt = MultiLineString(vec![
-            LineString(vec![
+        let w_multilinestring: Wkt = MultiLineString::from_line_strings([
+            LineString::from_coords([
                 Coord {
                     x: 10.,
                     y: 20.,
@@ -560,8 +567,9 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
-            LineString(vec![
+            ])
+            .unwrap(),
+            LineString::from_coords([
                 Coord {
                     x: 50.,
                     y: 60.,
@@ -574,8 +582,10 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
+            ])
+            .unwrap(),
         ])
+        .unwrap()
         .into();
         let g_multilinestring: geo_types::MultiLineString<f64> = geo_types::MultiLineString(vec![
             vec![(10., 20.), (30., 40.)].into(),
@@ -589,7 +599,7 @@ mod tests {
 
     #[test]
     fn convert_empty_multipoint() {
-        let w_multipoint: Wkt = MultiPoint(vec![]).into();
+        let w_multipoint: Wkt = MultiPoint::empty(Dimension::XY).into();
         let g_multipoint: geo_types::MultiPoint<f64> = geo_types::MultiPoint(vec![]);
         assert_eq!(
             geo_types::Geometry::MultiPoint(g_multipoint),
@@ -599,20 +609,21 @@ mod tests {
 
     #[test]
     fn convert_multipoint() {
-        let w_multipoint: Wkt = MultiPoint(vec![
-            Point(Some(Coord {
+        let w_multipoint: Wkt = MultiPoint::from_points([
+            Point::from_coord(Coord {
                 x: 10.,
                 y: 20.,
                 z: None,
                 m: None,
-            })),
-            Point(Some(Coord {
+            }),
+            Point::from_coord(Coord {
                 x: 30.,
                 y: 40.,
                 z: None,
                 m: None,
-            })),
+            }),
         ])
+        .unwrap()
         .into();
         let g_multipoint: geo_types::MultiPoint<f64> = vec![(10., 20.), (30., 40.)].into();
         assert_eq!(
@@ -623,7 +634,7 @@ mod tests {
 
     #[test]
     fn convert_empty_multipolygon() {
-        let w_multipolygon: Wkt = MultiPolygon(vec![]).into();
+        let w_multipolygon: Wkt = MultiPolygon::empty(Dimension::XY).into();
         let g_multipolygon: geo_types::MultiPolygon<f64> = geo_types::MultiPolygon(vec![]);
         assert_eq!(
             geo_types::Geometry::MultiPolygon(g_multipolygon),
@@ -633,9 +644,9 @@ mod tests {
 
     #[test]
     fn convert_multipolygon() {
-        let w_multipolygon: Wkt = MultiPolygon(vec![
-            Polygon(vec![
-                LineString(vec![
+        let w_multipolygon: Wkt = MultiPolygon::from_polygons([
+            Polygon::from_rings([
+                LineString::from_coords([
                     Coord {
                         x: 0.,
                         y: 0.,
@@ -660,8 +671,9 @@ mod tests {
                         z: None,
                         m: None,
                     },
-                ]),
-                LineString(vec![
+                ])
+                .unwrap(),
+                LineString::from_coords([
                     Coord {
                         x: 5.,
                         y: 5.,
@@ -686,9 +698,11 @@ mod tests {
                         z: None,
                         m: None,
                     },
-                ]),
-            ]),
-            Polygon(vec![LineString(vec![
+                ])
+                .unwrap(),
+            ])
+            .unwrap(),
+            Polygon::from_rings([LineString::from_coords([
                 Coord {
                     x: 40.,
                     y: 40.,
@@ -713,8 +727,11 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ])]),
+            ])
+            .unwrap()])
+            .unwrap(),
         ])
+        .unwrap()
         .into();
 
         let g_multipolygon: geo_types::MultiPolygon<f64> = geo_types::MultiPolygon(vec![
@@ -735,7 +752,7 @@ mod tests {
 
     #[test]
     fn convert_empty_geometrycollection() {
-        let w_geometrycollection: Wkt = GeometryCollection(vec![]).into();
+        let w_geometrycollection: Wkt = GeometryCollection::empty(Dimension::XY).into();
         let g_geometrycollection: geo_types::GeometryCollection<f64> =
             geo_types::GeometryCollection(vec![]);
         assert_eq!(
@@ -746,15 +763,15 @@ mod tests {
 
     #[test]
     fn convert_geometrycollection() {
-        let w_point = Point(Some(Coord {
+        let w_point = Point::from_coord(Coord {
             x: 10.,
             y: 20.,
             z: None,
             m: None,
-        }))
+        })
         .into();
 
-        let w_linestring = LineString(vec![
+        let w_linestring = LineString::from_coords([
             Coord {
                 x: 10.,
                 y: 20.,
@@ -768,9 +785,10 @@ mod tests {
                 m: None,
             },
         ])
+        .unwrap()
         .into();
 
-        let w_polygon = Polygon(vec![LineString(vec![
+        let w_polygon = Polygon::from_rings([LineString::from_coords([
             Coord {
                 x: 0.,
                 y: 0.,
@@ -795,11 +813,13 @@ mod tests {
                 z: None,
                 m: None,
             },
-        ])])
+        ])
+        .unwrap()])
+        .unwrap()
         .into();
 
-        let w_multilinestring = MultiLineString(vec![
-            LineString(vec![
+        let w_multilinestring = MultiLineString::from_line_strings([
+            LineString::from_coords([
                 Coord {
                     x: 10.,
                     y: 20.,
@@ -812,8 +832,9 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
-            LineString(vec![
+            ])
+            .unwrap(),
+            LineString::from_coords([
                 Coord {
                     x: 50.,
                     y: 60.,
@@ -826,28 +847,31 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
+            ])
+            .unwrap(),
         ])
+        .unwrap()
         .into();
 
-        let w_multipoint = MultiPoint(vec![
-            Point(Some(Coord {
+        let w_multipoint = MultiPoint::from_points([
+            Point::from_coord(Coord {
                 x: 10.,
                 y: 20.,
                 z: None,
                 m: None,
-            })),
-            Point(Some(Coord {
+            }),
+            Point::from_coord(Coord {
                 x: 30.,
                 y: 40.,
                 z: None,
                 m: None,
-            })),
+            }),
         ])
+        .unwrap()
         .into();
 
-        let w_multipolygon = MultiPolygon(vec![
-            Polygon(vec![LineString(vec![
+        let w_multipolygon = MultiPolygon::from_polygons([
+            Polygon::from_rings([LineString::from_coords([
                 Coord {
                     x: 0.,
                     y: 0.,
@@ -872,8 +896,10 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ])]),
-            Polygon(vec![LineString(vec![
+            ])
+            .unwrap()])
+            .unwrap(),
+            Polygon::from_rings([LineString::from_coords([
                 Coord {
                     x: 40.,
                     y: 40.,
@@ -898,11 +924,14 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ])]),
+            ])
+            .unwrap()])
+            .unwrap(),
         ])
+        .unwrap()
         .into();
 
-        let w_geometrycollection: Wkt = GeometryCollection(vec![
+        let w_geometrycollection: Wkt = GeometryCollection::from_geometries([
             w_point,
             w_multipoint,
             w_linestring,
@@ -910,6 +939,7 @@ mod tests {
             w_polygon,
             w_multipolygon,
         ])
+        .unwrap()
         .into();
 
         let g_point: geo_types::Point<f64> = (10., 20.).into();
