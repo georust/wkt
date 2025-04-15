@@ -292,7 +292,7 @@ macro_rules! line_string {
     (($($x: literal $y: literal),*)) => {
         LineString::from_coords(
             [$($crate::coord_xy!($x $y)),*]
-        )
+        ).unwrap()
     };
 }
 
@@ -308,7 +308,7 @@ macro_rules! line_string_z {
     (($($x: literal $y: literal $z:literal),*)) => {
         LineString::from_coords(
             [$($crate::coord_xyz!($x $y $z)),*]
-        )
+        ).unwrap()
     };
 }
 
@@ -324,7 +324,7 @@ macro_rules! line_string_m {
     (($($x: literal $y: literal $m:literal),*)) => {
         LineString::from_coords(
             [$($crate::coord_xym!($x $y $m)),*]
-        )
+        ).unwrap()
     };
 }
 
@@ -340,7 +340,7 @@ macro_rules! line_string_zm {
     (($($x: literal $y: literal $z: literal $m: literal),*)) => {
         LineString::from_coords(
             [$($crate::coord_xyzm!($x $y $z $m)),*]
-        )
+        ).unwrap()
     };
 }
 
@@ -356,7 +356,7 @@ macro_rules! polygon {
     (( $($line_string_tt: tt),* )) => {
         Polygon::from_rings([
            $($crate::line_string![$line_string_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -372,7 +372,7 @@ macro_rules! polygon_z {
     (( $($line_string_tt: tt),* )) => {
         Polygon::from_rings([
            $($crate::line_string_z![$line_string_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -388,7 +388,7 @@ macro_rules! polygon_m {
     (( $($line_string_tt: tt),* )) => {
         Polygon::from_rings([
            $($crate::line_string_m![$line_string_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -404,7 +404,7 @@ macro_rules! polygon_zm {
     (( $($line_string_tt: tt),* )) => {
         Polygon::from_rings([
            $($crate::line_string_zm![$line_string_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -537,7 +537,7 @@ macro_rules! multi_point {
     (($($tt: tt)*)) => {
         MultiPoint::from_points(
             $crate::point_vec!(@points [] $($tt)*)
-        )
+        ).unwrap()
     };
 }
 
@@ -553,7 +553,7 @@ macro_rules! multi_point_z {
     (($($tt: tt)*)) => {
         MultiPoint::from_points(
             $crate::point_vec_xyz!(@points [] $($tt)*)
-        )
+        ).unwrap()
     };
 }
 
@@ -569,7 +569,7 @@ macro_rules! multi_point_m {
     (($($tt: tt)*)) => {
         MultiPoint::from_points(
             $crate::point_vec_xym!(@points [] $($tt)*)
-        )
+        ).unwrap()
     };
 }
 
@@ -585,7 +585,7 @@ macro_rules! multi_point_zm {
     (($($tt: tt)*)) => {
         MultiPoint::from_points(
             $crate::point_vec_xyzm!(@points [] $($tt)*)
-        )
+        ).unwrap()
     };
 }
 
@@ -601,7 +601,7 @@ macro_rules! multi_line_string {
     (( $($line_string_tt: tt),* )) => {
         MultiLineString::from_line_strings(vec![
            $($crate::line_string![$line_string_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -617,7 +617,7 @@ macro_rules! multi_line_string_z {
     (( $($line_string_tt: tt),* )) => {
         MultiLineString::from_line_strings(vec![
            $($crate::line_string_z![$line_string_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -633,7 +633,7 @@ macro_rules! multi_line_string_m {
     (( $($line_string_tt: tt),* )) => {
         MultiLineString::from_line_strings(vec![
            $($crate::line_string_m![$line_string_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -649,7 +649,7 @@ macro_rules! multi_line_string_zm {
     (( $($line_string_tt: tt),* )) => {
         MultiLineString::from_line_strings(vec![
            $($crate::line_string_zm![$line_string_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -665,7 +665,7 @@ macro_rules! multi_polygon {
     (( $($polygon_tt: tt),* )) => {
         MultiPolygon::from_polygons(vec![
            $($crate::polygon![$polygon_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -681,7 +681,7 @@ macro_rules! multi_polygon_z {
     (( $($polygon_tt: tt),* )) => {
         MultiPolygon::from_polygons(vec![
            $($crate::polygon_z![$polygon_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -697,7 +697,7 @@ macro_rules! multi_polygon_m {
     (( $($polygon_tt: tt),* )) => {
         MultiPolygon::from_polygons(vec![
            $($crate::polygon_m![$polygon_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -713,7 +713,7 @@ macro_rules! multi_polygon_zm {
     (( $($polygon_tt: tt),* )) => {
         MultiPolygon::from_polygons(vec![
            $($crate::polygon_zm![$polygon_tt]),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -729,7 +729,7 @@ macro_rules! geometry_collection {
     (( $($el_type:tt $el_tt: tt),* )) => {
         GeometryCollection::from_geometries(vec![
            $($crate::wkt_internal!($el_type $el_tt).into()),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -745,7 +745,7 @@ macro_rules! geometry_collection_z {
     (( $($el_type:tt Z $el_tt: tt),* )) => {
         GeometryCollection::from_geometries(vec![
            $($crate::wkt_internal!($el_type Z $el_tt).into()),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -761,7 +761,7 @@ macro_rules! geometry_collection_m {
     (( $($el_type:tt M $el_tt: tt),* )) => {
         GeometryCollection::from_geometries(vec![
            $($crate::wkt_internal!($el_type M $el_tt).into()),*
-        ])
+        ]).unwrap()
     };
 }
 
@@ -777,7 +777,7 @@ macro_rules! geometry_collection_zm {
     (( $($el_type:tt ZM $el_tt: tt),* )) => {
         GeometryCollection::from_geometries(vec![
            $($crate::wkt_internal!($el_type ZM $el_tt).into()),*
-        ])
+        ]).unwrap()
     };
 }
 
