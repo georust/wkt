@@ -181,7 +181,7 @@ impl<T> Wkt<T>
 where
     T: WktNum,
 {
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         match self {
             Self::Point(g) => g.dimension(),

@@ -29,7 +29,7 @@ pub struct Coord<T: WktNum = f64> {
 }
 
 impl<T: WktNum> Coord<T> {
-    /// Return the dimension of this coord.
+    /// Return the [Dimension] of this coord.
     pub fn dimension(&self) -> Dimension {
         match (self.z.is_some(), self.m.is_some()) {
             (true, true) => Dimension::XYZM,

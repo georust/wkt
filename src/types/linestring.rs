@@ -14,6 +14,7 @@
 
 use geo_traits::LineStringTrait;
 
+use crate::error::Error;
 use crate::to_wkt::write_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
@@ -45,18 +46,30 @@ impl<T: WktNum> LineString<T> {
     /// This will infer the dimension from the first coordinate, and will not validate that all
     /// coordinates have the same dimension.
     ///
-    /// ## Panics
+    /// ## Errors
     ///
     /// If the input iterator is empty.
-    pub fn from_coords(coords: impl IntoIterator<Item = Coord<T>>) -> Self {
+    ///
+    /// To handle empty input iterators, consider calling `unwrap_or` on the result and defaulting
+    /// to an [empty][Self::empty] geometry with specified dimension.
+    pub fn from_coords(coords: impl IntoIterator<Item = Coord<T>>) -> Result<Self, Error> {
         let coords = coords.into_iter().collect::<Vec<_>>();
-        let dim = coords[0].dimension();
-        Self::new(coords, dim)
+        if coords.is_empty() {
+            Err(Error::UnknownDimension)
+        } else {
+            let dim = coords[0].dimension();
+            Ok(Self::new(coords, dim))
+        }
     }
 
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Access the coordinates of this LineString.
+    pub fn coords(&self) -> &[Coord<T>] {
+        &self.coords
     }
 
     /// Consume self and return the inner parts.
@@ -336,7 +349,8 @@ mod tests {
                 z: None,
                 m: None,
             },
-        ]);
+        ])
+        .unwrap();
 
         assert_eq!("LINESTRING(10.1 20.2,30.3 40.4)", format!("{}", linestring));
     }

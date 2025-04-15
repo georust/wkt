@@ -14,6 +14,7 @@
 
 use geo_traits::PolygonTrait;
 
+use crate::error::Error;
 use crate::to_wkt::write_polygon;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
@@ -45,18 +46,32 @@ impl<T: WktNum> Polygon<T> {
     /// This will infer the dimension from the first line string, and will not validate that all
     /// line strings have the same dimension.
     ///
-    /// ## Panics
+    /// ## Errors
     ///
     /// If the input iterator is empty.
-    pub fn from_rings(rings: impl IntoIterator<Item = LineString<T>>) -> Self {
+    ///
+    /// To handle empty input iterators, consider calling `unwrap_or` on the result and defaulting
+    /// to an [empty][Self::empty] geometry with specified dimension.
+    pub fn from_rings(rings: impl IntoIterator<Item = LineString<T>>) -> Result<Self, Error> {
         let rings = rings.into_iter().collect::<Vec<_>>();
-        let dim = rings[0].dimension();
-        Self::new(rings, dim)
+        if rings.is_empty() {
+            Err(Error::UnknownDimension)
+        } else {
+            let dim = rings[0].dimension();
+            Ok(Self::new(rings, dim))
+        }
     }
 
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Access the inner rings.
+    ///
+    /// The first ring is defined to be the exterior ring, and the rest are interior rings.
+    pub fn rings(&self) -> &[LineString<T>] {
+        &self.rings
     }
 
     /// Consume self and return the inner parts.
@@ -253,7 +268,8 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
+            ])
+            .unwrap(),
             LineString::from_coords([
                 Coord {
                     x: 5.,
@@ -279,8 +295,10 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
-        ]);
+            ])
+            .unwrap(),
+        ])
+        .unwrap();
 
         assert_eq!(
             "POLYGON((0 0,20 40,40 0,0 0),(5 5,20 30,30 5,5 5))",

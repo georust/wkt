@@ -14,6 +14,7 @@
 
 use geo_traits::MultiLineStringTrait;
 
+use crate::error::Error;
 use crate::to_wkt::write_multi_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
@@ -45,18 +46,32 @@ impl<T: WktNum> MultiLineString<T> {
     /// This will infer the dimension from the first line string, and will not validate that all
     /// line strings have the same dimension.
     ///
-    /// ## Panics
+    /// ## Errors
     ///
     /// If the input iterator is empty.
-    pub fn from_line_strings(line_strings: impl IntoIterator<Item = LineString<T>>) -> Self {
+    ///
+    /// To handle empty input iterators, consider calling `unwrap_or` on the result and defaulting
+    /// to an [empty][Self::empty] geometry with specified dimension.
+    pub fn from_line_strings(
+        line_strings: impl IntoIterator<Item = LineString<T>>,
+    ) -> Result<Self, Error> {
         let line_strings = line_strings.into_iter().collect::<Vec<_>>();
-        let dim = line_strings[0].dimension();
-        Self::new(line_strings, dim)
+        if line_strings.is_empty() {
+            Err(Error::UnknownDimension)
+        } else {
+            let dim = line_strings[0].dimension();
+            Ok(Self::new(line_strings, dim))
+        }
     }
 
-    /// Return the dimension of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Access the inner line strings.
+    pub fn line_strings(&self) -> &[LineString<T>] {
+        &self.line_strings
     }
 
     /// Consume self and return the inner parts.
@@ -233,7 +248,8 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
+            ])
+            .unwrap(),
             LineString::from_coords([
                 Coord {
                     x: 50.5,
@@ -247,8 +263,10 @@ mod tests {
                     z: None,
                     m: None,
                 },
-            ]),
-        ]);
+            ])
+            .unwrap(),
+        ])
+        .unwrap();
 
         assert_eq!(
             "MULTILINESTRING((10.1 20.2,30.3 40.4),(50.5 60.6,70.7 80.8))",

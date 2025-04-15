@@ -1,8 +1,13 @@
 use geo_types::CoordNum;
 
+use crate::to_wkt::{
+    write_geometry, write_geometry_collection, write_line, write_linestring,
+    write_multi_linestring, write_multi_point, write_multi_polygon, write_point, write_polygon,
+    write_rect, write_triangle, WriterWrapper,
+};
 use crate::types::{
-    Coord, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
-    Polygon,
+    Coord, Dimension, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon,
+    Point, Polygon,
 };
 use crate::{ToWkt, Wkt};
 
@@ -33,6 +38,11 @@ where
             geo_types::Geometry::Triangle(g) => g.to_wkt(),
         }
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_geometry(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -50,6 +60,11 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         Wkt::Point(g_point_to_w_point(self))
+    }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_point(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 
@@ -69,6 +84,11 @@ where
     fn to_wkt(&self) -> Wkt<T> {
         g_line_to_w_linestring(self).into()
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_line(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -86,6 +106,11 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_linestring_to_w_linestring(self).into()
+    }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_linestring(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 
@@ -105,6 +130,11 @@ where
     fn to_wkt(&self) -> Wkt<T> {
         g_polygon_to_w_polygon(self).into()
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_polygon(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -122,6 +152,11 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_mpoint_to_w_mpoint(self).into()
+    }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_multi_point(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 
@@ -142,6 +177,12 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_mline_to_w_mline(self).into()
+    }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_multi_linestring(&mut writer_wrapper, self)
+            .map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 
@@ -165,6 +206,12 @@ where
     fn to_wkt(&self) -> Wkt<T> {
         g_mpolygon_to_w_mpolygon(self).into()
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_multi_polygon(&mut writer_wrapper, self)
+            .map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -185,6 +232,12 @@ where
     fn to_wkt(&self) -> Wkt<T> {
         g_geocol_to_w_geocol(self).into()
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_geometry_collection(&mut writer_wrapper, self)
+            .map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -203,6 +256,11 @@ where
     fn to_wkt(&self) -> Wkt<T> {
         g_rect_to_w_polygon(self).into()
     }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_rect(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
+    }
 }
 
 /// # Examples
@@ -220,6 +278,11 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_triangle_to_w_polygon(self).into()
+    }
+
+    fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
+        let mut writer_wrapper = WriterWrapper::new(writer);
+        write_triangle(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
     }
 }
 
@@ -282,19 +345,14 @@ where
     T: CoordNum,
 {
     let w_coords = g_points_to_w_coords(g_coords);
-    LineString::from_coords(w_coords)
+    LineString::from_coords(w_coords).unwrap_or(LineString::empty(Dimension::XY))
 }
 
 fn g_lines_to_w_lines<T>(g_lines: &[geo_types::LineString<T>]) -> Vec<LineString<T>>
 where
     T: CoordNum,
 {
-    let mut w_lines = vec![];
-    for g_line in g_lines {
-        let geo_types::LineString(g_points) = g_line;
-        w_lines.push(g_points_to_w_linestring(g_points));
-    }
-    w_lines
+    g_lines.iter().map(g_linestring_to_w_linestring).collect()
 }
 
 fn g_triangle_to_w_polygon<T>(g_triangle: &geo_types::Triangle<T>) -> Polygon<T>
@@ -319,19 +377,21 @@ where
 {
     let outer_line = g_polygon.exterior();
     let inner_lines = g_polygon.interiors();
-    let mut poly_lines = vec![];
 
     // Outer
     let geo_types::LineString(outer_points) = outer_line;
-    if !outer_points.is_empty() {
-        poly_lines.push(g_points_to_w_linestring(outer_points));
-    }
+    let poly_lines = std::iter::once_with(|| {
+        if !outer_points.is_empty() {
+            Some(g_points_to_w_linestring(outer_points))
+        } else {
+            None
+        }
+    })
+    .flatten()
+    .chain(inner_lines.iter().map(g_linestring_to_w_linestring))
+    .collect::<Vec<_>>();
 
-    // Inner
-    let inner = g_lines_to_w_lines(inner_lines);
-    poly_lines.extend(inner);
-
-    Polygon::from_rings(poly_lines)
+    Polygon::from_rings(poly_lines).unwrap_or(Polygon::empty(Dimension::XY))
 }
 
 fn g_mpoint_to_w_mpoint<T>(g_mpoint: &geo_types::MultiPoint<T>) -> MultiPoint<T>
@@ -340,7 +400,7 @@ where
 {
     let geo_types::MultiPoint(g_points) = g_mpoint;
     let w_points = g_points_to_w_points(g_points);
-    MultiPoint::from_points(w_points)
+    MultiPoint::from_points(w_points).unwrap_or(MultiPoint::empty(Dimension::XY))
 }
 
 fn g_mline_to_w_mline<T>(g_mline: &geo_types::MultiLineString<T>) -> MultiLineString<T>
@@ -349,18 +409,14 @@ where
 {
     let geo_types::MultiLineString(g_lines) = g_mline;
     let w_lines = g_lines_to_w_lines(g_lines);
-    MultiLineString::from_line_strings(w_lines)
+    MultiLineString::from_line_strings(w_lines).unwrap_or(MultiLineString::empty(Dimension::XY))
 }
 
 fn g_polygons_to_w_polygons<T>(g_polygons: &[geo_types::Polygon<T>]) -> Vec<Polygon<T>>
 where
     T: CoordNum,
 {
-    let mut w_polygons = vec![];
-    for g_polygon in g_polygons {
-        w_polygons.push(g_polygon_to_w_polygon(g_polygon));
-    }
-    w_polygons
+    g_polygons.iter().map(g_polygon_to_w_polygon).collect()
 }
 
 fn g_mpolygon_to_w_mpolygon<T>(g_mpolygon: &geo_types::MultiPolygon<T>) -> MultiPolygon<T>
@@ -369,7 +425,7 @@ where
 {
     let geo_types::MultiPolygon(g_polygons) = g_mpolygon;
     let w_polygons = g_polygons_to_w_polygons(g_polygons);
-    MultiPolygon::from_polygons(w_polygons)
+    MultiPolygon::from_polygons(w_polygons).unwrap_or(MultiPolygon::empty(Dimension::XY))
 }
 
 fn g_geocol_to_w_geocol<T>(g_geocol: &geo_types::GeometryCollection<T>) -> GeometryCollection<T>
@@ -377,12 +433,8 @@ where
     T: CoordNum,
 {
     let geo_types::GeometryCollection(g_geoms) = g_geocol;
-    let mut w_geoms = vec![];
-    for g_geom in g_geoms {
-        let w_geom = g_geom_to_w_geom(g_geom);
-        w_geoms.push(w_geom);
-    }
-    GeometryCollection::from_geometries(w_geoms)
+    let w_geoms = g_geoms.iter().map(g_geom_to_w_geom).collect::<Vec<_>>();
+    GeometryCollection::from_geometries(w_geoms).unwrap_or(GeometryCollection::empty(Dimension::XY))
 }
 
 fn g_geom_to_w_geom<T>(g_geom: &geo_types::Geometry<T>) -> Wkt<T>
