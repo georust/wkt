@@ -14,7 +14,6 @@
 
 use geo_traits::MultiPolygonTrait;
 
-use crate::error::Error;
 use crate::to_wkt::write_multi_polygon;
 use crate::tokenizer::PeekableTokens;
 use crate::types::polygon::Polygon;
@@ -46,19 +45,17 @@ impl<T: WktNum> MultiPolygon<T> {
     /// This will infer the dimension from the first polygon, and will not validate that all
     /// polygons have the same dimension.
     ///
-    /// ## Errors
-    ///
-    /// If the input iterator is empty.
+    /// Returns `None` if the input iterator is empty.
     ///
     /// To handle empty input iterators, consider calling `unwrap_or` on the result and defaulting
     /// to an [empty][Self::empty] geometry with specified dimension.
-    pub fn from_polygons(polygons: impl IntoIterator<Item = Polygon<T>>) -> Result<Self, Error> {
+    pub fn from_polygons(polygons: impl IntoIterator<Item = Polygon<T>>) -> Option<Self> {
         let polygons = polygons.into_iter().collect::<Vec<_>>();
         if polygons.is_empty() {
-            Err(Error::UnknownDimension)
+            None
         } else {
             let dim = polygons[0].dimension();
-            Ok(Self::new(polygons, dim))
+            Some(Self::new(polygons, dim))
         }
     }
 

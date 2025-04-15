@@ -14,7 +14,6 @@
 
 use geo_traits::MultiLineStringTrait;
 
-use crate::error::Error;
 use crate::to_wkt::write_multi_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
@@ -46,21 +45,19 @@ impl<T: WktNum> MultiLineString<T> {
     /// This will infer the dimension from the first line string, and will not validate that all
     /// line strings have the same dimension.
     ///
-    /// ## Errors
-    ///
-    /// If the input iterator is empty.
+    /// Returns `None` if the input iterator is empty.
     ///
     /// To handle empty input iterators, consider calling `unwrap_or` on the result and defaulting
     /// to an [empty][Self::empty] geometry with specified dimension.
     pub fn from_line_strings(
         line_strings: impl IntoIterator<Item = LineString<T>>,
-    ) -> Result<Self, Error> {
+    ) -> Option<Self> {
         let line_strings = line_strings.into_iter().collect::<Vec<_>>();
         if line_strings.is_empty() {
-            Err(Error::UnknownDimension)
+            None
         } else {
             let dim = line_strings[0].dimension();
-            Ok(Self::new(line_strings, dim))
+            Some(Self::new(line_strings, dim))
         }
     }
 

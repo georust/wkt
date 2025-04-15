@@ -14,7 +14,6 @@
 
 use geo_traits::MultiPointTrait;
 
-use crate::error::Error;
 use crate::to_wkt::write_multi_point;
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
@@ -46,19 +45,17 @@ impl<T: WktNum> MultiPoint<T> {
     /// This will infer the dimension from the first point, and will not validate that all
     /// points have the same dimension.
     ///
-    /// ## Errors
-    ///
-    /// If the input iterator is empty.
+    /// Returns `None` if the input iterator is empty.
     ///
     /// To handle empty input iterators, consider calling `unwrap_or` on the result and defaulting
     /// to an [empty][Self::empty] geometry with specified dimension.
-    pub fn from_points(points: impl IntoIterator<Item = Point<T>>) -> Result<Self, Error> {
+    pub fn from_points(points: impl IntoIterator<Item = Point<T>>) -> Option<Self> {
         let points = points.into_iter().collect::<Vec<_>>();
         if points.is_empty() {
-            Err(Error::UnknownDimension)
+            None
         } else {
             let dim = points[0].dimension();
-            Ok(Self::new(points, dim))
+            Some(Self::new(points, dim))
         }
     }
 

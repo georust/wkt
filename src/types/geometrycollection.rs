@@ -14,7 +14,6 @@
 
 use geo_traits::GeometryCollectionTrait;
 
-use crate::error::Error;
 use crate::to_wkt::write_geometry_collection;
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
@@ -51,13 +50,13 @@ impl<T: WktNum> GeometryCollection<T> {
     ///
     /// To handle empty input iterators, consider calling `unwrap_or` on the result and defaulting
     /// to an [empty][Self::empty] geometry with specified dimension.
-    pub fn from_geometries(geoms: impl IntoIterator<Item = Wkt<T>>) -> Result<Self, Error> {
+    pub fn from_geometries(geoms: impl IntoIterator<Item = Wkt<T>>) -> Option<Self> {
         let geoms = geoms.into_iter().collect::<Vec<_>>();
         if geoms.is_empty() {
-            Err(Error::UnknownDimension)
+            None
         } else {
             let dim = geoms[0].dimension();
-            Ok(Self::new(geoms, dim))
+            Some(Self::new(geoms, dim))
         }
     }
 
