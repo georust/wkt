@@ -6,6 +6,7 @@
 
 ## 0.13.0 - unreleased
 
+* New `wkt!` macro for compile time checking of static WKT text. (#137)
 * BREAKING: Store dimension in wkt types (#135)
   * This removes the publicly-accessible tuple member for each struct in `wkt::types`. Use public constructors to construct new objects and new public accessors to access internal data.
   * WKT dimension is now always correctly inferred from the WKT string, even for empty geometries.
