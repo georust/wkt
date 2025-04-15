@@ -536,7 +536,7 @@ macro_rules! multi_point {
     };
     (($($tt: tt)*)) => {
         MultiPoint::from_points(
-            point_vec!(@points [] $($tt)*)
+            $crate::point_vec!(@points [] $($tt)*)
         )
     };
 }
@@ -552,7 +552,7 @@ macro_rules! multi_point_z {
     };
     (($($tt: tt)*)) => {
         MultiPoint::from_points(
-            point_vec_xyz!(@points [] $($tt)*)
+            $crate::point_vec_xyz!(@points [] $($tt)*)
         )
     };
 }
@@ -568,7 +568,7 @@ macro_rules! multi_point_m {
     };
     (($($tt: tt)*)) => {
         MultiPoint::from_points(
-            point_vec_xym!(@points [] $($tt)*)
+            $crate::point_vec_xym!(@points [] $($tt)*)
         )
     };
 }
@@ -584,7 +584,7 @@ macro_rules! multi_point_zm {
     };
     (($($tt: tt)*)) => {
         MultiPoint::from_points(
-            point_vec_xyzm!(@points [] $($tt)*)
+            $crate::point_vec_xyzm!(@points [] $($tt)*)
         )
     };
 }
