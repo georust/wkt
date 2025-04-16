@@ -784,6 +784,7 @@ macro_rules! geometry_collection_zm {
 #[cfg(test)]
 mod test {
     use crate::types::*;
+    use crate::Wkt;
 
     #[test]
     fn point() {
@@ -910,23 +911,16 @@ mod test {
         assert_eq!(polygon.rings[0].coords[0], coord_xy! { 1.0 2.0 });
         assert_eq!(polygon.dim, Dimension::XY);
 
-        // let polygon = wkt! { POLYGON((1.0 2.0,3.0 4.0)) };
-        // // Note: an extra coord is added to close the linestring
-        // assert_eq!(polygon.exterior().0.len(), 3);
-        // assert_eq!(polygon.exterior().0[0], coord! { x: 1.0, y: 2.0 });
-        // assert_eq!(polygon.exterior().0[1], coord! { x: 3.0, y: 4.0 });
-        // assert_eq!(polygon.exterior().0[2], coord! { x: 1.0, y: 2.0 });
-
         let polygon = wkt! { POLYGON((1.0 2.0), (1.1 2.1)) };
         assert_eq!(polygon.rings[0].coords.len(), 1);
         assert_eq!(polygon.rings[1].coords.len(), 1);
         assert_eq!(polygon.rings[0].coords[0], coord_xy! { 1.0 2.0 });
         assert_eq!(polygon.rings[1].coords[0], coord_xy! { 1.1 2.1 });
 
-        // let polygon = wkt! { POLYGON((1.0 2.0,3.0 4.0), (1.1 2.1,3.1 4.1), (1.2 2.2,3.2 4.2)) };
-        // assert_eq!(polygon.exterior().0.len(), 3);
-        // assert_eq!(polygon.interiors().len(), 2);
-        // assert_eq!(polygon.interiors()[1][1], coord! { x: 3.2, y: 4.2 });
+        let polygon = wkt! { POLYGON((1.0 2.0,3.0 4.0), (1.1 2.1,3.1 4.1), (1.2 2.2,3.2 4.2)) };
+        assert_eq!(polygon.rings.len(), 3);
+        assert_eq!(polygon.rings[0].coords.len(), 2);
+        assert_eq!(polygon.rings[2].coords[1], coord_xy! { 3.2 4.2 });
     }
 
     #[test]
@@ -1215,14 +1209,11 @@ mod test {
         assert_eq!(geometry_collection.geoms.len(), 3);
         assert_eq!(geometry_collection.dim, Dimension::XY);
 
-        // let line_string = match &geometry_collection[1] {
-        //     Geometry::LineString(line_string) => line_string,
-        //     _ => panic!(
-        //         "unexpected geometry: {geometry:?}",
-        //         geometry = geometry_collection[1]
-        //     ),
-        // };
-        // assert_eq!(line_string.0[1], coord! {x: 20.0, y: 20.0 });
+        let line_string = match &geometry_collection.geometries()[1] {
+            Wkt::LineString(line_string) => line_string,
+            _ => unreachable!(),
+        };
+        assert_eq!(line_string.coords[1], coord_xy! { 20.0 20.0 });
 
         let geometry_collection: GeometryCollection = wkt! {
             GEOMETRYCOLLECTION Z (
