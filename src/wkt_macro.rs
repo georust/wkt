@@ -10,7 +10,7 @@ use crate::types::Dimension;
 /// - Creates a concrete type. So `wkt! { POINT(1.0 2.0) }` will create a
 ///   [`Point`][crate::types::Point], not a [`Wkt`][crate::Wkt].
 /// - Empty geometries, including `POINT EMPTY` **are** supported.
-/// - All dimensions, including `Z`, `M`, and `ZM` are supported. You must
+/// - All dimensions, including `Z`, `M`, and `ZM` are supported.
 /// - Extended geometry types like `Curve`, `PolyhedralSurface`, or `CircularString` are **not**
 ///   supported.
 ///
