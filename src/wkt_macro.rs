@@ -1,5 +1,3 @@
-use crate::types::Dimension;
-
 /// Creates a geometry from a [WKT] literal.
 ///
 /// This is evaluated at compile time, so you don't need to worry about runtime errors from invalid
@@ -314,26 +312,21 @@ macro_rules! geometry_collection {
     };
     ($dim: ident ( $($el_type:tt $dim2: ident $el_tt: tt),* )) => {
         $crate::types::GeometryCollection::from_geometries(vec![
-           $({
-               const _: () = assert!(
-                   $crate::wkt_macro::equal_dims($crate::dim!($dim), $crate::dim!($dim2)),
-                   concat!("Cannot add member with ", stringify!($dim2), " dimension to GEOMETRYCOLLECTION ", stringify!($dim))
-               );
-               $crate::wkt!($el_type $dim $el_tt).into()
+            $({
+                const _: () = assert!(
+                    matches!(
+                        ($crate::dim!($dim), $crate::dim!($dim2)),
+                        ($crate::types::Dimension::XY, $crate::types::Dimension::XY)
+                            | ($crate::types::Dimension::XYZ, $crate::types::Dimension::XYZ)
+                            | ($crate::types::Dimension::XYM, $crate::types::Dimension::XYM)
+                            | ($crate::types::Dimension::XYZM, $crate::types::Dimension::XYZM)
+                    ),
+                    concat!("Cannot add member with ", stringify!($dim2), " dimension to GEOMETRYCOLLECTION ", stringify!($dim))
+                );
+                $crate::wkt!($el_type $dim $el_tt).into()
            }),*
         ]).unwrap()
     };
-}
-
-#[allow(unused)]
-const fn equal_dims(a: Dimension, b: Dimension) -> bool {
-    matches!(
-        (a, b),
-        (Dimension::XY, Dimension::XY)
-            | (Dimension::XYZ, Dimension::XYZ)
-            | (Dimension::XYM, Dimension::XYM)
-            | (Dimension::XYZM, Dimension::XYZM)
-    )
 }
 
 #[cfg(test)]
