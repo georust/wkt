@@ -128,7 +128,7 @@ macro_rules! point {
         $crate::types::Point::empty($crate::types::Dimension::XY)
     };
     ($dim: ident EMPTY) => {
-        $crate::types::Point::empty(dim!($dim))
+        $crate::types::Point::empty($crate::dim!($dim))
     };
 }
 
@@ -145,7 +145,7 @@ macro_rules! line_string {
        $crate::types::LineString::empty($crate::types::Dimension::XY)
     };
     ($dim: ident EMPTY) => {
-        $crate::types::LineString::empty(dim!($dim))
+        $crate::types::LineString::empty($crate::dim!($dim))
     };
     (($($($scalar: literal)+),*)) => {
         $crate::types::LineString::from_coords(
@@ -172,7 +172,7 @@ macro_rules! polygon {
         $crate::types::Polygon::empty($crate::types::Dimension::XY)
     };
     ($dim: ident EMPTY) => {
-        $crate::types::Polygon::empty(dim!($dim))
+        $crate::types::Polygon::empty($crate::dim!($dim))
     };
     (( $($line_string_tt: tt),* )) => {
         $crate::types::Polygon::from_rings([
@@ -229,7 +229,7 @@ macro_rules! multi_point {
        $crate::types::MultiPoint::empty($crate::types::Dimension::XY)
     };
     ($dim: ident EMPTY) => {
-        $crate::types::MultiPoint::empty(dim!($dim))
+        $crate::types::MultiPoint::empty($crate::dim!($dim))
     };
     ($($dim: ident)? ($($tt: tt)*)) => {
         $crate::types::MultiPoint::from_points(
@@ -251,7 +251,7 @@ macro_rules! multi_line_string {
         $crate::types::MultiLineString::empty($crate::types::Dimension::XY)
     };
     ($dim: ident EMPTY) => {
-        $crate::types::MultiLineString::empty(dim!($dim))
+        $crate::types::MultiLineString::empty($crate::dim!($dim))
     };
     (( $($line_string_tt: tt),* )) => {
         $crate::types::MultiLineString::from_line_strings(vec![
@@ -275,10 +275,10 @@ macro_rules! multi_polygon {
         compile_error!(concat!("use `MULTIPOLYGON ", stringify!($dim), " EMPTY` for a MultiPolygon with no coordinates"))
     };
     (EMPTY) => {
-        $crate::types::MultiPolygon::empty(Dimension::XY)
+        $crate::types::MultiPolygon::empty($crate::types::Dimension::XY)
     };
     ($dim: ident EMPTY) => {
-        $crate::types::MultiPolygon::empty(dim!($dim))
+        $crate::types::MultiPolygon::empty($crate::dim!($dim))
     };
     (( $($polygon_tt: tt),* )) => {
         $crate::types::MultiPolygon::from_polygons(vec![
@@ -296,10 +296,10 @@ macro_rules! multi_polygon {
 #[doc(hidden)]
 macro_rules! geometry_collection {
     (EMPTY) => {
-        $crate::types::GeometryCollection::empty(Dimension::XY)
+        $crate::types::GeometryCollection::empty($crate::types::Dimension::XY)
     };
     ($dim: ident EMPTY) => {
-        $crate::types::GeometryCollection::empty(dim!($dim))
+        $crate::types::GeometryCollection::empty($crate::dim!($dim))
     };
     (()) => {
         compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
@@ -316,7 +316,7 @@ macro_rules! geometry_collection {
         $crate::types::GeometryCollection::from_geometries(vec![
            $({
                const _: () = assert!(
-                   $crate::wkt_macro::equal_dims(dim!($dim), dim!($dim2)),
+                   $crate::wkt_macro::equal_dims($crate::dim!($dim), $crate::dim!($dim2)),
                    concat!("Cannot add member with ", stringify!($dim2), " dimension to GEOMETRYCOLLECTION ", stringify!($dim))
                );
                $crate::wkt!($el_type $dim $el_tt).into()
