@@ -4,7 +4,7 @@
 
 * Your change here.
 
-## 0.13.0 - unreleased
+## 0.13.0 - 2025-04-24
 
 * New `wkt!` macro for compile time checking of static WKT text. (#137)
 * BREAKING: Store dimension in wkt types (#135)
