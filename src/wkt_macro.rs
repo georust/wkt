@@ -8,7 +8,7 @@
 /// - Creates a concrete type. So `wkt! { POINT(1.0 2.0) }` will create a
 ///   [`Point`][crate::types::Point], not a [`Wkt`][crate::Wkt].
 /// - Empty geometries, including `POINT EMPTY` **are** supported.
-/// - All dimensions, including `Z`, `M`, and `ZM` are supported. You must
+/// - All dimensions, including `Z`, `M`, and `ZM` are supported.
 /// - Extended geometry types like `Curve`, `PolyhedralSurface`, or `CircularString` are **not**
 ///   supported.
 ///
@@ -42,241 +42,91 @@
 /// [WKT]: https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
 #[macro_export]
 macro_rules! wkt {
-    // Hide distracting implementation details from the generated rustdoc.
-    ($($wkt:tt)+) => {
-        {
-            use $crate::types::*;
-            $crate::wkt_internal!($($wkt)+)
-        }
+    (POINT $($tt: tt)+) => {
+        $crate::point!($($tt)+)
+    };
+    (LINESTRING $($tt: tt)+) => {
+        $crate::line_string!($($tt)+)
+    };
+    (POLYGON $($tt:tt)+) => {
+       $crate::polygon!($($tt)+)
+    };
+    (MULTIPOINT $($tt: tt)+) => {
+        $crate::multi_point!($($tt)+)
+    };
+    (MULTILINESTRING $($tt: tt)+) => {
+        $crate::multi_line_string!($($tt)+)
+    };
+    (MULTIPOLYGON $($tt: tt)+) => {
+        $crate::multi_polygon!($($tt)+)
+    };
+    (GEOMETRYCOLLECTION $($tt: tt)+) => {
+        $crate::geometry_collection!($($tt)+)
     };
 }
 
 #[macro_export(local_inner_macros)]
 #[doc(hidden)]
-macro_rules! wkt_internal {
-    (POINT $tt: tt) => {
-        point!($tt)
+macro_rules! dim {
+    (Z) => {
+        $crate::types::Dimension::XYZ
     };
-    (POINT Z $tt: tt) => {
-        point_z!($tt)
+    (M) => {
+        $crate::types::Dimension::XYM
     };
-    (POINT M $tt: tt) => {
-        point_m!($tt)
-    };
-    (POINT ZM $tt: tt) => {
-        point_zm!($tt)
-    };
-    (LINESTRING $tt: tt) => {
-        line_string!($tt)
-    };
-    (LINESTRING Z $tt: tt) => {
-        line_string_z!($tt)
-    };
-    (LINESTRING M $tt: tt) => {
-        line_string_m!($tt)
-    };
-    (LINESTRING ZM $tt: tt) => {
-        line_string_zm!($tt)
-    };
-    (POLYGON $tt:tt) => {
-        polygon!($tt)
-    };
-    (POLYGON Z $tt:tt) => {
-        polygon_z!($tt)
-    };
-    (POLYGON M $tt:tt) => {
-        polygon_m!($tt)
-    };
-    (POLYGON ZM $tt:tt) => {
-        polygon_zm!($tt)
-    };
-    (MULTIPOINT $tt: tt) => {
-        multi_point!($tt)
-    };
-    (MULTIPOINT Z $tt: tt) => {
-        multi_point_z!($tt)
-    };
-    (MULTIPOINT M $tt: tt) => {
-        multi_point_m!($tt)
-    };
-    (MULTIPOINT ZM $tt: tt) => {
-        multi_point_zm!($tt)
-    };
-    (MULTILINESTRING $tt: tt) => {
-        multi_line_string!($tt)
-    };
-    (MULTILINESTRING Z $tt: tt) => {
-        multi_line_string_z!($tt)
-    };
-    (MULTILINESTRING M $tt: tt) => {
-        multi_line_string_m!($tt)
-    };
-    (MULTILINESTRING ZM $tt: tt) => {
-        multi_line_string_zm!($tt)
-    };
-    (MULTIPOLYGON $tt: tt) => {
-        multi_polygon!($tt)
-    };
-    (MULTIPOLYGON Z $tt: tt) => {
-        multi_polygon_z!($tt)
-    };
-    (MULTIPOLYGON M $tt: tt) => {
-        multi_polygon_m!($tt)
-    };
-    (MULTIPOLYGON ZM $tt: tt) => {
-        multi_polygon_zm!($tt)
-    };
-    (GEOMETRYCOLLECTION $tt: tt) => {
-        geometry_collection!($tt)
-    };
-    (GEOMETRYCOLLECTION Z $tt: tt) => {
-        geometry_collection_z!($tt)
-    };
-    (GEOMETRYCOLLECTION M $tt: tt) => {
-        geometry_collection_m!($tt)
-    };
-    (GEOMETRYCOLLECTION ZM $tt: tt) => {
-        geometry_collection_zm!($tt)
+    (ZM) => {
+        $crate::types::Dimension::XYZM
     };
 }
 
 #[macro_export]
 #[doc(hidden)]
-macro_rules! coord_xy {
+macro_rules! coord {
     ($x: literal $y: literal) => {
-        Coord {
+        $crate::types::Coord {
             x: $x,
             y: $y,
             z: None,
             m: None,
         }
     };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! coord_xyz {
-    ($x: literal $y: literal $z: literal) => {
-        Coord {
+    (Z $x: literal $y: literal $z: literal) => {
+        $crate::types::Coord {
             x: $x,
             y: $y,
             z: Some($z),
             m: None,
         }
     };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! coord_xym {
-    ($x: literal $y: literal $m: literal) => {
-        Coord {
+    (M $x: literal $y: literal $m: literal) => {
+        $crate::types::Coord {
             x: $x,
             y: $y,
             z: None,
             m: Some($m),
         }
     };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! coord_xyzm {
-    ($x: literal $y: literal $z: literal $m: literal) => {
-        Coord {
+    (ZM $x: literal $y: literal $z: literal $m: literal) => {
+        $crate::types::Coord {
             x: $x,
             y: $y,
             z: Some($z),
             m: Some($m),
         }
-    };
-}
-
-#[macro_export(local_inner_macros)]
-#[doc(hidden)]
-macro_rules! point_el_xy {
-    (EMPTY) => {
-        Point::empty(Dimension::XY)
-    };
-    ($x: literal $y: literal) => {
-        Point::from_coord($crate::coord_xy!($x $y))
-    };
-}
-
-#[macro_export(local_inner_macros)]
-#[doc(hidden)]
-macro_rules! point_el_xyz {
-    (EMPTY) => {
-        Point::empty(Dimension::XYZ)
-    };
-    ($x: literal $y: literal $z:literal) => {
-        Point::from_coord($crate::coord_xyz!($x $y $z))
-    };
-}
-
-#[macro_export(local_inner_macros)]
-#[doc(hidden)]
-macro_rules! point_el_xym {
-    (EMPTY) => {
-        Point::empty(Dimension::XYM)
-    };
-    ($x: literal $y: literal $m:literal) => {
-        Point::from_coord($crate::coord_xym!($x $y $m))
-    };
-}
-
-#[macro_export(local_inner_macros)]
-#[doc(hidden)]
-macro_rules! point_el_xyzm {
-    (EMPTY) => {
-        Point::empty(Dimension::XYZM)
-    };
-    ($x: literal $y: literal $z:literal $m:literal) => {
-        Point::from_coord($crate::coord_xyzm!($x $y $z $m))
     };
 }
 
 #[macro_export(local_inner_macros)]
 #[doc(hidden)]
 macro_rules! point {
-    (($x: literal $y: literal)) => {
-        Point::from_coord($crate::coord_xy!($x $y))
+    ($($dim: ident)? ($($scalar: literal)+)) => {
+        $crate::types::Point::from_coord($crate::coord!($($dim)? $($scalar)+))
     };
     (EMPTY) => {
-        Point::empty(Dimension::XY)
+        $crate::types::Point::empty($crate::types::Dimension::XY)
     };
-}
-
-#[macro_export(local_inner_macros)]
-#[doc(hidden)]
-macro_rules! point_z {
-    (($x: literal $y: literal $z: literal)) => {
-        Point::from_coord($crate::coord_xyz!($x $y $z))
-    };
-    (EMPTY) => {
-        Point::empty(Dimension::XYZ)
-    };
-}
-
-#[macro_export(local_inner_macros)]
-#[doc(hidden)]
-macro_rules! point_m {
-    (($x: literal $y: literal $m: literal)) => {
-        Point::from_coord($crate::coord_xym!($x $y $m))
-    };
-    (EMPTY) => {
-        Point::empty(Dimension::XYM)
-    };
-}
-
-#[macro_export(local_inner_macros)]
-#[doc(hidden)]
-macro_rules! point_zm {
-    (($x: literal $y: literal $z: literal $m: literal)) => {
-        Point::from_coord($crate::coord_xyzm!($x $y $z $m))
-    };
-    (EMPTY) => {
-        Point::empty(Dimension::XYZM)
+    ($dim: ident EMPTY) => {
+        $crate::types::Point::empty($crate::dim!($dim))
     };
 }
 
@@ -286,60 +136,23 @@ macro_rules! line_string {
     (()) => {
         compile_error!("use `LINESTRING EMPTY` for a LineString with no coordinates")
     };
-    (EMPTY) => {
-        LineString::empty(Dimension::XY)
+    ($dim: ident ()) => {
+        compile_error!(concat!("use `LINESTRING ", stringify!($dim), " EMPTY` for a Polygon with no coordinates"))
     };
-    (($($x: literal $y: literal),*)) => {
-        LineString::from_coords(
-            [$($crate::coord_xy!($x $y)),*]
+    (EMPTY) => {
+       $crate::types::LineString::empty($crate::types::Dimension::XY)
+    };
+    ($dim: ident EMPTY) => {
+        $crate::types::LineString::empty($crate::dim!($dim))
+    };
+    (($($($scalar: literal)+),*)) => {
+        $crate::types::LineString::from_coords(
+            [$($crate::coord!($($scalar)+)),*]
         ).unwrap()
     };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! line_string_z {
-    (()) => {
-        compile_error!("use `LINESTRING Z EMPTY` for a LineString with no coordinates")
-    };
-    (EMPTY) => {
-        LineString::empty(Dimension::XYZ)
-    };
-    (($($x: literal $y: literal $z:literal),*)) => {
-        LineString::from_coords(
-            [$($crate::coord_xyz!($x $y $z)),*]
-        ).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! line_string_m {
-    (()) => {
-        compile_error!("use `LINESTRING M EMPTY` for a LineString with no coordinates")
-    };
-    (EMPTY) => {
-        LineString::empty(Dimension::XYM)
-    };
-    (($($x: literal $y: literal $m:literal),*)) => {
-        LineString::from_coords(
-            [$($crate::coord_xym!($x $y $m)),*]
-        ).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! line_string_zm {
-    (()) => {
-        compile_error!("use `LINESTRING ZM EMPTY` for a LineString with no coordinates")
-    };
-    (EMPTY) => {
-        LineString::empty(Dimension::XYZM)
-    };
-    (($($x: literal $y: literal $z: literal $m: literal),*)) => {
-        LineString::from_coords(
-            [$($crate::coord_xyzm!($x $y $z $m)),*]
+    ($dim: ident ($($($scalar: literal)+),*)) => {
+        $crate::types::LineString::from_coords(
+            [$($crate::coord!($dim $($scalar)+)),*]
         ).unwrap()
     };
 }
@@ -350,60 +163,23 @@ macro_rules! polygon {
     (()) => {
         compile_error!("use `POLYGON EMPTY` for a Polygon with no coordinates")
     };
+    ($dim: ident ()) => {
+        compile_error!(concat!("use `POLYGON ", stringify!($dim), " EMPTY` for a Polygon with no coordinates"))
+    };
     (EMPTY) => {
-        Polygon::empty(Dimension::XY)
+        $crate::types::Polygon::empty($crate::types::Dimension::XY)
+    };
+    ($dim: ident EMPTY) => {
+        $crate::types::Polygon::empty($crate::dim!($dim))
     };
     (( $($line_string_tt: tt),* )) => {
-        Polygon::from_rings([
+        $crate::types::Polygon::from_rings([
            $($crate::line_string![$line_string_tt]),*
         ]).unwrap()
     };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! polygon_z {
-    (()) => {
-        compile_error!("use `POLYGON Z EMPTY` for a Polygon with no coordinates")
-    };
-    (EMPTY) => {
-        Polygon::empty(Dimension::XYZ)
-    };
-    (( $($line_string_tt: tt),* )) => {
-        Polygon::from_rings([
-           $($crate::line_string_z![$line_string_tt]),*
-        ]).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! polygon_m {
-    (()) => {
-        compile_error!("use `POLYGON M EMPTY` for a Polygon with no coordinates")
-    };
-    (EMPTY) => {
-        Polygon::empty(Dimension::XYM)
-    };
-    (( $($line_string_tt: tt),* )) => {
-        Polygon::from_rings([
-           $($crate::line_string_m![$line_string_tt]),*
-        ]).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! polygon_zm {
-    (()) => {
-        compile_error!("use `POLYGON ZM EMPTY` for a Polygon with no coordinates")
-    };
-    (EMPTY) => {
-        Polygon::empty(Dimension::XYZM)
-    };
-    (( $($line_string_tt: tt),* )) => {
-        Polygon::from_rings([
-           $($crate::line_string_zm![$line_string_tt]),*
+    ($dim: ident ( $($line_string_tt: tt),* )) => {
+        $crate::types::Polygon::from_rings([
+           $($crate::line_string![$dim $line_string_tt]),*
         ]).unwrap()
     };
 }
@@ -412,116 +188,29 @@ macro_rules! polygon_zm {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! point_vec {
-    (@points [$($el:expr),*]) => {
+    ($($dim: ident)? @points [$($el:expr),*]) => {
         // done
         vec![$($el),*]
     };
-    (@points [$el:expr]) => {
+    ($($dim: ident)? @points [$el:expr]) => {
         // done
         vec![$el]
     };
 
     // Next element is an expression followed by comma.
-    (@points [$($el:expr,)*] EMPTY, $($rest:tt)*) => {
-        $crate::point_vec!(@points [$($el,)* $crate::point_el_xy!(EMPTY),] $($rest)*)
+    ($($dim: ident)? @points [$($el:expr,)*] EMPTY, $($rest:tt)*) => {
+        $crate::point_vec!($($dim)? @points [$($el,)* $crate::wkt!(POINT $($dim)? EMPTY),] $($rest)*)
     };
     // Next element is an expression followed by comma.
-    (@points [$($el:expr,)*] $x:literal $y:literal, $($rest:tt)*) => {
-        $crate::point_vec!(@points [$($el,)* $crate::point_el_xy!($x $y),] $($rest)*)
+    ($($dim: ident)? @points [$($el:expr,)*] $($scalar:literal)+, $($rest:tt)*) => {
+        $crate::point_vec!($($dim)? @points [$($el,)* $crate::wkt!(POINT $($dim)? ($($scalar)+)),] $($rest)*)
     };
 
-    (@points [$($el:expr,)*] EMPTY) => {
-        $crate::point_vec!(@points [$($el,)* $crate::point_el_xy!(EMPTY)])
+    ($($dim: ident)? @points [$($el:expr,)*] EMPTY) => {
+        $crate::point_vec!($($dim)? @points [$($el,)* $crate::wkt!(POINT $($dim)? EMPTY)])
     };
-    (@points [$($el:expr,)*] $x: literal $y:literal) => {
-        $crate::point_vec!(@points [$($el,)* $crate::point_el_xy!($x $y)])
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! point_vec_xyz {
-    (@points [$($el:expr),*]) => {
-        // done
-        vec![$($el),*]
-    };
-    (@points [$el:expr]) => {
-        // done
-        vec![$el]
-    };
-
-    // Next element is an expression followed by comma.
-    (@points [$($el:expr,)*] EMPTY, $($rest:tt)*) => {
-        $crate::point_vec_xyz!(@points [$($el,)* $crate::point_el_xyz!(EMPTY),] $($rest)*)
-    };
-    // Next element is an expression followed by comma.
-    (@points [$($el:expr,)*] $x:literal $y:literal $z:literal, $($rest:tt)*) => {
-        $crate::point_vec_xyz!(@points [$($el,)* $crate::point_el_xyz!($x $y $z),] $($rest)*)
-    };
-
-    (@points [$($el:expr,)*] EMPTY) => {
-        $crate::point_vec_xyz!(@points [$($el,)* $crate::point_el_xyz!(EMPTY)])
-    };
-    (@points [$($el:expr,)*] $x: literal $y:literal $z:literal) => {
-        $crate::point_vec_xyz!(@points [$($el,)* $crate::point_el_xyz!($x $y $z)])
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! point_vec_xym {
-    (@points [$($el:expr),*]) => {
-        // done
-        vec![$($el),*]
-    };
-    (@points [$el:expr]) => {
-        // done
-        vec![$el]
-    };
-
-    // Next element is an expression followed by comma.
-    (@points [$($el:expr,)*] EMPTY, $($rest:tt)*) => {
-        $crate::point_vec_xym!(@points [$($el,)* $crate::point_el_xym!(EMPTY),] $($rest)*)
-    };
-    // Next element is an expression followed by comma.
-    (@points [$($el:expr,)*] $x:literal $y:literal $m:literal, $($rest:tt)*) => {
-        $crate::point_vec_xym!(@points [$($el,)* $crate::point_el_xym!($x $y $m),] $($rest)*)
-    };
-
-    (@points [$($el:expr,)*] EMPTY) => {
-        $crate::point_vec_xym!(@points [$($el,)* $crate::point_el_xym!(EMPTY)])
-    };
-    (@points [$($el:expr,)*] $x: literal $y:literal $m:literal) => {
-        $crate::point_vec_xym!(@points [$($el,)* $crate::point_el_xym!($x $y $m)])
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! point_vec_xyzm {
-    (@points [$($el:expr),*]) => {
-        // done
-        vec![$($el),*]
-    };
-    (@points [$el:expr]) => {
-        // done
-        vec![$el]
-    };
-
-    // Next element is an expression followed by comma.
-    (@points [$($el:expr,)*] EMPTY, $($rest:tt)*) => {
-        $crate::point_vec_xyzm!(@points [$($el,)* $crate::point_el_xyzm!(EMPTY),] $($rest)*)
-    };
-    // Next element is an expression followed by comma.
-    (@points [$($el:expr,)*] $x:literal $y:literal $z:literal $m:literal, $($rest:tt)*) => {
-        $crate::point_vec_xyzm!(@points [$($el,)* $crate::point_el_xyzm!($x $y $z $m),] $($rest)*)
-    };
-
-    (@points [$($el:expr,)*] EMPTY) => {
-        $crate::point_vec_xyzm!(@points [$($el,)* $crate::point_el_xyzm!(EMPTY)])
-    };
-    (@points [$($el:expr,)*] $x: literal $y:literal $z:literal $m:literal) => {
-        $crate::point_vec_xyzm!(@points [$($el,)* $crate::point_el_xyzm!($x $y $z $m)])
+    ($($dim: ident)? @points [$($el:expr,)*] $($scalar:literal)+) => {
+        $crate::point_vec!($($dim)? @points [$($el,)* $crate::wkt!(POINT $($dim)? ($($scalar)+))])
     };
 }
 
@@ -531,60 +220,18 @@ macro_rules! multi_point {
     (()) => {
         compile_error!("use `MULTIPOINT EMPTY` for a MultiPoint with no coordinates")
     };
-    (EMPTY) => {
-        MultiPoint::empty(Dimension::XY)
-    };
-    (($($tt: tt)*)) => {
-        MultiPoint::from_points(
-            $crate::point_vec!(@points [] $($tt)*)
-        ).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! multi_point_z {
-    (()) => {
-        compile_error!("use `MULTIPOINT Z EMPTY` for a MultiPoint with no coordinates")
+    ($dim: ident ()) => {
+        compile_error!(concat!("use `MULTIPOINT ", stringify!($dim), " EMPTY` for a MultiPoint with no coordinates"))
     };
     (EMPTY) => {
-        MultiPoint::empty(Dimension::XYZ)
+       $crate::types::MultiPoint::empty($crate::types::Dimension::XY)
     };
-    (($($tt: tt)*)) => {
-        MultiPoint::from_points(
-            $crate::point_vec_xyz!(@points [] $($tt)*)
-        ).unwrap()
+    ($dim: ident EMPTY) => {
+        $crate::types::MultiPoint::empty($crate::dim!($dim))
     };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! multi_point_m {
-    (()) => {
-        compile_error!("use `MULTIPOINT M EMPTY` for a MultiPoint with no coordinates")
-    };
-    (EMPTY) => {
-        MultiPoint::empty(Dimension::XYM)
-    };
-    (($($tt: tt)*)) => {
-        MultiPoint::from_points(
-            $crate::point_vec_xym!(@points [] $($tt)*)
-        ).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! multi_point_zm {
-    (()) => {
-        compile_error!("use `MULTIPOINT ZM EMPTY` for a MultiPoint with no coordinates")
-    };
-    (EMPTY) => {
-        MultiPoint::empty(Dimension::XYZM)
-    };
-    (($($tt: tt)*)) => {
-        MultiPoint::from_points(
-            $crate::point_vec_xyzm!(@points [] $($tt)*)
+    ($($dim: ident)? ($($tt: tt)*)) => {
+        $crate::types::MultiPoint::from_points(
+            $crate::point_vec!($($dim)? @points [] $($tt)*)
         ).unwrap()
     };
 }
@@ -595,60 +242,23 @@ macro_rules! multi_line_string {
     (()) => {
         compile_error!("use `MULTILINESTRING EMPTY` for a MultiLineString with no coordinates")
     };
+    ($dim: ident ()) => {
+        compile_error!(concat!("use `MULTILINESTRING ", stringify!($dim), " EMPTY` for a MultiLineString with no coordinates"))
+    };
     (EMPTY) => {
-        MultiLineString::empty(Dimension::XY)
+        $crate::types::MultiLineString::empty($crate::types::Dimension::XY)
+    };
+    ($dim: ident EMPTY) => {
+        $crate::types::MultiLineString::empty($crate::dim!($dim))
     };
     (( $($line_string_tt: tt),* )) => {
-        MultiLineString::from_line_strings(vec![
+        $crate::types::MultiLineString::from_line_strings(vec![
            $($crate::line_string![$line_string_tt]),*
         ]).unwrap()
     };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! multi_line_string_z {
-    (()) => {
-        compile_error!("use `MULTILINESTRING Z EMPTY` for a MultiLineString with no coordinates")
-    };
-    (EMPTY) => {
-        MultiLineString::empty(Dimension::XYZ)
-    };
-    (( $($line_string_tt: tt),* )) => {
-        MultiLineString::from_line_strings(vec![
-           $($crate::line_string_z![$line_string_tt]),*
-        ]).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! multi_line_string_m {
-    (()) => {
-        compile_error!("use `MULTILINESTRING M EMPTY` for a MultiLineString with no coordinates")
-    };
-    (EMPTY) => {
-        MultiLineString::empty(Dimension::XYM)
-    };
-    (( $($line_string_tt: tt),* )) => {
-        MultiLineString::from_line_strings(vec![
-           $($crate::line_string_m![$line_string_tt]),*
-        ]).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! multi_line_string_zm {
-    (()) => {
-        compile_error!("use `MULTILINESTRING ZM EMPTY` for a MultiLineString with no coordinates")
-    };
-    (EMPTY) => {
-        MultiLineString::empty(Dimension::XYZM)
-    };
-    (( $($line_string_tt: tt),* )) => {
-        MultiLineString::from_line_strings(vec![
-           $($crate::line_string_zm![$line_string_tt]),*
+    ($dim: ident ( $($line_string_tt: tt),* )) => {
+        $crate::types::MultiLineString::from_line_strings(vec![
+           $($crate::line_string![$dim $line_string_tt]),*
         ]).unwrap()
     };
 }
@@ -659,60 +269,23 @@ macro_rules! multi_polygon {
     (()) => {
         compile_error!("use `MULTIPOLYGON EMPTY` for a MultiPolygon with no coordinates")
     };
+    ($dim: ident ()) => {
+        compile_error!(concat!("use `MULTIPOLYGON ", stringify!($dim), " EMPTY` for a MultiPolygon with no coordinates"))
+    };
     (EMPTY) => {
-        MultiPolygon::empty(Dimension::XY)
+        $crate::types::MultiPolygon::empty($crate::types::Dimension::XY)
+    };
+    ($dim: ident EMPTY) => {
+        $crate::types::MultiPolygon::empty($crate::dim!($dim))
     };
     (( $($polygon_tt: tt),* )) => {
-        MultiPolygon::from_polygons(vec![
+        $crate::types::MultiPolygon::from_polygons(vec![
            $($crate::polygon![$polygon_tt]),*
         ]).unwrap()
     };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! multi_polygon_z {
-    (()) => {
-        compile_error!("use `MULTIPOLYGON Z EMPTY` for a MultiPolygon with no coordinates")
-    };
-    (EMPTY) => {
-        MultiPolygon::empty(Dimension::XYZ)
-    };
-    (( $($polygon_tt: tt),* )) => {
-        MultiPolygon::from_polygons(vec![
-           $($crate::polygon_z![$polygon_tt]),*
-        ]).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! multi_polygon_m {
-    (()) => {
-        compile_error!("use `MULTIPOLYGON M EMPTY` for a MultiPolygon with no coordinates")
-    };
-    (EMPTY) => {
-        MultiPolygon::empty(Dimension::XYM)
-    };
-    (( $($polygon_tt: tt),* )) => {
-        MultiPolygon::from_polygons(vec![
-           $($crate::polygon_m![$polygon_tt]),*
-        ]).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! multi_polygon_zm {
-    (()) => {
-        compile_error!("use `MULTIPOLYGON ZM EMPTY` for a MultiPolygon with no coordinates")
-    };
-    (EMPTY) => {
-        MultiPolygon::empty(Dimension::XYZM)
-    };
-    (( $($polygon_tt: tt),* )) => {
-        MultiPolygon::from_polygons(vec![
-           $($crate::polygon_zm![$polygon_tt]),*
+    ($dim: ident ( $($polygon_tt: tt),* )) => {
+        $crate::types::MultiPolygon::from_polygons(vec![
+           $($crate::polygon![$dim $polygon_tt]),*
         ]).unwrap()
     };
 }
@@ -721,62 +294,37 @@ macro_rules! multi_polygon_zm {
 #[doc(hidden)]
 macro_rules! geometry_collection {
     (EMPTY) => {
-        GeometryCollection::empty(Dimension::XY)
+        $crate::types::GeometryCollection::empty($crate::types::Dimension::XY)
+    };
+    ($dim: ident EMPTY) => {
+        $crate::types::GeometryCollection::empty($crate::dim!($dim))
     };
     (()) => {
         compile_error!("use `GEOMETRYCOLLECTION EMPTY` for an empty collection")
     };
+    ($dim: ident ()) => {
+        compile_error!(concat!("use `GEOMETRYCOLLECTION ", stringify!($dim), " EMPTY` for an empty collection"))
+    };
     (( $($el_type:tt $el_tt: tt),* )) => {
-        GeometryCollection::from_geometries(vec![
-           $($crate::wkt_internal!($el_type $el_tt).into()),*
+        $crate::types::GeometryCollection::from_geometries(vec![
+           $($crate::wkt!($el_type $el_tt).into()),*
         ]).unwrap()
     };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! geometry_collection_z {
-    (EMPTY) => {
-        GeometryCollection::empty(Dimension::XYZ)
-    };
-    (()) => {
-        compile_error!("use `GEOMETRYCOLLECTION Z EMPTY` for an empty collection")
-    };
-    (( $($el_type:tt Z $el_tt: tt),* )) => {
-        GeometryCollection::from_geometries(vec![
-           $($crate::wkt_internal!($el_type Z $el_tt).into()),*
-        ]).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! geometry_collection_m {
-    (EMPTY) => {
-        GeometryCollection::empty(Dimension::XYM)
-    };
-    (()) => {
-        compile_error!("use `GEOMETRYCOLLECTION M EMPTY` for an empty collection")
-    };
-    (( $($el_type:tt M $el_tt: tt),* )) => {
-        GeometryCollection::from_geometries(vec![
-           $($crate::wkt_internal!($el_type M $el_tt).into()),*
-        ]).unwrap()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! geometry_collection_zm {
-    (EMPTY) => {
-        GeometryCollection::empty(Dimension::XYZM)
-    };
-    (()) => {
-        compile_error!("use `GEOMETRYCOLLECTION ZM EMPTY` for an empty collection")
-    };
-    (( $($el_type:tt ZM $el_tt: tt),* )) => {
-        GeometryCollection::from_geometries(vec![
-           $($crate::wkt_internal!($el_type ZM $el_tt).into()),*
+    ($dim: ident ( $($el_type:tt $dim2: ident $el_tt: tt),* )) => {
+        $crate::types::GeometryCollection::from_geometries(vec![
+            $({
+                const _: () = assert!(
+                    matches!(
+                        ($crate::dim!($dim), $crate::dim!($dim2)),
+                        ($crate::types::Dimension::XY, $crate::types::Dimension::XY)
+                            | ($crate::types::Dimension::XYZ, $crate::types::Dimension::XYZ)
+                            | ($crate::types::Dimension::XYM, $crate::types::Dimension::XYM)
+                            | ($crate::types::Dimension::XYZM, $crate::types::Dimension::XYZM)
+                    ),
+                    concat!("Cannot add member with ", stringify!($dim2), " dimension to GEOMETRYCOLLECTION ", stringify!($dim))
+                );
+                $crate::wkt!($el_type $dim $el_tt).into()
+           }),*
         ]).unwrap()
     };
 }
@@ -863,22 +411,22 @@ mod test {
     fn line_string() {
         let line_string = wkt! { LINESTRING(1.0 2.0, 3.0 4.0) };
         assert_eq!(line_string.coords.len(), 2);
-        assert_eq!(line_string.coords[0], coord_xy! { 1.0 2.0 });
+        assert_eq!(line_string.coords[0], coord! { 1.0 2.0 });
         assert_eq!(line_string.dim, Dimension::XY);
 
         let line_string = wkt! { LINESTRING Z (1.0 2.0 3.0, 3.0 4.0 5.0) };
         assert_eq!(line_string.coords.len(), 2);
-        assert_eq!(line_string.coords[0], coord_xyz! { 1.0 2.0 3.0 });
+        assert_eq!(line_string.coords[0], coord! { Z 1.0 2.0 3.0 });
         assert_eq!(line_string.dim, Dimension::XYZ);
 
         let line_string = wkt! { LINESTRING M (1.0 2.0 3.0, 3.0 4.0 5.0) };
         assert_eq!(line_string.coords.len(), 2);
-        assert_eq!(line_string.coords[0], coord_xym! { 1.0 2.0 3.0 });
+        assert_eq!(line_string.coords[0], coord! { M 1.0 2.0 3.0 });
         assert_eq!(line_string.dim, Dimension::XYM);
 
         let line_string = wkt! { LINESTRING ZM (1.0 2.0 3.0 4.0, 3.0 4.0 5.0 6.0) };
         assert_eq!(line_string.coords.len(), 2);
-        assert_eq!(line_string.coords[0], coord_xyzm! { 1.0 2.0 3.0 4.0 });
+        assert_eq!(line_string.coords[0], coord! { ZM 1.0 2.0 3.0 4.0 });
         assert_eq!(line_string.dim, Dimension::XYZM);
     }
 
@@ -908,19 +456,19 @@ mod test {
     fn polygon() {
         let polygon = wkt! { POLYGON((1.0 2.0)) };
         assert_eq!(polygon.rings.len(), 1);
-        assert_eq!(polygon.rings[0].coords[0], coord_xy! { 1.0 2.0 });
+        assert_eq!(polygon.rings[0].coords[0], coord! { 1.0 2.0 });
         assert_eq!(polygon.dim, Dimension::XY);
 
         let polygon = wkt! { POLYGON((1.0 2.0), (1.1 2.1)) };
         assert_eq!(polygon.rings[0].coords.len(), 1);
         assert_eq!(polygon.rings[1].coords.len(), 1);
-        assert_eq!(polygon.rings[0].coords[0], coord_xy! { 1.0 2.0 });
-        assert_eq!(polygon.rings[1].coords[0], coord_xy! { 1.1 2.1 });
+        assert_eq!(polygon.rings[0].coords[0], coord! { 1.0 2.0 });
+        assert_eq!(polygon.rings[1].coords[0], coord! { 1.1 2.1 });
 
         let polygon = wkt! { POLYGON((1.0 2.0,3.0 4.0), (1.1 2.1,3.1 4.1), (1.2 2.2,3.2 4.2)) };
         assert_eq!(polygon.rings.len(), 3);
         assert_eq!(polygon.rings[0].coords.len(), 2);
-        assert_eq!(polygon.rings[2].coords[1], coord_xy! { 3.2 4.2 });
+        assert_eq!(polygon.rings[2].coords[1], coord! { 3.2 4.2 });
     }
 
     #[test]
@@ -959,35 +507,35 @@ mod test {
 
         let multi_point = wkt! { MULTIPOINT Z (1.0 2.0 3.0) };
         assert_eq!(multi_point.points.len(), 1);
-        assert_eq!(multi_point.points[0], point_z! { (1.0 2.0 3.0) });
+        assert_eq!(multi_point.points[0], point! { Z (1.0 2.0 3.0) });
         assert_eq!(multi_point.dim, Dimension::XYZ);
 
         let multi_point = wkt! { MULTIPOINT Z (1.0 2.0 3.0, 4.0 5.0 6.0) };
         assert_eq!(multi_point.points.len(), 2);
-        assert_eq!(multi_point.points[0], point_z! { (1.0 2.0 3.0) });
-        assert_eq!(multi_point.points[1], point_z! { (4.0 5.0 6.0) });
+        assert_eq!(multi_point.points[0], point! { Z (1.0 2.0 3.0) });
+        assert_eq!(multi_point.points[1], point! { Z (4.0 5.0 6.0) });
         assert_eq!(multi_point.dim, Dimension::XYZ);
 
         let multi_point = wkt! { MULTIPOINT M (1.0 2.0 3.0) };
         assert_eq!(multi_point.points.len(), 1);
-        assert_eq!(multi_point.points[0], point_m! { (1.0 2.0 3.0) });
+        assert_eq!(multi_point.points[0], point! { M (1.0 2.0 3.0) });
         assert_eq!(multi_point.dim, Dimension::XYM);
 
         let multi_point = wkt! { MULTIPOINT M (1.0 2.0 3.0, 4.0 5.0 6.0) };
         assert_eq!(multi_point.points.len(), 2);
-        assert_eq!(multi_point.points[0], point_m! { (1.0 2.0 3.0) });
-        assert_eq!(multi_point.points[1], point_m! { (4.0 5.0 6.0) });
+        assert_eq!(multi_point.points[0], point! { M (1.0 2.0 3.0) });
+        assert_eq!(multi_point.points[1], point! { M (4.0 5.0 6.0) });
         assert_eq!(multi_point.dim, Dimension::XYM);
 
         let multi_point = wkt! { MULTIPOINT ZM (1.0 2.0 3.0 4.0) };
         assert_eq!(multi_point.points.len(), 1);
-        assert_eq!(multi_point.points[0], point_zm! { (1.0 2.0 3.0 4.0) });
+        assert_eq!(multi_point.points[0], point! { ZM (1.0 2.0 3.0 4.0) });
         assert_eq!(multi_point.dim, Dimension::XYZM);
 
         let multi_point = wkt! { MULTIPOINT ZM (1.0 2.0 3.0 4.0, 4.0 5.0 6.0 7.0) };
         assert_eq!(multi_point.points.len(), 2);
-        assert_eq!(multi_point.points[0], point_zm! { (1.0 2.0 3.0 4.0) });
-        assert_eq!(multi_point.points[1], point_zm! { (4.0 5.0 6.0 7.0) });
+        assert_eq!(multi_point.points[0], point! { ZM (1.0 2.0 3.0 4.0) });
+        assert_eq!(multi_point.points[1], point! { ZM (4.0 5.0 6.0 7.0) });
         assert_eq!(multi_point.dim, Dimension::XYZM);
     }
 
@@ -1020,7 +568,7 @@ mod test {
         assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
         assert_eq!(
             multi_line_string.line_strings[0].coords[1],
-            coord_xy! { 3.0 4.0 }
+            coord! { 3.0 4.0 }
         );
         assert_eq!(multi_line_string.dim, Dimension::XY);
 
@@ -1028,7 +576,7 @@ mod test {
         assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
         assert_eq!(
             multi_line_string.line_strings[1].coords[1],
-            coord_xy! { 7.0 8.0 }
+            coord! { 7.0 8.0 }
         );
         assert_eq!(multi_line_string.dim, Dimension::XY);
 
@@ -1037,7 +585,7 @@ mod test {
         assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
         assert_eq!(
             multi_line_string.line_strings[0].coords[1],
-            coord_xyz! { 3.0 4.0 5.0 }
+            coord! { Z 3.0 4.0 5.0 }
         );
         assert_eq!(multi_line_string.dim, Dimension::XYZ);
 
@@ -1046,7 +594,7 @@ mod test {
         assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
         assert_eq!(
             multi_line_string.line_strings[1].coords[1],
-            coord_xyz! { 7.0 8.0 9.0 }
+            coord! { Z 7.0 8.0 9.0 }
         );
         assert_eq!(multi_line_string.dim, Dimension::XYZ);
 
@@ -1055,7 +603,7 @@ mod test {
         assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
         assert_eq!(
             multi_line_string.line_strings[0].coords[1],
-            coord_xym! { 3.0 4.0 5.0 }
+            coord! { M 3.0 4.0 5.0 }
         );
         assert_eq!(multi_line_string.dim, Dimension::XYM);
 
@@ -1064,7 +612,7 @@ mod test {
         assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
         assert_eq!(
             multi_line_string.line_strings[1].coords[1],
-            coord_xym! { 7.0 8.0 9.0 }
+            coord! { M 7.0 8.0 9.0 }
         );
         assert_eq!(multi_line_string.dim, Dimension::XYM);
 
@@ -1073,7 +621,7 @@ mod test {
         assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
         assert_eq!(
             multi_line_string.line_strings[0].coords[1],
-            coord_xyzm! { 3.0 4.0 5.0 6.0 }
+            coord! { ZM 3.0 4.0 5.0 6.0 }
         );
         assert_eq!(multi_line_string.dim, Dimension::XYZM);
 
@@ -1081,7 +629,7 @@ mod test {
         assert_eq!(multi_line_string.line_strings[0].coords.len(), 2);
         assert_eq!(
             multi_line_string.line_strings[1].coords[1],
-            coord_xyzm! { 7.0 8.0 9.0 10.0 }
+            coord! { ZM 7.0 8.0 9.0 10.0 }
         );
         assert_eq!(multi_line_string.dim, Dimension::XYZM);
     }
@@ -1114,7 +662,7 @@ mod test {
         assert_eq!(multi_polygon.polygons.len(), 1);
         assert_eq!(
             multi_polygon.polygons[0].rings[0].coords[0],
-            coord_xy! { 1.0 2.0}
+            coord! { 1.0 2.0}
         );
         assert_eq!(multi_polygon.dim, Dimension::XY);
 
@@ -1122,7 +670,7 @@ mod test {
         assert_eq!(multi_polygon.polygons.len(), 2);
         assert_eq!(
             multi_polygon.polygons[0].rings[2].coords[0],
-            coord_xy! { 1.2 2.2}
+            coord! { 1.2 2.2}
         );
         assert_eq!(multi_polygon.dim, Dimension::XY);
 
@@ -1130,7 +678,7 @@ mod test {
         assert_eq!(multi_polygon.polygons.len(), 1);
         assert_eq!(
             multi_polygon.polygons[0].rings[0].coords[0],
-            coord_xyz! { 1.0 2.0 3.0 }
+            coord! { Z 1.0 2.0 3.0 }
         );
         assert_eq!(multi_polygon.dim, Dimension::XYZ);
 
@@ -1138,7 +686,7 @@ mod test {
         assert_eq!(multi_polygon.polygons.len(), 2);
         assert_eq!(
             multi_polygon.polygons[0].rings[2].coords[0],
-            coord_xyz! { 1.2 2.2 3.2}
+            coord! { Z 1.2 2.2 3.2}
         );
         assert_eq!(multi_polygon.dim, Dimension::XYZ);
 
@@ -1146,7 +694,7 @@ mod test {
         assert_eq!(multi_polygon.polygons.len(), 1);
         assert_eq!(
             multi_polygon.polygons[0].rings[0].coords[0],
-            coord_xym! { 1.0 2.0 3.0 }
+            coord! { M 1.0 2.0 3.0 }
         );
         assert_eq!(multi_polygon.dim, Dimension::XYM);
 
@@ -1154,7 +702,7 @@ mod test {
         assert_eq!(multi_polygon.polygons.len(), 2);
         assert_eq!(
             multi_polygon.polygons[0].rings[2].coords[0],
-            coord_xym! { 1.2 2.2 3.2}
+            coord! { M 1.2 2.2 3.2}
         );
         assert_eq!(multi_polygon.dim, Dimension::XYM);
 
@@ -1162,7 +710,7 @@ mod test {
         assert_eq!(multi_polygon.polygons.len(), 1);
         assert_eq!(
             multi_polygon.polygons[0].rings[0].coords[0],
-            coord_xyzm! { 1.0 2.0 3.0 4.0 }
+            coord! { ZM 1.0 2.0 3.0 4.0 }
         );
         assert_eq!(multi_polygon.dim, Dimension::XYZM);
 
@@ -1170,7 +718,7 @@ mod test {
         assert_eq!(multi_polygon.polygons.len(), 2);
         assert_eq!(
             multi_polygon.polygons[0].rings[2].coords[0],
-            coord_xyzm! { 1.2 2.2 3.2 4.2}
+            coord! { ZM 1.2 2.2 3.2 4.2}
         );
         assert_eq!(multi_polygon.dim, Dimension::XYZM);
     }
@@ -1194,7 +742,7 @@ mod test {
         assert_eq!(geometry_collection.dim, Dimension::XYZM);
 
         // This (rightfully) fails to compile because its invalid wkt
-        // wkt! { MULTIPOLYGON() }
+        // wkt! { GEOMETRYCOLLECTION() }
     }
 
     #[test]
@@ -1213,7 +761,7 @@ mod test {
             Wkt::LineString(line_string) => line_string,
             _ => unreachable!(),
         };
-        assert_eq!(line_string.coords[1], coord_xy! { 20.0 20.0 });
+        assert_eq!(line_string.coords[1], coord! { 20.0 20.0 });
 
         let geometry_collection: GeometryCollection = wkt! {
             GEOMETRYCOLLECTION Z (
