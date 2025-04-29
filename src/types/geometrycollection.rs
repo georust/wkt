@@ -130,15 +130,10 @@ where
 }
 
 impl<T: WktNum> GeometryCollectionTrait for GeometryCollection<T> {
-    type T = T;
     type GeometryType<'a>
         = &'a Wkt<T>
     where
         Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
-    }
 
     fn num_geometries(&self) -> usize {
         self.geoms.len()
@@ -150,15 +145,10 @@ impl<T: WktNum> GeometryCollectionTrait for GeometryCollection<T> {
 }
 
 impl<T: WktNum> GeometryCollectionTrait for &GeometryCollection<T> {
-    type T = T;
     type GeometryType<'a>
         = &'a Wkt<T>
     where
         Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
-    }
 
     fn num_geometries(&self) -> usize {
         self.geoms.len()

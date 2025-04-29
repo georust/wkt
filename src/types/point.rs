@@ -102,36 +102,27 @@ where
 }
 
 impl<T: WktNum> PointTrait for Point<T> {
-    type T = T;
     type CoordType<'a>
         = &'a Coord<T>
     where
         Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
-    }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         self.coord.as_ref()
     }
 }
 
-impl<T: WktNum> PointTrait for &Point<T> {
-    type T = T;
-    type CoordType<'a>
+impl<'a, T: WktNum> PointTrait for &'a Point<T> {
+    type CoordType<'b>
         = &'a Coord<T>
     where
-        Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
-    }
+        Self: 'b;
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         self.coord.as_ref()
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::{Coord, Point};

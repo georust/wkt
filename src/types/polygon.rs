@@ -16,8 +16,7 @@ use geo_traits::PolygonTrait;
 
 use crate::to_wkt::write_polygon;
 use crate::tokenizer::PeekableTokens;
-use crate::types::linestring::LineString;
-use crate::types::Dimension;
+use crate::types::{Dimension, LineString};
 use crate::{FromTokens, Wkt, WktNum};
 use std::fmt;
 use std::str::FromStr;
@@ -114,15 +113,10 @@ where
 }
 
 impl<T: WktNum> PolygonTrait for Polygon<T> {
-    type T = T;
     type RingType<'a>
         = &'a LineString<T>
     where
         Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
-    }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
         self.rings.first()
@@ -138,15 +132,10 @@ impl<T: WktNum> PolygonTrait for Polygon<T> {
 }
 
 impl<T: WktNum> PolygonTrait for &Polygon<T> {
-    type T = T;
     type RingType<'a>
         = &'a LineString<T>
     where
         Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
-    }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
         self.rings.first()

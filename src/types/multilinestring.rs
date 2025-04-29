@@ -114,41 +114,31 @@ where
 }
 
 impl<T: WktNum> MultiLineStringTrait for MultiLineString<T> {
-    type T = T;
-    type LineStringType<'a>
+    type InnerLineStringType<'a>
         = &'a LineString<T>
     where
         Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
-    }
 
     fn num_line_strings(&self) -> usize {
         self.line_strings.len()
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::InnerLineStringType<'_> {
         self.line_strings.get_unchecked(i)
     }
 }
 
 impl<T: WktNum> MultiLineStringTrait for &MultiLineString<T> {
-    type T = T;
-    type LineStringType<'a>
+    type InnerLineStringType<'a>
         = &'a LineString<T>
     where
         Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.dim.into()
-    }
 
     fn num_line_strings(&self) -> usize {
         self.line_strings.len()
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::InnerLineStringType<'_> {
         self.line_strings.get_unchecked(i)
     }
 }
