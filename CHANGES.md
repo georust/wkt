@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Your change here.
+* Adapt to changes in geo-traits 0.3.0 (See georust/geo#1346). (#146)
 
 ## 0.13.0 - 2025-04-25
 
@@ -14,7 +15,6 @@
 * Remove allocation to `Wkt` when writing geo-types via `write_wkt` (#140)
 * Default to using `f64` for `WktNum` in WKT types
 * Add `Copy` impl to `Coord`
-* Adapt to changes in geo-traits 0.3.0 (See georust/geo#1346). (#146)
 
 ## 0.12.0 - 2024-11-27
 
