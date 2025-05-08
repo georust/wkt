@@ -36,3 +36,7 @@ harness = false
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[patch.crates-io]
+geo-types = { git = "https://github.com/georust/geo", branch = "main", package = "geo-types" }
+geo-traits = { git = "https://github.com/georust/geo", branch = "main", package = "geo-traits" }
