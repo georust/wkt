@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::MultiLineStringTrait;
-
 use crate::to_wkt::write_multi_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
@@ -113,7 +111,50 @@ where
     }
 }
 
-impl<T: WktNum> MultiLineStringTrait for MultiLineString<T> {
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::MultiLineStringTrait for MultiLineString<T> {
+    type T = T;
+    type LineStringType<'a>
+        = &'a LineString<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn num_line_strings(&self) -> usize {
+        self.line_strings.len()
+    }
+
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+        self.line_strings.get_unchecked(i)
+    }
+}
+
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::MultiLineStringTrait for &MultiLineString<T> {
+    type T = T;
+    type LineStringType<'a>
+        = &'a LineString<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn num_line_strings(&self) -> usize {
+        self.line_strings.len()
+    }
+
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+        self.line_strings.get_unchecked(i)
+    }
+}
+
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::MultiLineStringTrait for MultiLineString<T> {
     type InnerLineStringType<'a>
         = &'a LineString<T>
     where
@@ -128,7 +169,8 @@ impl<T: WktNum> MultiLineStringTrait for MultiLineString<T> {
     }
 }
 
-impl<T: WktNum> MultiLineStringTrait for &MultiLineString<T> {
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::MultiLineStringTrait for &MultiLineString<T> {
     type InnerLineStringType<'a>
         = &'a LineString<T>
     where
