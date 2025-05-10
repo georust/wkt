@@ -99,7 +99,10 @@ use std::default::Default;
 use std::fmt;
 use std::str::FromStr;
 
-use geo_traits::GeometryTrait;
+use geo_traits::{
+    GeometryCollectionTrait, GeometryTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
+    MultiPolygonTrait, PointTrait, PolygonTrait,
+};
 use num_traits::{Float, Num, NumCast};
 
 use crate::to_wkt::write_geometry;
@@ -471,13 +474,13 @@ impl<T: WktNum> GeometryTrait for Wkt<T> {
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self {
-            Wkt::Point(geom) => geom.dim(),
-            Wkt::LineString(geom) => geom.dim(),
-            Wkt::Polygon(geom) => geom.dim(),
-            Wkt::MultiPoint(geom) => geom.dim(),
-            Wkt::MultiLineString(geom) => geom.dim(),
-            Wkt::MultiPolygon(geom) => geom.dim(),
-            Wkt::GeometryCollection(geom) => geom.dim(),
+            Wkt::Point(geom) => PointTrait::dim(geom),
+            Wkt::LineString(geom) => LineStringTrait::dim(geom),
+            Wkt::Polygon(geom) => PolygonTrait::dim(geom),
+            Wkt::MultiPoint(geom) => MultiPointTrait::dim(geom),
+            Wkt::MultiLineString(geom) => MultiLineStringTrait::dim(geom),
+            Wkt::MultiPolygon(geom) => MultiPolygonTrait::dim(geom),
+            Wkt::GeometryCollection(geom) => GeometryCollectionTrait::dim(geom),
         }
     }
 
@@ -553,13 +556,13 @@ impl<T: WktNum> GeometryTrait for &Wkt<T> {
 
     fn dim(&self) -> geo_traits::Dimensions {
         match self {
-            Wkt::Point(geom) => geom.dim(),
-            Wkt::LineString(geom) => geom.dim(),
-            Wkt::Polygon(geom) => geom.dim(),
-            Wkt::MultiPoint(geom) => geom.dim(),
-            Wkt::MultiLineString(geom) => geom.dim(),
-            Wkt::MultiPolygon(geom) => geom.dim(),
-            Wkt::GeometryCollection(geom) => geom.dim(),
+            Wkt::Point(geom) => PointTrait::dim(geom),
+            Wkt::LineString(geom) => LineStringTrait::dim(geom),
+            Wkt::Polygon(geom) => PolygonTrait::dim(geom),
+            Wkt::MultiPoint(geom) => MultiPointTrait::dim(geom),
+            Wkt::MultiLineString(geom) => MultiLineStringTrait::dim(geom),
+            Wkt::MultiPolygon(geom) => MultiPolygonTrait::dim(geom),
+            Wkt::GeometryCollection(geom) => GeometryCollectionTrait::dim(geom),
         }
     }
 
@@ -638,7 +641,7 @@ macro_rules! impl_specialization {
                 Self: 'b;
 
             fn dim(&self) -> geo_traits::Dimensions {
-                self.dim.into()
+                geo_traits::Dimensions::Xy
             }
 
             fn as_type(
@@ -704,7 +707,7 @@ macro_rules! impl_specialization {
                 Self: 'b;
 
             fn dim(&self) -> geo_traits::Dimensions {
-                self.dim.into()
+                geo_traits::Dimensions::Xy
             }
 
             fn as_type(

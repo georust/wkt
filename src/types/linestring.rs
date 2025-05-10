@@ -108,10 +108,15 @@ where
 }
 
 impl<T: WktNum> LineStringTrait for LineString<T> {
+    type T = T;
     type CoordType<'a>
         = &'a Coord<T>
     where
         Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.dim.into()
+    }
 
     fn num_coords(&self) -> usize {
         self.coords.len()
@@ -122,11 +127,16 @@ impl<T: WktNum> LineStringTrait for LineString<T> {
     }
 }
 
-impl<'a, T: WktNum> LineStringTrait for &'a LineString<T> {
-    type CoordType<'b>
+impl<T: WktNum> LineStringTrait for &LineString<T> {
+    type T = T;
+    type CoordType<'a>
         = &'a Coord<T>
     where
-        Self: 'b;
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.dim.into()
+    }
 
     fn num_coords(&self) -> usize {
         self.coords.len()

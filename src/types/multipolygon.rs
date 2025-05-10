@@ -112,31 +112,41 @@ where
 }
 
 impl<T: WktNum> MultiPolygonTrait for MultiPolygon<T> {
-    type InnerPolygonType<'a>
+    type T = T;
+    type PolygonType<'a>
         = &'a Polygon<T>
     where
         Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.dim.into()
+    }
 
     fn num_polygons(&self) -> usize {
         self.polygons.len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::InnerPolygonType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         self.polygons.get_unchecked(i)
     }
 }
 
 impl<T: WktNum> MultiPolygonTrait for &MultiPolygon<T> {
-    type InnerPolygonType<'a>
+    type T = T;
+    type PolygonType<'a>
         = &'a Polygon<T>
     where
         Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.dim.into()
+    }
 
     fn num_polygons(&self) -> usize {
         self.polygons.len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::InnerPolygonType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
         self.polygons.get_unchecked(i)
     }
 }

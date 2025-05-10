@@ -112,31 +112,41 @@ where
 }
 
 impl<T: WktNum> MultiPointTrait for MultiPoint<T> {
-    type InnerPointType<'a>
+    type T = T;
+    type PointType<'a>
         = &'a Point<T>
     where
         Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.dim.into()
+    }
 
     fn num_points(&self) -> usize {
         self.points.len()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         self.points.get_unchecked(i)
     }
 }
 
 impl<T: WktNum> MultiPointTrait for &MultiPoint<T> {
-    type InnerPointType<'a>
+    type T = T;
+    type PointType<'a>
         = &'a Point<T>
     where
         Self: 'a;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.dim.into()
+    }
 
     fn num_points(&self) -> usize {
         self.points.len()
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
         self.points.get_unchecked(i)
     }
 }
