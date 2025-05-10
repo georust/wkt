@@ -178,3 +178,95 @@ impl<T: WktNum> CoordTrait for &Coord<T> {
         }
     }
 }
+
+#[cfg(feature="geo-traits_0_3")]
+mod geo_traits_0_3_integration {
+    use super::*;
+    use geo_traits_0_3 as geo_traits;
+
+    impl<T: WktNum> geo_traits_0_3::CoordTrait for Coord<T> {
+        type T = T;
+
+        fn dim(&self) -> geo_traits::Dimensions {
+            self.dimension().into()
+        }
+
+        fn x(&self) -> Self::T {
+            self.x
+        }
+
+        fn y(&self) -> Self::T {
+            self.y
+        }
+
+        fn nth_or_panic(&self, n: usize) -> Self::T {
+            let has_z = self.z.is_some();
+            let has_m = self.m.is_some();
+            match n {
+                0 => self.x,
+                1 => self.y,
+                2 => {
+                    if has_z {
+                        self.z.unwrap()
+                    } else if has_m {
+                        self.m.unwrap()
+                    } else {
+                        panic!("n out of range")
+                    }
+                }
+                3 => {
+                    if has_z && has_m {
+                        self.m.unwrap()
+                    } else {
+                        panic!("n out of range")
+                    }
+                }
+                _ => panic!("n out of range"),
+            }
+        }
+    }
+
+    impl<T: WktNum> geo_traits_0_3::CoordTrait for &Coord<T> {
+        type T = T;
+
+        fn dim(&self) -> geo_traits::Dimensions {
+            self.dimension().into()
+        }
+
+        fn x(&self) -> Self::T {
+            self.x
+        }
+
+        fn y(&self) -> Self::T {
+            self.y
+        }
+
+        fn nth_or_panic(&self, n: usize) -> Self::T {
+            let has_z = self.z.is_some();
+            let has_m = self.m.is_some();
+            match n {
+                0 => self.x,
+                1 => self.y,
+                2 => {
+                    if has_z {
+                        self.z.unwrap()
+                    } else if has_m {
+                        self.m.unwrap()
+                    } else {
+                        panic!("n out of range")
+                    }
+                }
+                3 => {
+                    if has_z && has_m {
+                        self.m.unwrap()
+                    } else {
+                        panic!("n out of range")
+                    }
+                }
+                _ => panic!("n out of range"),
+            }
+        }
+    }
+
+
+}

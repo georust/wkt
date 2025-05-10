@@ -132,6 +132,34 @@ impl<T: WktNum> PointTrait for &Point<T> {
         self.coord.as_ref()
     }
 }
+
+#[cfg(feature="geo-traits_0_3")]
+mod geo_traits_0_3_integration {
+    use super::*;
+
+    impl<T: WktNum> geo_traits_0_3::PointTrait for Point<T> {
+        type CoordType<'a>
+        = &'a Coord<T>
+        where
+            Self: 'a;
+
+        fn coord(&self) -> Option<Self::CoordType<'_>> {
+            self.coord.as_ref()
+        }
+    }
+
+    impl<'a, T: WktNum> geo_traits_0_3::PointTrait for &'a Point<T> {
+        type CoordType<'b>
+        = &'a Coord<T>
+        where
+            Self: 'b;
+
+        fn coord(&self) -> Option<Self::CoordType<'_>> {
+            self.coord.as_ref()
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Coord, Point};
