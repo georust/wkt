@@ -3,6 +3,9 @@
 ## Unreleased
 
 * Your change here.
+
+## 0.14.0 - 2025-05-08
+
 * BREAKING: Adapt to changes in geo-traits 0.3.0 (See georust/geo#1346). (#146)
 
 ## 0.13.0 - 2025-04-25
