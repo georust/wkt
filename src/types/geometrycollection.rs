@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::GeometryCollectionTrait;
-
 use crate::to_wkt::write_geometry_collection;
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
@@ -129,7 +127,50 @@ where
     }
 }
 
-impl<T: WktNum> GeometryCollectionTrait for GeometryCollection<T> {
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::GeometryCollectionTrait for GeometryCollection<T> {
+    type T = T;
+    type GeometryType<'a>
+        = &'a Wkt<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn num_geometries(&self) -> usize {
+        self.geoms.len()
+    }
+
+    unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
+        self.geoms.get_unchecked(i)
+    }
+}
+
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::GeometryCollectionTrait for &GeometryCollection<T> {
+    type T = T;
+    type GeometryType<'a>
+        = &'a Wkt<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn num_geometries(&self) -> usize {
+        self.geoms.len()
+    }
+
+    unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
+        self.geoms.get_unchecked(i)
+    }
+}
+
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::GeometryCollectionTrait for GeometryCollection<T> {
     type GeometryType<'a>
         = &'a Wkt<T>
     where
@@ -144,7 +185,8 @@ impl<T: WktNum> GeometryCollectionTrait for GeometryCollection<T> {
     }
 }
 
-impl<T: WktNum> GeometryCollectionTrait for &GeometryCollection<T> {
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::GeometryCollectionTrait for &GeometryCollection<T> {
     type GeometryType<'a>
         = &'a Wkt<T>
     where
