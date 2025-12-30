@@ -106,7 +106,7 @@ pub fn infer_type(input: &str) -> Result<(GeometryType, Dimension), String> {
         } else if input.starts_with(GEOMETRYCOLLECTION) {
             Ok((GeometryType::GeometryCollection, dim))
         } else {
-            return Err(format!("Unsupported WKT prefix {}", input));
+            Err(format!("Unsupported WKT prefix {}", input))
         }
     }
 }
