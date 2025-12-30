@@ -24,7 +24,7 @@
 //! Conversions are available via the [`TryFromWkt`] and [`ToWkt`] traits, with implementations for
 //! [`geo_types`] and [`geo_traits`] primitives enabled by default.
 //!
-//! For advanced usage, see the [`types`](crate::types) module for a list of internally used types.
+//! For advanced usage, see the [`types`] module for a list of internally used types.
 //!
 //! This crate has optional `serde` integration for deserializing fields containing WKT. See
 //! [`deserialize`] for an example.

@@ -1,8 +1,7 @@
 //! This module deserialises to WKT using [`serde`].
 //!
 //! You can deserialise to [`geo_types`] or any other implementor of [`TryFromWkt`], using
-//! [`deserialize_wkt`]. Or you can store this crates internal primitives [`wkt`]
-//! or [`Wkt`] in your struct fields.
+//! [`deserialize_wkt`]. Alternatively, you can store this crate's [`Wkt`] in your struct fields.
 
 use crate::{TryFromWkt, Wkt, WktNum};
 use serde::de::{Deserializer, Error, Visitor};
@@ -19,7 +18,7 @@ pub mod geo_types;
 /// Deserializes a WKT String into any type which implements `TryFromWkt`.
 ///
 /// This is useful when you have a struct which has a structured geometry field, (like a [`geo`](https://docs.rs/geo) or
-/// [`geo-types`] geometry) stored as WKT.
+/// [`geo-types`](https://docs.rs/geo-types) geometry) stored as WKT.
 ///
 #[cfg_attr(feature = "geo-types", doc = "```")]
 #[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
