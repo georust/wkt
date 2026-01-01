@@ -33,9 +33,9 @@ impl<W: io::Write> WriterWrapper<W> {
             (Error::FmtError(_), Some(io_err)) => io_err,
             (Error::FmtError(fmt_err), None) => {
                 debug_assert!(false, "FmtError without setting an error on WriterWrapper");
-                io::Error::new(io::ErrorKind::Other, fmt_err.to_string())
+                io::Error::other(fmt_err.to_string())
             }
-            (other, _) => io::Error::new(io::ErrorKind::Other, other.to_string()),
+            (other, _) => io::Error::other(other.to_string()),
         }
     }
 }
@@ -108,10 +108,7 @@ mod tests {
         struct FailingWriter;
         impl io::Write for FailingWriter {
             fn write(&mut self, _buf: &[u8]) -> io::Result<usize> {
-                Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "FailingWriter always fails",
-                ))
+                Err(io::Error::other("FailingWriter always fails"))
             }
 
             fn flush(&mut self) -> io::Result<()> {

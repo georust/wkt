@@ -1,8 +1,7 @@
 //! This module deserialises to WKT using [`serde`].
 //!
 //! You can deserialise to [`geo_types`] or any other implementor of [`TryFromWkt`], using
-//! [`deserialize_wkt`]. Or you can store this crates internal primitives [`wkt`]
-//! or [`Wkt`] in your struct fields.
+//! [`deserialize_wkt`]. Alternatively, you can store this crate's [`Wkt`] in your struct fields.
 
 use crate::{TryFromWkt, Wkt, WktNum};
 use serde::de::{Deserializer, Error, Visitor};
@@ -19,7 +18,7 @@ pub mod geo_types;
 /// Deserializes a WKT String into any type which implements `TryFromWkt`.
 ///
 /// This is useful when you have a struct which has a structured geometry field, (like a [`geo`](https://docs.rs/geo) or
-/// [`geo-types`] geometry) stored as WKT.
+/// [`geo-types`](https://docs.rs/geo-types) geometry) stored as WKT.
 ///
 #[cfg_attr(feature = "geo-types", doc = "```")]
 #[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
@@ -144,35 +143,6 @@ where
     }
 }
 
-struct GeometryVisitor<T> {
-    _marker: PhantomData<T>,
-}
-
-impl<T> Default for GeometryVisitor<T> {
-    fn default() -> Self {
-        GeometryVisitor {
-            _marker: PhantomData,
-        }
-    }
-}
-
-impl<T> Visitor<'_> for GeometryVisitor<T>
-where
-    T: FromStr + Default + WktNum,
-{
-    type Value = Wkt<T>;
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "a valid WKT format")
-    }
-    fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-    where
-        E: Error,
-    {
-        let wkt = Wkt::from_str(s).map_err(|e| serde::de::Error::custom(e))?;
-        Ok(wkt)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -185,71 +155,33 @@ mod tests {
         Deserializer, Error as _, IntoDeserializer,
     };
 
-    mod wkt {
-        use super::*;
-
-        #[test]
-        fn deserialize() {
-            let deserializer: StrDeserializer<'_, Error> = "POINT (10 20.1)".into_deserializer();
-            let wkt = deserializer
-                .deserialize_any(WktVisitor::<f64>::default())
-                .unwrap();
-            assert!(matches!(
-                wkt,
-                Wkt::Point(Point {
-                    coord: Some(Coord {
-                        x: _, // floating-point types cannot be used in patterns
-                        y: _, // floating-point types cannot be used in patterns
-                        z: None,
-                        m: None,
-                    }),
-                    dim: _dim,
-                })
-            ));
-        }
-
-        #[test]
-        fn deserialize_error() {
-            let deserializer: StrDeserializer<'_, Error> = "POINT (10 20.1A)".into_deserializer();
-            let wkt = deserializer.deserialize_any(WktVisitor::<f64>::default());
-            assert_eq!(
-                wkt.unwrap_err(),
-                Error::custom("Unable to parse input number as the desired output type")
-            );
-        }
+    #[test]
+    fn deserialize() {
+        let deserializer: StrDeserializer<'_, Error> = "POINT (10 20.1)".into_deserializer();
+        let wkt = deserializer
+            .deserialize_any(WktVisitor::<f64>::default())
+            .unwrap();
+        assert!(matches!(
+            wkt,
+            Wkt::Point(Point {
+                coord: Some(Coord {
+                    x: _, // floating-point types cannot be used in patterns
+                    y: _, // floating-point types cannot be used in patterns
+                    z: None,
+                    m: None,
+                }),
+                dim: _dim,
+            })
+        ));
     }
 
-    mod geometry {
-        use super::*;
-
-        #[test]
-        fn deserialize() {
-            let deserializer: StrDeserializer<'_, Error> = "POINT (42 3.14)".into_deserializer();
-            let geometry = deserializer
-                .deserialize_any(GeometryVisitor::<f64>::default())
-                .unwrap();
-            assert!(matches!(
-                geometry,
-                Wkt::Point(Point {
-                    coord: Some(Coord {
-                        x: _, // floating-point types cannot be used in patterns
-                        y: _, // floating-point types cannot be used in patterns
-                        z: None,
-                        m: None,
-                    }),
-                    dim: _dim,
-                })
-            ));
-        }
-
-        #[test]
-        fn deserialize_error() {
-            let deserializer: StrDeserializer<'_, Error> = "POINT (42 PI3.14)".into_deserializer();
-            let geometry = deserializer.deserialize_any(GeometryVisitor::<f64>::default());
-            assert_eq!(
-                geometry.unwrap_err(),
-                Error::custom("Expected a number for the Y coordinate")
-            );
-        }
+    #[test]
+    fn deserialize_error() {
+        let deserializer: StrDeserializer<'_, Error> = "POINT (10 20.1A)".into_deserializer();
+        let wkt = deserializer.deserialize_any(WktVisitor::<f64>::default());
+        assert_eq!(
+            wkt.unwrap_err(),
+            Error::custom("Unable to parse input number as the desired output type")
+        );
     }
 }
