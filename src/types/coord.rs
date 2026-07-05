@@ -44,7 +44,11 @@ impl<T> FromTokens<T> for Coord<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(
+        tokens: &mut PeekableTokens<T>,
+        dim: Dimension,
+        _depth: usize,
+    ) -> Result<Self, &'static str> {
         let x = match tokens.next().transpose()? {
             Some(Token::Number(n)) => n,
             _ => return Err("Expected a number for the X coordinate"),

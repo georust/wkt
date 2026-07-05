@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* Your change here.
+* Bound `GEOMETRYCOLLECTION` nesting depth to prevent stack overflow when parsing untrusted WKT.
 
 ## 0.14.0 - 2025-05-08
 

@@ -87,7 +87,7 @@ where
                     Err(_) => {
                         log::warn!(
                             "Failed to parse input: '{}' as {}",
-                            &number,
+                            number,
                             type_name::<T>()
                         );
                         return Some(Err(

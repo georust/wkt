@@ -98,11 +98,16 @@ impl<T> FromTokens<T> for Polygon<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(
+        tokens: &mut PeekableTokens<T>,
+        dim: Dimension,
+        depth: usize,
+    ) -> Result<Self, &'static str> {
         let result = FromTokens::comma_many(
             <LineString<T> as FromTokens<T>>::from_tokens_with_parens,
             tokens,
             dim,
+            depth,
         );
         result.map(|rings| Polygon { rings, dim })
     }

@@ -98,7 +98,11 @@ impl<T> FromTokens<T> for GeometryCollection<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(
+        tokens: &mut PeekableTokens<T>,
+        dim: Dimension,
+        depth: usize,
+    ) -> Result<Self, &'static str> {
         let mut items = Vec::new();
 
         let word = match tokens.next().transpose()? {
@@ -106,7 +110,7 @@ where
             _ => return Err("Expected a word in GEOMETRYCOLLECTION"),
         };
 
-        let item = Wkt::from_word_and_tokens(&word, tokens)?;
+        let item = Wkt::from_word_and_tokens(&word, tokens, depth + 1)?;
         items.push(item);
 
         while let Some(&Ok(Token::Comma)) = tokens.peek() {
@@ -117,7 +121,7 @@ where
                 _ => return Err("Expected a word in GEOMETRYCOLLECTION"),
             };
 
-            let item = Wkt::from_word_and_tokens(&word, tokens)?;
+            let item = Wkt::from_word_and_tokens(&word, tokens, depth + 1)?;
             items.push(item);
         }
 
@@ -455,5 +459,167 @@ mod tests {
              )",
             format!("{}", geometrycollection)
         );
+    }
+    #[test]
+    fn deeply_nested_geometrycollection_returns_error() {
+        // Prevents stack overflow on deeply nested GeometryCollections
+        let handle = std::thread::Builder::new()
+            .stack_size(1_048_576)
+            .spawn(|| {
+                let depth = 200;
+                let mut s = String::new();
+                for _ in 0..depth {
+                    s.push_str("GEOMETRYCOLLECTION(");
+                }
+                s.push_str("POINT(1 2)");
+                for _ in 0..depth {
+                    s.push(')');
+                }
+                let result = Wkt::<f64>::from_str(&s);
+                assert!(
+                    result.is_err(),
+                    "Parsing deeply nested GeometryCollection should return an error"
+                );
+            })
+            .expect("Failed to spawn thread");
+
+        let join_result = handle.join();
+        assert!(
+            join_result.is_ok(),
+            "Parser thread should not panic or overflow the stack"
+        );
+    }
+    #[test]
+    fn nested_geometrycollection_parses() {
+        let wkt: Wkt<f64> =
+            Wkt::from_str("GEOMETRYCOLLECTION(GEOMETRYCOLLECTION(POINT(1 2)),LINESTRING(0 0,1 1))")
+                .unwrap();
+        let outer = match wkt {
+            Wkt::GeometryCollection(gc) => gc,
+            _ => unreachable!(),
+        };
+        assert_eq!(outer.geoms.len(), 2);
+
+        let inner = match &outer.geoms[0] {
+            Wkt::GeometryCollection(gc) => gc,
+            _ => unreachable!(),
+        };
+        assert_eq!(inner.geoms.len(), 1);
+    }
+
+    #[test]
+    fn geometrycollection_depth_boundary() {
+        use crate::MAX_DEPTH;
+
+        // MAX_DEPTH levels parse successfully
+        let mut s = String::new();
+        for _ in 0..MAX_DEPTH {
+            s.push_str("GEOMETRYCOLLECTION(");
+        }
+        s.push_str("POINT(0 0)");
+        for _ in 0..MAX_DEPTH {
+            s.push(')');
+        }
+        assert!(
+            Wkt::<f64>::from_str(&s).is_ok(),
+            "Depth {} (MAX_DEPTH) should parse",
+            MAX_DEPTH
+        );
+
+        // MAX_DEPTH + 1 levels exceed the limit
+        let mut s = String::new();
+        for _ in 0..=MAX_DEPTH {
+            s.push_str("GEOMETRYCOLLECTION(");
+        }
+        s.push_str("POINT(0 0)");
+        for _ in 0..=MAX_DEPTH {
+            s.push(')');
+        }
+        let result = Wkt::<f64>::from_str(&s);
+        assert!(
+            result.is_err(),
+            "Depth {} (MAX_DEPTH + 1) should fail",
+            MAX_DEPTH + 1
+        );
+        assert_eq!(
+            result.unwrap_err(),
+            "Maximum GeometryCollection nesting depth exceeded"
+        );
+    }
+
+    #[test]
+    fn geometrycollection_sibling_nesting_counts_independently() {
+        // Sibling GeometryCollections share depth
+        let wkt: Wkt<f64> = Wkt::from_str(
+            "GEOMETRYCOLLECTION(GEOMETRYCOLLECTION(POINT(0 0)),GEOMETRYCOLLECTION(POINT(1 1)))",
+        )
+        .unwrap();
+        let outer = match wkt {
+            Wkt::GeometryCollection(gc) => gc,
+            _ => unreachable!(),
+        };
+        assert_eq!(outer.geoms.len(), 2);
+    }
+
+    #[test]
+    fn geometrycollection_z_depth_limit() {
+        let handle = std::thread::Builder::new()
+            .stack_size(1_048_576)
+            .spawn(|| {
+                let depth = 200;
+                let mut s = String::new();
+                for _ in 0..depth {
+                    s.push_str("GEOMETRYCOLLECTION Z(");
+                }
+                s.push_str("POINT Z(1 2 3)");
+                for _ in 0..depth {
+                    s.push(')');
+                }
+                Wkt::<f64>::from_str(&s)
+            })
+            .expect("Failed to spawn thread")
+            .join();
+
+        let result = handle.expect("Thread should not overflow");
+        assert!(result.is_err());
+    }
+    #[test]
+    fn geometrycollection_m_and_zm_depth_limit() {
+        for variant in ["GEOMETRYCOLLECTION M", "GEOMETRYCOLLECTION ZM"] {
+            let mut s = String::new();
+            for _ in 0..200 {
+                s.push_str(&format!("{}(", variant));
+            }
+            if variant.ends_with("M") && !variant.ends_with("ZM") {
+                s.push_str("POINT M(1 2 3)");
+            } else {
+                s.push_str("POINT ZM(1 2 3 4)");
+            }
+            for _ in 0..200 {
+                s.push(')');
+            }
+            let result = Wkt::<f64>::from_str(&s);
+            assert!(result.is_err(), "{} deeply nested should fail", variant);
+        }
+    }
+
+    #[test]
+    fn geometrycollection_wide_nesting() {
+        // Breadth does not affect depth counting
+        let mut s = "GEOMETRYCOLLECTION(".to_string();
+        for i in 0..50 {
+            if i > 0 {
+                s.push(',');
+            }
+            s.push_str("GEOMETRYCOLLECTION(POINT(1 2))");
+        }
+        s.push(')');
+
+        let wkt: Wkt<f64> = Wkt::from_str(&s).unwrap();
+        let outer = match wkt {
+            Wkt::GeometryCollection(gc) => gc,
+            _ => unreachable!(),
+        };
+        assert_eq!(outer.geoms.len(), 50);
     }
 }

@@ -88,8 +88,13 @@ impl<T> FromTokens<T> for LineString<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
-        let result = FromTokens::comma_many(<Coord<T> as FromTokens<T>>::from_tokens, tokens, dim);
+    fn from_tokens(
+        tokens: &mut PeekableTokens<T>,
+        dim: Dimension,
+        depth: usize,
+    ) -> Result<Self, &'static str> {
+        let result =
+            FromTokens::comma_many(<Coord<T> as FromTokens<T>>::from_tokens, tokens, dim, depth);
         result.map(|coords| LineString { coords, dim })
     }
 
