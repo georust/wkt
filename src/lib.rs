@@ -199,6 +199,7 @@ where
     fn from_word_and_tokens(
         word: &str,
         tokens: &mut PeekableTokens<T>,
+        depth: usize,
     ) -> Result<Self, &'static str> {
         // Normally Z/M/ZM is separated by a space from the primary WKT word. E.g. `POINT Z`
         // instead of `POINTZ`. However we wish to support both types (in reading). When written
@@ -357,28 +358,30 @@ where
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTION") => {
-                let x =
-                    <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                let x = GeometryCollection::from_tokens_with_header_at_depth(tokens, None, depth);
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZ") => {
-                let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(
+                let x = GeometryCollection::from_tokens_with_header_at_depth(
                     tokens,
                     Some(Dimension::XYZ),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONM") => {
-                let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(
+                let x = GeometryCollection::from_tokens_with_header_at_depth(
                     tokens,
                     Some(Dimension::XYM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZM") => {
-                let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(
+                let x = GeometryCollection::from_tokens_with_header_at_depth(
                     tokens,
                     Some(Dimension::XYZM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -411,7 +414,7 @@ where
             }
             _ => return Err("Invalid WKT format"),
         };
-        Wkt::from_word_and_tokens(word, &mut tokens)
+        Wkt::from_word_and_tokens(word, &mut tokens, 0)
     }
 }
 
@@ -781,18 +784,41 @@ where
         tokens: &mut PeekableTokens<T>,
         dim: Option<Dimension>,
     ) -> Result<Self, &'static str> {
+        Self::from_tokens_with_header_by(tokens, dim, Self::from_tokens)
+    }
+
+    // Only `GeometryCollection` needs extra state, so its body parser is passed in.
+    fn from_tokens_with_header_by<'a, F>(
+        tokens: &mut PeekableTokens<'a, T>,
+        dim: Option<Dimension>,
+        parse: F,
+    ) -> Result<Self, &'static str>
+    where
+        F: FnOnce(&mut PeekableTokens<'a, T>, Dimension) -> Result<Self, &'static str>,
+    {
         let dim = if let Some(dim) = dim {
             dim
         } else {
             infer_geom_dimension(tokens)?
         };
-        FromTokens::from_tokens_with_parens(tokens, dim)
+        Self::from_tokens_with_parens_by(tokens, dim, parse)
     }
 
     fn from_tokens_with_parens(
         tokens: &mut PeekableTokens<T>,
         dim: Dimension,
     ) -> Result<Self, &'static str> {
+        Self::from_tokens_with_parens_by(tokens, dim, Self::from_tokens)
+    }
+
+    fn from_tokens_with_parens_by<'a, F>(
+        tokens: &mut PeekableTokens<'a, T>,
+        dim: Dimension,
+        parse: F,
+    ) -> Result<Self, &'static str>
+    where
+        F: FnOnce(&mut PeekableTokens<'a, T>, Dimension) -> Result<Self, &'static str>,
+    {
         match tokens.next().transpose()? {
             Some(Token::ParenOpen) => (),
             Some(Token::Word(s)) if s.eq_ignore_ascii_case("EMPTY") => {
@@ -800,12 +826,12 @@ where
             }
             _ => return Err("Missing open parenthesis for type"),
         };
-        let result = FromTokens::from_tokens(tokens, dim);
+        let result = parse(tokens, dim)?;
         match tokens.next().transpose()? {
             Some(Token::ParenClose) => (),
             _ => return Err("Missing closing parenthesis for type"),
         };
-        result
+        Ok(result)
     }
 
     fn from_tokens_with_optional_parens(
