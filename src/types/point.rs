@@ -88,8 +88,12 @@ impl<T> FromTokens<T> for Point<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
-        let result = <Coord<T> as FromTokens<T>>::from_tokens(tokens, dim);
+    fn from_tokens(
+        tokens: &mut PeekableTokens<T>,
+        dim: Dimension,
+        _depth: usize,
+    ) -> Result<Self, &'static str> {
+        let result = <Coord<T> as FromTokens<T>>::from_tokens(tokens, dim, _depth);
         result.map(|coord| Point {
             coord: Some(coord),
             dim,

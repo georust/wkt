@@ -162,6 +162,9 @@ impl<T> WktNum for T where T: Num + NumCast + PartialOrd + PartialEq + Copy + fm
 pub trait WktFloat: WktNum + Float {}
 impl<T> WktFloat for T where T: WktNum + Float {}
 
+/// Maximum GeometryCollection nesting depth to prevent stack overflow.
+const MAX_DEPTH: usize = 128;
+
 #[derive(Clone, Debug, PartialEq)]
 /// All supported WKT geometry [`types`]
 pub enum Wkt<T: WktNum = f64> {
@@ -199,6 +202,7 @@ where
     fn from_word_and_tokens(
         word: &str,
         tokens: &mut PeekableTokens<T>,
+        depth: usize,
     ) -> Result<Self, &'static str> {
         // Normally Z/M/ZM is separated by a space from the primary WKT word. E.g. `POINT Z`
         // instead of `POINTZ`. However we wish to support both types (in reading). When written
@@ -206,13 +210,14 @@ where
         // matches here.
         match word {
             w if w.eq_ignore_ascii_case("POINT") => {
-                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(tokens, None, depth);
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("POINTZ") => {
                 let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZ),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -220,6 +225,7 @@ where
                 let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -227,17 +233,20 @@ where
                 let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("LINESTRING") || w.eq_ignore_ascii_case("LINEARRING") => {
-                let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                let x =
+                    <LineString<T> as FromTokens<T>>::from_tokens_with_header(tokens, None, depth);
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("LINESTRINGZ") => {
                 let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZ),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -245,6 +254,7 @@ where
                 let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -252,17 +262,19 @@ where
                 let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("POLYGON") => {
-                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(tokens, None, depth);
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("POLYGONZ") => {
                 let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZ),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -270,6 +282,7 @@ where
                 let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -277,17 +290,20 @@ where
                 let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTIPOINT") => {
-                let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                let x =
+                    <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(tokens, None, depth);
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTIPOINTZ") => {
                 let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZ),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -295,6 +311,7 @@ where
                 let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -302,18 +319,21 @@ where
                 let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTILINESTRING") => {
-                let x =
-                    <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens, None, depth,
+                );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTILINESTRINGZ") => {
                 let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZ),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -321,6 +341,7 @@ where
                 let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -328,17 +349,21 @@ where
                 let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTIPOLYGON") => {
-                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
+                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(
+                    tokens, None, depth,
+                );
                 x.map(|y| y.into())
             }
             w if w.eq_ignore_ascii_case("MULTIPOLYGONZ") => {
                 let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZ),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -346,6 +371,7 @@ where
                 let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
@@ -353,32 +379,29 @@ where
                 let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(
                     tokens,
                     Some(Dimension::XYZM),
+                    depth,
                 );
                 x.map(|y| y.into())
             }
-            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTION") => {
-                let x =
-                    <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZ") => {
+            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTION")
+                || w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZ")
+                || w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONM")
+                || w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZM") =>
+            {
+                if depth >= MAX_DEPTH {
+                    return Err("Maximum GeometryCollection nesting depth exceeded");
+                }
+                let dim = if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZ") {
+                    Some(Dimension::XYZ)
+                } else if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONM") {
+                    Some(Dimension::XYM)
+                } else if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZM") {
+                    Some(Dimension::XYZM)
+                } else {
+                    None
+                };
                 let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZ),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONM") => {
-                let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZM") => {
-                let x = <GeometryCollection<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZM),
+                    tokens, dim, depth,
                 );
                 x.map(|y| y.into())
             }
@@ -411,7 +434,7 @@ where
             }
             _ => return Err("Invalid WKT format"),
         };
-        Wkt::from_word_and_tokens(&word, &mut tokens)
+        Wkt::from_word_and_tokens(&word, &mut tokens, 0)
     }
 }
 
@@ -771,7 +794,11 @@ trait FromTokens<T>: Sized + Default
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str>;
+    fn from_tokens(
+        tokens: &mut PeekableTokens<T>,
+        dim: Dimension,
+        depth: usize,
+    ) -> Result<Self, &'static str>;
 
     fn new_empty(dim: Dimension) -> Self;
 
@@ -780,41 +807,44 @@ where
     fn from_tokens_with_header(
         tokens: &mut PeekableTokens<T>,
         dim: Option<Dimension>,
+        depth: usize,
     ) -> Result<Self, &'static str> {
         let dim = if let Some(dim) = dim {
             dim
         } else {
             infer_geom_dimension(tokens)?
         };
-        FromTokens::from_tokens_with_parens(tokens, dim)
+        FromTokens::from_tokens_with_parens(tokens, dim, depth)
     }
 
     fn from_tokens_with_parens(
         tokens: &mut PeekableTokens<T>,
         dim: Dimension,
+        depth: usize,
     ) -> Result<Self, &'static str> {
         match tokens.next().transpose()? {
             Some(Token::ParenOpen) => (),
-            Some(Token::Word(ref s)) if s.eq_ignore_ascii_case("EMPTY") => {
+            Some(Token::Word(s)) if s.eq_ignore_ascii_case("EMPTY") => {
                 return Ok(Self::new_empty(dim));
             }
             _ => return Err("Missing open parenthesis for type"),
         };
-        let result = FromTokens::from_tokens(tokens, dim);
+        let result = FromTokens::from_tokens(tokens, dim, depth)?;
         match tokens.next().transpose()? {
             Some(Token::ParenClose) => (),
             _ => return Err("Missing closing parenthesis for type"),
         };
-        result
+        Ok(result)
     }
 
     fn from_tokens_with_optional_parens(
         tokens: &mut PeekableTokens<T>,
         dim: Dimension,
+        depth: usize,
     ) -> Result<Self, &'static str> {
         match tokens.peek() {
-            Some(Ok(Token::ParenOpen)) => Self::from_tokens_with_parens(tokens, dim),
-            _ => Self::from_tokens(tokens, dim),
+            Some(Ok(Token::ParenOpen)) => Self::from_tokens_with_parens(tokens, dim, depth),
+            _ => Self::from_tokens(tokens, dim, depth),
         }
     }
 
@@ -822,19 +852,20 @@ where
         f: F,
         tokens: &mut PeekableTokens<T>,
         dim: Dimension,
+        depth: usize,
     ) -> Result<Vec<Self>, &'static str>
     where
-        F: Fn(&mut PeekableTokens<T>, Dimension) -> Result<Self, &'static str>,
+        F: Fn(&mut PeekableTokens<T>, Dimension, usize) -> Result<Self, &'static str>,
     {
         let mut items = Vec::new();
 
-        let item = f(tokens, dim)?;
+        let item = f(tokens, dim, depth)?;
         items.push(item);
 
         while let Some(&Ok(Token::Comma)) = tokens.peek() {
             tokens.next(); // throw away comma
 
-            let item = f(tokens, dim)?;
+            let item = f(tokens, dim, depth)?;
             items.push(item);
         }
 
