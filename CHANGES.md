@@ -2,8 +2,7 @@
 
 ## Unreleased
 
-* Parse and write `MULTIPOINT` with a mix of `EMPTY` and non-empty members, e.g. `MULTIPOINT(1 2, EMPTY)`. (#111)
-* Your change here.
+* Parse and write `MULTIPOINT`, `MULTILINESTRING`, and `MULTIPOLYGON` with a mix of `EMPTY` and non-empty members, e.g. `MULTIPOINT(1 2, EMPTY)`. (#111)
 
 ## 0.14.0 - 2025-05-08
 

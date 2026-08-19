@@ -291,4 +291,29 @@ mod tests {
             format!("{}", polygon)
         );
     }
+
+    #[test]
+    fn polygon_with_empty_interior_ring() {
+        // An EMPTY interior ring must round-trip: it is written as the bare EMPTY keyword, since
+        // an empty coordinate sequence `()` is not accepted by the parser.
+        let wkt_str = "POLYGON((0 0, 10 0, 10 10, 0 0), EMPTY, (1 1, 2 1, 2 2, 1 1))";
+        let wkt: Wkt<f64> = Wkt::from_str(wkt_str).unwrap();
+        let rings = match &wkt {
+            Wkt::Polygon(Polygon { rings, dim }) => {
+                assert_eq!(*dim, Dimension::XY);
+                rings
+            }
+            _ => unreachable!(),
+        };
+        assert_eq!(3, rings.len());
+        assert!(rings[1].coords.is_empty(), "second ring should be empty");
+
+        let serialized = wkt.to_string();
+        assert_eq!(
+            "POLYGON((0 0,10 0,10 10,0 0),EMPTY,(1 1,2 1,2 2,1 1))",
+            serialized
+        );
+        let reparsed: Wkt<f64> = Wkt::from_str(&serialized).unwrap();
+        assert_eq!(wkt, reparsed);
+    }
 }
