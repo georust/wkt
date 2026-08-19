@@ -812,6 +812,18 @@ where
         tokens: &mut PeekableTokens<T>,
         dim: Dimension,
     ) -> Result<Self, &'static str> {
+        // An `EMPTY` member (e.g. the empty point in `MULTIPOINT(1 2, EMPTY)`) is valid per the
+        // OGC Simple Feature Access spec, so handle it here in addition to the parenthesized form
+        // already handled by `from_tokens_with_parens`.
+        let is_empty = matches!(
+            tokens.peek(),
+            Some(Ok(Token::Word(word))) if word.eq_ignore_ascii_case("EMPTY")
+        );
+        if is_empty {
+            tokens.next(); // consume the EMPTY token
+            return Ok(Self::new_empty(dim));
+        }
+
         match tokens.peek() {
             Some(Ok(Token::ParenOpen)) => Self::from_tokens_with_parens(tokens, dim),
             _ => Self::from_tokens(tokens, dim),
