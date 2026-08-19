@@ -333,6 +333,7 @@ macro_rules! geometry_collection {
 mod test {
     use crate::types::*;
     use crate::Wkt;
+    use std::str::FromStr;
 
     #[test]
     fn point() {
@@ -807,5 +808,74 @@ mod test {
         let point: Point<f32> = wkt!(POINT(1.0 2.0));
         assert_eq!(point.coord.unwrap().x, 1f32);
         assert_eq!(point.coord.unwrap().y, 2f32);
+    }
+
+    /// Compare the output of the wkt! macro with the runtim Wkt::parse
+    macro_rules! assert_macro_matches_parser {
+        ($($tt: tt)+) => {{
+            let from_parser: Wkt<f64> = Wkt::from_str(stringify!($($tt)+))
+                .expect(concat!("parser rejected `", stringify!($($tt)+), "`"));
+            assert_eq!(
+                Wkt::from(wkt! { $($tt)+ }),
+                from_parser,
+                "`wkt!` macro and parser disagree on `{}`",
+                stringify!($($tt)+)
+            );
+        }};
+    }
+
+    #[test]
+    fn multi_point_with_empty_member() {
+        assert_macro_matches_parser! { MULTIPOINT(1.0 2.0, EMPTY) };
+        assert_macro_matches_parser! { MULTIPOINT Z (EMPTY, 1.0 2.0 3.0) };
+    }
+
+    #[test]
+    fn multi_line_string_with_empty_member() {
+        assert_macro_matches_parser! { MULTILINESTRING(EMPTY, (0.0 0.0, 1.0 1.0)) };
+        assert_macro_matches_parser! { MULTILINESTRING Z ((0.0 0.0 1.0, 1.0 1.0 2.0), EMPTY) };
+    }
+
+    #[test]
+    fn polygon_with_empty_interior_ring() {
+        assert_macro_matches_parser! { POLYGON((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 0.0), EMPTY) };
+        assert_macro_matches_parser! {
+            POLYGON Z ((0.0 0.0 1.0, 10.0 0.0 1.0, 10.0 10.0 1.0, 0.0 0.0 1.0), EMPTY)
+        };
+    }
+
+    #[test]
+    fn multi_polygon_with_empty_member_and_ring() {
+        assert_macro_matches_parser! {
+            MULTIPOLYGON(((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 0.0), EMPTY), EMPTY)
+        };
+        assert_macro_matches_parser! {
+            MULTIPOLYGON Z (EMPTY, ((0.0 0.0 1.0, 1.0 0.0 1.0, 1.0 1.0 1.0, 0.0 0.0 1.0)))
+        };
+    }
+
+    #[test]
+    fn geometry_collection_with_empty_members() {
+        assert_macro_matches_parser! {
+            GEOMETRYCOLLECTION(
+                POINT(1.0 2.0),
+                POINT EMPTY,
+                LINESTRING EMPTY,
+                POLYGON EMPTY,
+                MULTIPOINT(1.0 2.0, EMPTY),
+                MULTILINESTRING(EMPTY, (0.0 0.0, 1.0 1.0)),
+                MULTIPOLYGON(EMPTY),
+                GEOMETRYCOLLECTION EMPTY
+            )
+        };
+
+        // The dimensioned collection arm has a separate matcher, so exercise EMPTY members there
+        // too.
+        assert_macro_matches_parser! {
+            GEOMETRYCOLLECTION Z (
+                POINT Z EMPTY,
+                MULTILINESTRING Z (EMPTY, (0.0 0.0 1.0, 1.0 1.0 1.0))
+            )
+        };
     }
 }

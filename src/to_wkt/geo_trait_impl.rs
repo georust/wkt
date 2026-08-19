@@ -116,7 +116,7 @@ pub fn write_polygon<T: WktNum + fmt::Display>(
 
             for interior in polygon.interiors() {
                 f.write_char(',')?;
-                write_coord_sequence(f, interior.coords(), size)?;
+                write_linestring_or_empty(f, &interior, size)?;
             }
 
             Ok(f.write_char(')')?)
@@ -155,22 +155,41 @@ pub fn write_multi_point<T: WktNum + fmt::Display>(
     // Note: This is largely copied from `write_coord_sequence`, because `multipoint.points()`
     // yields a sequence of Point, not Coord.
     if let Some(first_point) = points.next() {
-        f.write_str("((")?;
+        f.write_char('(')?;
 
-        // Assume no empty points within this MultiPoint
-        write_coord(f, &first_point.coord().unwrap(), size)?;
+        write_multi_point_member(f, &first_point, size)?;
 
         for point in points {
-            f.write_str("),(")?;
-            write_coord(f, &point.coord().unwrap(), size)?;
+            f.write_char(',')?;
+            write_multi_point_member(f, &point, size)?;
         }
 
-        f.write_str("))")?;
+        f.write_char(')')?;
     } else {
         f.write_str(" EMPTY")?;
     }
 
     Ok(())
+}
+
+/// Write a single member of a MultiPoint, which may be an empty point.
+///
+/// A non-empty member is written parenthesized, e.g. `(1 2)`; an empty member is written as the
+/// bare `EMPTY` keyword, matching the WKT form accepted by the parser for empty points in a
+/// MultiPoint.
+fn write_multi_point_member<T: WktNum + fmt::Display>(
+    f: &mut impl Write,
+    point: &impl PointTrait<T = T>,
+    size: PhysicalCoordinateDimension,
+) -> Result<(), Error> {
+    if let Some(coord) = point.coord() {
+        f.write_char('(')?;
+        write_coord(f, &coord, size)?;
+        f.write_char(')')?;
+        Ok(())
+    } else {
+        Ok(f.write_str("EMPTY")?)
+    }
 }
 
 /// Write an object implementing [`MultiLineStringTrait`] to a WKT string.
@@ -197,11 +216,11 @@ pub fn write_multi_linestring<T: WktNum + fmt::Display>(
     let mut line_strings = multilinestring.line_strings();
     if let Some(first_linestring) = line_strings.next() {
         f.write_str("(")?;
-        write_coord_sequence(f, first_linestring.coords(), size)?;
+        write_linestring_or_empty(f, &first_linestring, size)?;
 
         for linestring in line_strings {
             f.write_char(',')?;
-            write_coord_sequence(f, linestring.coords(), size)?;
+            write_linestring_or_empty(f, &linestring, size)?;
         }
 
         f.write_char(')')?;
@@ -210,6 +229,23 @@ pub fn write_multi_linestring<T: WktNum + fmt::Display>(
     };
 
     Ok(())
+}
+
+/// Write a LineString which appears as part of a larger geometry - a MultiLineString member or a
+/// Polygon ring - and which may be empty.
+///
+/// An empty one is written as the bare `EMPTY` keyword, e.g. `MULTILINESTRING(EMPTY,(0 0,1 1))`,
+/// rather than as an empty coordinate sequence `()`, which the parser does not accept.
+fn write_linestring_or_empty<T: WktNum + fmt::Display>(
+    f: &mut impl Write,
+    linestring: &impl LineStringTrait<T = T>,
+    size: PhysicalCoordinateDimension,
+) -> Result<(), Error> {
+    if linestring.num_coords() == 0 {
+        Ok(f.write_str("EMPTY")?)
+    } else {
+        write_coord_sequence(f, linestring.coords(), size)
+    }
 }
 
 /// Write an object implementing [`MultiPolygonTrait`] to a WKT string.
@@ -237,30 +273,46 @@ pub fn write_multi_polygon<T: WktNum + fmt::Display>(
     let mut polygons = multipolygon.polygons();
 
     if let Some(first_polygon) = polygons.next() {
-        f.write_str("((")?;
+        f.write_char('(')?;
 
-        write_coord_sequence(f, first_polygon.exterior().unwrap().coords(), size)?;
-        for interior in first_polygon.interiors() {
-            f.write_char(',')?;
-            write_coord_sequence(f, interior.coords(), size)?;
-        }
+        write_multi_polygon_member(f, &first_polygon, size)?;
 
         for polygon in polygons {
-            f.write_str("),(")?;
-
-            write_coord_sequence(f, polygon.exterior().unwrap().coords(), size)?;
-            for interior in polygon.interiors() {
-                f.write_char(',')?;
-                write_coord_sequence(f, interior.coords(), size)?;
-            }
+            f.write_char(',')?;
+            write_multi_polygon_member(f, &polygon, size)?;
         }
 
-        f.write_str("))")?;
+        f.write_char(')')?;
     } else {
         f.write_str(" EMPTY")?;
     };
 
     Ok(())
+}
+
+/// Write a single member of a MultiPolygon, which may be an empty Polygon.
+///
+/// An empty member is written as the bare `EMPTY` keyword, e.g.
+/// `MULTIPOLYGON(EMPTY,((0 0,1 0,1 1,0 0)))`, matching the form accepted by the parser.
+fn write_multi_polygon_member<T: WktNum + fmt::Display>(
+    f: &mut impl Write,
+    polygon: &impl PolygonTrait<T = T>,
+    size: PhysicalCoordinateDimension,
+) -> Result<(), Error> {
+    let Some(exterior) = polygon.exterior() else {
+        return Ok(f.write_str("EMPTY")?);
+    };
+    if exterior.num_coords() == 0 {
+        return Ok(f.write_str("EMPTY")?);
+    }
+
+    f.write_char('(')?;
+    write_coord_sequence(f, exterior.coords(), size)?;
+    for interior in polygon.interiors() {
+        f.write_char(',')?;
+        write_linestring_or_empty(f, &interior, size)?;
+    }
+    Ok(f.write_char(')')?)
 }
 
 /// Write an object implementing [`GeometryTrait`] to a WKT string.

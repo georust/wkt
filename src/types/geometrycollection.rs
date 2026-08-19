@@ -456,4 +456,45 @@ mod tests {
             format!("{}", geometrycollection)
         );
     }
+
+    #[test]
+    fn geometrycollection_with_empty_member() {
+        // Empty geometries are valid members of a GEOMETRYCOLLECTION, in the same way an EMPTY
+        // point is a valid MULTIPOINT member (#111). Members carry their own header, so each one
+        // is written with the type keyword followed by EMPTY.
+        let wkt_str = "GEOMETRYCOLLECTION(POINT(1 2), POINT EMPTY, LINESTRING EMPTY, POLYGON EMPTY, MULTIPOINT EMPTY, GEOMETRYCOLLECTION EMPTY)";
+        let wkt: Wkt<f64> = Wkt::from_str(wkt_str).unwrap();
+        let geoms = match &wkt {
+            Wkt::GeometryCollection(GeometryCollection { geoms, dim }) => {
+                assert_eq!(*dim, Dimension::XY);
+                geoms
+            }
+            _ => unreachable!(),
+        };
+        assert_eq!(6, geoms.len());
+
+        let serialized = wkt.to_string();
+        assert_eq!(
+            "GEOMETRYCOLLECTION(POINT(1 2),POINT EMPTY,LINESTRING EMPTY,POLYGON EMPTY,MULTIPOINT EMPTY,GEOMETRYCOLLECTION EMPTY)",
+            serialized
+        );
+        let reparsed: Wkt<f64> = Wkt::from_str(&serialized).unwrap();
+        assert_eq!(wkt, reparsed);
+    }
+
+    #[test]
+    fn geometrycollection_with_multi_member_containing_empty() {
+        // A collection member which itself has an EMPTY member must round-trip too.
+        let wkt: Wkt<f64> = Wkt::from_str(
+            "GEOMETRYCOLLECTION(MULTIPOINT(1 2, EMPTY), MULTILINESTRING(EMPTY, (0 0, 1 1)), MULTIPOLYGON(EMPTY, ((0 0, 1 0, 1 1, 0 0))))",
+        )
+        .unwrap();
+        let serialized = wkt.to_string();
+        assert_eq!(
+            "GEOMETRYCOLLECTION(MULTIPOINT((1 2),EMPTY),MULTILINESTRING(EMPTY,(0 0,1 1)),MULTIPOLYGON(EMPTY,((0 0,1 0,1 1,0 0))))",
+            serialized
+        );
+        let reparsed: Wkt<f64> = Wkt::from_str(&serialized).unwrap();
+        assert_eq!(wkt, reparsed);
+    }
 }
