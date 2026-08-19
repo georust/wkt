@@ -304,4 +304,49 @@ mod tests {
             format!("{}", multipoint)
         );
     }
+
+    #[test]
+    fn multipoint_with_empty_member() {
+        // An EMPTY point is a valid member of a MULTIPOINT per the OGC Simple Feature Access
+        // spec. Regression test for https://github.com/georust/wkt/issues/111.
+        for wkt_str in ["MULTIPOINT(1 2, EMPTY)", "MULTIPOINT((1 2), EMPTY)"] {
+            let wkt: Wkt<f64> = Wkt::from_str(wkt_str).unwrap();
+            let points = match wkt {
+                Wkt::MultiPoint(MultiPoint { points, dim }) => {
+                    assert_eq!(dim, Dimension::XY);
+                    points
+                }
+                _ => unreachable!(),
+            };
+            assert_eq!(2, points.len(), "parsing {wkt_str}");
+            let coord = points[0].coord.as_ref().unwrap();
+            assert_eq!(coord.x, 1.0);
+            assert_eq!(coord.y, 2.0);
+            assert!(points[1].coord.is_none(), "second member should be empty");
+        }
+    }
+
+    #[test]
+    fn roundtrip_multipoint_with_empty_member() {
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT(1 2, EMPTY)").unwrap();
+        let serialized = wkt.to_string();
+        assert_eq!(serialized, "MULTIPOINT((1 2),EMPTY)");
+        let reparsed: Wkt<f64> = Wkt::from_str(&serialized).unwrap();
+        assert_eq!(wkt, reparsed);
+    }
+
+    #[test]
+    fn multipoint_all_nonempty_still_parses() {
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOINT(1 2, 3 4)").unwrap();
+        let points = match wkt {
+            Wkt::MultiPoint(MultiPoint { points, dim }) => {
+                assert_eq!(dim, Dimension::XY);
+                points
+            }
+            _ => unreachable!(),
+        };
+        assert_eq!(2, points.len());
+        assert!(points[0].coord.is_some());
+        assert!(points[1].coord.is_some());
+    }
 }
