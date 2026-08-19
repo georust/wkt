@@ -310,4 +310,93 @@ mod tests {
             format!("{}", multipolygon)
         );
     }
+
+    #[test]
+    fn multipolygon_with_empty_member() {
+        // An EMPTY Polygon is a valid member of a MULTIPOLYGON per the OGC Simple Feature Access
+        // spec, in the same way an EMPTY point is a valid MULTIPOINT member (#111).
+        for wkt_str in [
+            "MULTIPOLYGON(EMPTY, ((0 0, 1 0, 1 1, 0 0)))",
+            "MULTIPOLYGON(((0 0, 1 0, 1 1, 0 0)), EMPTY)",
+        ] {
+            let wkt: Wkt<f64> = Wkt::from_str(wkt_str).unwrap();
+            let polygons = match wkt {
+                Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                    assert_eq!(dim, Dimension::XY);
+                    polygons
+                }
+                _ => unreachable!(),
+            };
+            assert_eq!(2, polygons.len(), "parsing {wkt_str}");
+            assert_eq!(
+                1,
+                polygons.iter().filter(|p| p.rings.is_empty()).count(),
+                "exactly one empty member in {wkt_str}"
+            );
+        }
+    }
+
+    #[test]
+    fn roundtrip_multipolygon_with_empty_member() {
+        // Writing an empty member used to panic on `exterior().unwrap()`; it is written as the
+        // bare EMPTY keyword.
+        let wkt: Wkt<f64> = Wkt::from_str("MULTIPOLYGON(EMPTY, ((0 0, 1 0, 1 1, 0 0)))").unwrap();
+        let serialized = wkt.to_string();
+        assert_eq!(serialized, "MULTIPOLYGON(EMPTY,((0 0,1 0,1 1,0 0)))");
+        let reparsed: Wkt<f64> = Wkt::from_str(&serialized).unwrap();
+        assert_eq!(wkt, reparsed);
+    }
+
+    #[test]
+    fn roundtrip_multipolygon_with_empty_member_3d() {
+        let wkt: Wkt<f64> =
+            Wkt::from_str("MULTIPOLYGON Z (((0 0 1, 1 0 1, 1 1 1, 0 0 1)), EMPTY)").unwrap();
+        let serialized = wkt.to_string();
+        assert_eq!(
+            serialized,
+            "MULTIPOLYGON Z(((0 0 1,1 0 1,1 1 1,0 0 1)),EMPTY)"
+        );
+        let reparsed: Wkt<f64> = Wkt::from_str(&serialized).unwrap();
+        assert_eq!(wkt, reparsed);
+    }
+
+    #[test]
+    fn multipolygon_with_empty_interior_ring() {
+        // As for a standalone Polygon, an EMPTY interior ring of a MultiPolygon member must be
+        // written as the bare EMPTY keyword rather than as `()`.
+        let wkt: Wkt<f64> =
+            Wkt::from_str("MULTIPOLYGON(((0 0, 10 0, 10 10, 0 0), EMPTY), EMPTY)").unwrap();
+        let polygons = match &wkt {
+            Wkt::MultiPolygon(MultiPolygon { polygons, dim }) => {
+                assert_eq!(*dim, Dimension::XY);
+                polygons
+            }
+            _ => unreachable!(),
+        };
+        assert_eq!(2, polygons.len());
+        assert_eq!(2, polygons[0].rings.len());
+        assert!(polygons[0].rings[1].coords.is_empty());
+        assert!(polygons[1].rings.is_empty());
+
+        let serialized = wkt.to_string();
+        assert_eq!(
+            "MULTIPOLYGON(((0 0,10 0,10 10,0 0),EMPTY),EMPTY)",
+            serialized
+        );
+        let reparsed: Wkt<f64> = Wkt::from_str(&serialized).unwrap();
+        assert_eq!(wkt, reparsed);
+    }
+
+    #[test]
+    fn roundtrip_multipolygon_with_empty_interior_ring_3d() {
+        let wkt: Wkt<f64> =
+            Wkt::from_str("MULTIPOLYGON Z (((0 0 1, 1 0 1, 1 1 1, 0 0 1), EMPTY))").unwrap();
+        let serialized = wkt.to_string();
+        assert_eq!(
+            "MULTIPOLYGON Z(((0 0 1,1 0 1,1 1 1,0 0 1),EMPTY))",
+            serialized
+        );
+        let reparsed: Wkt<f64> = Wkt::from_str(&serialized).unwrap();
+        assert_eq!(wkt, reparsed);
+    }
 }
