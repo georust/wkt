@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::PointTrait;
-
 use crate::to_wkt::write_point;
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
@@ -101,7 +99,42 @@ where
     }
 }
 
-impl<T: WktNum> PointTrait for Point<T> {
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::PointTrait for Point<T> {
+    type T = T;
+    type CoordType<'a>
+        = &'a Coord<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        self.coord.as_ref()
+    }
+}
+
+#[cfg(feature = "geo-traits_0_2")]
+impl<'a, T: WktNum> geo_traits_0_2::PointTrait for &'a Point<T> {
+    type T = T;
+    type CoordType<'b>
+        = &'a Coord<T>
+    where
+        Self: 'b;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn coord(&self) -> Option<Self::CoordType<'_>> {
+        self.coord.as_ref()
+    }
+}
+
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::PointTrait for Point<T> {
     type CoordType<'a>
         = &'a Coord<T>
     where
@@ -112,7 +145,8 @@ impl<T: WktNum> PointTrait for Point<T> {
     }
 }
 
-impl<'a, T: WktNum> PointTrait for &'a Point<T> {
+#[cfg(feature = "geo-traits_0_3")]
+impl<'a, T: WktNum> geo_traits_0_3::PointTrait for &'a Point<T> {
     type CoordType<'b>
         = &'a Coord<T>
     where

@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::MultiPolygonTrait;
-
 use crate::to_wkt::write_multi_polygon;
 use crate::tokenizer::PeekableTokens;
 use crate::types::polygon::Polygon;
@@ -111,7 +109,50 @@ where
     }
 }
 
-impl<T: WktNum> MultiPolygonTrait for MultiPolygon<T> {
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::MultiPolygonTrait for MultiPolygon<T> {
+    type T = T;
+    type PolygonType<'a>
+        = &'a Polygon<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn num_polygons(&self) -> usize {
+        self.polygons.len()
+    }
+
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
+        self.polygons.get_unchecked(i)
+    }
+}
+
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::MultiPolygonTrait for &MultiPolygon<T> {
+    type T = T;
+    type PolygonType<'a>
+        = &'a Polygon<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn num_polygons(&self) -> usize {
+        self.polygons.len()
+    }
+
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
+        self.polygons.get_unchecked(i)
+    }
+}
+
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::MultiPolygonTrait for MultiPolygon<T> {
     type InnerPolygonType<'a>
         = &'a Polygon<T>
     where
@@ -126,7 +167,8 @@ impl<T: WktNum> MultiPolygonTrait for MultiPolygon<T> {
     }
 }
 
-impl<T: WktNum> MultiPolygonTrait for &MultiPolygon<T> {
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::MultiPolygonTrait for &MultiPolygon<T> {
     type InnerPolygonType<'a>
         = &'a Polygon<T>
     where

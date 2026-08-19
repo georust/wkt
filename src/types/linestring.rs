@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::LineStringTrait;
-
 use crate::to_wkt::write_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
@@ -107,7 +105,50 @@ where
     }
 }
 
-impl<T: WktNum> LineStringTrait for LineString<T> {
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::LineStringTrait for LineString<T> {
+    type T = T;
+    type CoordType<'a>
+        = &'a Coord<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn num_coords(&self) -> usize {
+        self.coords.len()
+    }
+
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
+        self.coords.get_unchecked(i)
+    }
+}
+
+#[cfg(feature = "geo-traits_0_2")]
+impl<'a, T: WktNum> geo_traits_0_2::LineStringTrait for &'a LineString<T> {
+    type T = T;
+    type CoordType<'b>
+        = &'a Coord<T>
+    where
+        Self: 'b;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn num_coords(&self) -> usize {
+        self.coords.len()
+    }
+
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
+        self.coords.get_unchecked(i)
+    }
+}
+
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::LineStringTrait for LineString<T> {
     type CoordType<'a>
         = &'a Coord<T>
     where
@@ -122,7 +163,8 @@ impl<T: WktNum> LineStringTrait for LineString<T> {
     }
 }
 
-impl<'a, T: WktNum> LineStringTrait for &'a LineString<T> {
+#[cfg(feature = "geo-traits_0_3")]
+impl<'a, T: WktNum> geo_traits_0_3::LineStringTrait for &'a LineString<T> {
     type CoordType<'b>
         = &'a Coord<T>
     where

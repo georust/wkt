@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::CoordTrait;
-
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
 use crate::{FromTokens, WktNum};
@@ -95,10 +93,11 @@ where
     }
 }
 
-impl<T: WktNum> CoordTrait for Coord<T> {
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::CoordTrait for Coord<T> {
     type T = T;
 
-    fn dim(&self) -> geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
         self.dimension().into()
     }
 
@@ -137,10 +136,97 @@ impl<T: WktNum> CoordTrait for Coord<T> {
     }
 }
 
-impl<T: WktNum> CoordTrait for &Coord<T> {
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::CoordTrait for &Coord<T> {
     type T = T;
 
-    fn dim(&self) -> geo_traits::Dimensions {
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dimension().into()
+    }
+
+    fn x(&self) -> Self::T {
+        self.x
+    }
+
+    fn y(&self) -> Self::T {
+        self.y
+    }
+
+    fn nth_or_panic(&self, n: usize) -> Self::T {
+        let has_z = self.z.is_some();
+        let has_m = self.m.is_some();
+        match n {
+            0 => self.x,
+            1 => self.y,
+            2 => {
+                if has_z {
+                    self.z.unwrap()
+                } else if has_m {
+                    self.m.unwrap()
+                } else {
+                    panic!("n out of range")
+                }
+            }
+            3 => {
+                if has_z && has_m {
+                    self.m.unwrap()
+                } else {
+                    panic!("n out of range")
+                }
+            }
+            _ => panic!("n out of range"),
+        }
+    }
+}
+
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::CoordTrait for Coord<T> {
+    type T = T;
+
+    fn dim(&self) -> geo_traits_0_3::Dimensions {
+        self.dimension().into()
+    }
+
+    fn x(&self) -> Self::T {
+        self.x
+    }
+
+    fn y(&self) -> Self::T {
+        self.y
+    }
+
+    fn nth_or_panic(&self, n: usize) -> Self::T {
+        let has_z = self.z.is_some();
+        let has_m = self.m.is_some();
+        match n {
+            0 => self.x,
+            1 => self.y,
+            2 => {
+                if has_z {
+                    self.z.unwrap()
+                } else if has_m {
+                    self.m.unwrap()
+                } else {
+                    panic!("n out of range")
+                }
+            }
+            3 => {
+                if has_z && has_m {
+                    self.m.unwrap()
+                } else {
+                    panic!("n out of range")
+                }
+            }
+            _ => panic!("n out of range"),
+        }
+    }
+}
+
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::CoordTrait for &Coord<T> {
+    type T = T;
+
+    fn dim(&self) -> geo_traits_0_3::Dimensions {
         self.dimension().into()
     }
 
