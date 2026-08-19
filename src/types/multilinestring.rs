@@ -260,4 +260,52 @@ mod tests {
             format!("{}", multilinestring)
         );
     }
+
+    #[test]
+    fn multilinestring_with_empty_member() {
+        // An EMPTY LineString is a valid member of a MULTILINESTRING per the OGC Simple Feature
+        // Access spec, in the same way an EMPTY point is a valid MULTIPOINT member (#111).
+        for wkt_str in [
+            "MULTILINESTRING(EMPTY, (0 0, 1 1))",
+            "MULTILINESTRING((0 0, 1 1), EMPTY)",
+        ] {
+            let wkt: Wkt<f64> = Wkt::from_str(wkt_str).unwrap();
+            let line_strings = match wkt {
+                Wkt::MultiLineString(MultiLineString { line_strings, dim }) => {
+                    assert_eq!(dim, Dimension::XY);
+                    line_strings
+                }
+                _ => unreachable!(),
+            };
+            assert_eq!(2, line_strings.len(), "parsing {wkt_str}");
+            assert_eq!(
+                1,
+                line_strings
+                    .iter()
+                    .filter(|ls| ls.coords.is_empty())
+                    .count(),
+                "exactly one empty member in {wkt_str}"
+            );
+        }
+    }
+
+    #[test]
+    fn roundtrip_multilinestring_with_empty_member() {
+        // The empty member must be written as the bare EMPTY keyword: an empty coordinate
+        // sequence `()` is not accepted by the parser.
+        let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING(EMPTY, (0 0, 1 1))").unwrap();
+        let serialized = wkt.to_string();
+        assert_eq!(serialized, "MULTILINESTRING(EMPTY,(0 0,1 1))");
+        let reparsed: Wkt<f64> = Wkt::from_str(&serialized).unwrap();
+        assert_eq!(wkt, reparsed);
+    }
+
+    #[test]
+    fn roundtrip_multilinestring_with_empty_member_3d() {
+        let wkt: Wkt<f64> = Wkt::from_str("MULTILINESTRING Z ((0 0 1, 1 1 2), EMPTY)").unwrap();
+        let serialized = wkt.to_string();
+        assert_eq!(serialized, "MULTILINESTRING Z((0 0 1,1 1 2),EMPTY)");
+        let reparsed: Wkt<f64> = Wkt::from_str(&serialized).unwrap();
+        assert_eq!(wkt, reparsed);
+    }
 }
