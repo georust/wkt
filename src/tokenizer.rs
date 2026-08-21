@@ -19,7 +19,7 @@ use std::marker::PhantomData;
 use std::str;
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum Token<T>
+pub enum Token<'a, T>
 where
     T: WktNum,
 {
@@ -27,24 +27,25 @@ where
     Number(T),
     ParenClose,
     ParenOpen,
-    Word(String),
+    Word(&'a str),
 }
 
 #[inline]
-fn is_whitespace(c: char) -> bool {
-    c == ' ' || c == '\n' || c == '\r' || c == '\t'
+fn is_whitespace(c: u8) -> bool {
+    c == b' ' || c == b'\n' || c == b'\r' || c == b'\t'
 }
 
 #[inline]
-fn is_numberlike(c: char) -> bool {
-    c == '.' || c == '-' || c == '+' || c.is_ascii_digit()
+fn is_numberlike(c: u8) -> bool {
+    c == b'.' || c == b'-' || c == b'+' || c.is_ascii_digit()
 }
 
 pub type PeekableTokens<'a, T> = Peekable<Tokens<'a, T>>;
 
 #[derive(Debug)]
 pub struct Tokens<'a, T> {
-    chars: Peekable<str::Chars<'a>>,
+    bytes: &'a [u8],
+    i: usize,
     phantom: PhantomData<T>,
 }
 
@@ -54,34 +55,53 @@ where
 {
     pub fn from_str(input: &'a str) -> Self {
         Tokens {
-            chars: input.chars().peekable(),
+            bytes: input.as_bytes(),
+            i: 0,
             phantom: PhantomData,
         }
     }
 }
 
-impl<T> Iterator for Tokens<'_, T>
+impl<'a, T> Iterator for Tokens<'a, T>
 where
     T: WktNum + str::FromStr,
 {
-    type Item = Result<Token<T>, &'static str>;
+    type Item = Result<Token<'a, T>, &'static str>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // TODO: should this return Result?
-        let mut next_char = self.chars.next()?;
+        let bytes = self.bytes;
 
         // Skip whitespace
-        while is_whitespace(next_char) {
-            next_char = self.chars.next()?
+        while self.i < bytes.len() && is_whitespace(bytes[self.i]) {
+            self.i += 1;
+        }
+        if self.i >= bytes.len() {
+            return None;
         }
 
-        let token = match next_char {
-            '\0' => return None,
-            '(' => Token::ParenOpen,
-            ')' => Token::ParenClose,
-            ',' => Token::Comma,
+        let c = bytes[self.i];
+        let token = match c {
+            b'\0' => return None,
+            b'(' => {
+                self.i += 1;
+                Token::ParenOpen
+            }
+            b')' => {
+                self.i += 1;
+                Token::ParenClose
+            }
+            b',' => {
+                self.i += 1;
+                Token::Comma
+            }
             c if is_numberlike(c) => {
-                let number = self.read_until_whitespace(if c == '+' { None } else { Some(c) });
+                // A leading '+' is not part of the number token.
+                if c == b'+' {
+                    self.i += 1;
+                }
+                let start = self.i;
+                let end = self.read_until_break();
+                let number = str::from_utf8(&bytes[start..end]).unwrap_or("");
                 match number.parse::<T>() {
                     Ok(parsed_num) => Token::Number(parsed_num),
                     Err(_) => {
@@ -96,7 +116,13 @@ where
                     }
                 }
             }
-            c => Token::Word(self.read_until_whitespace(Some(c))),
+            _ => {
+                let start = self.i;
+                let end = self.read_until_break();
+                // Tokens end only on ASCII bytes, which cannot occur within
+                // a multi-byte UTF-8 sequence, so the slice is valid UTF-8.
+                Token::Word(str::from_utf8(&bytes[start..end]).unwrap_or(""))
+            }
         };
         Some(Ok(token))
     }
@@ -106,27 +132,25 @@ impl<T> Tokens<'_, T>
 where
     T: str::FromStr,
 {
-    fn read_until_whitespace(&mut self, first_char: Option<char>) -> String {
-        let mut result = String::with_capacity(12); // Big enough for most tokens
-        if let Some(c) = first_char {
-            result.push(c);
-        }
-
-        while let Some(&next_char) = self.chars.peek() {
-            match next_char {
-                '\0' | '(' | ')' | ',' => break, // Just stop on a marker
+    // Returns the end index of the token beginning at `self.i`, consuming
+    // one trailing whitespace byte; marker bytes end the token unconsumed.
+    fn read_until_break(&mut self) -> usize {
+        let bytes = self.bytes;
+        let mut end = self.i;
+        while self.i < bytes.len() {
+            match bytes[self.i] {
+                b'\0' | b'(' | b')' | b',' => break,
                 c if is_whitespace(c) => {
-                    let _ = self.chars.next();
+                    self.i += 1;
                     break;
                 }
                 _ => {
-                    result.push(next_char);
-                    let _ = self.chars.next();
+                    self.i += 1;
+                    end = self.i;
                 }
             }
         }
-
-        result
+        end
     }
 }
 
@@ -143,7 +167,7 @@ fn test_tokenizer_1word() {
     let test_str = "hello";
     let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
     let tokens = tokens.unwrap();
-    assert_eq!(tokens, vec![Token::Word("hello".to_string())]);
+    assert_eq!(tokens, vec![Token::Word("hello")]);
 }
 
 #[test]
@@ -151,13 +175,7 @@ fn test_tokenizer_2words() {
     let test_str = "hello world";
     let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
     let tokens = tokens.unwrap();
-    assert_eq!(
-        tokens,
-        vec![
-            Token::Word("hello".to_string()),
-            Token::Word("world".to_string()),
-        ]
-    );
+    assert_eq!(tokens, vec![Token::Word("hello"), Token::Word("world")]);
 }
 
 #[test]
@@ -192,7 +210,7 @@ fn test_tokenizer_not_a_number() {
     let test_str = "¾"; // A number according to char.is_numeric()
     let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
     let tokens = tokens.unwrap();
-    assert_eq!(tokens, vec![Token::Word("¾".to_owned())]);
+    assert_eq!(tokens, vec![Token::Word("¾")]);
 }
 
 #[test]
@@ -233,11 +251,20 @@ fn test_tokenizer_point() {
     assert_eq!(
         tokens,
         vec![
-            Token::Word("POINT".to_string()),
+            Token::Word("POINT"),
             Token::ParenOpen,
             Token::Number(10.0),
             Token::Number(-20.0),
             Token::ParenClose,
         ]
     );
+}
+
+#[test]
+fn test_tokenizer_utf8_word() {
+    // Multi-byte characters must not break byte scanning.
+    let test_str = "POINT¾Z";
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap();
+    assert_eq!(tokens, vec![Token::Word("POINT¾Z")]);
 }

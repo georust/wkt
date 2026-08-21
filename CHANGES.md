@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Perf: tokenize from the input byte slice rather than allocating a `String`
+  per token; parsing is ~2x faster.
 * Your change here.
 
 ## 0.14.0 - 2025-05-08
