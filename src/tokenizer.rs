@@ -44,7 +44,7 @@ pub type PeekableTokens<'a, T> = Peekable<Tokens<'a, T>>;
 
 #[derive(Debug)]
 pub struct Tokens<'a, T> {
-    bytes: &'a [u8],
+    input: &'a str,
     i: usize,
     phantom: PhantomData<T>,
 }
@@ -55,7 +55,7 @@ where
 {
     pub fn from_str(input: &'a str) -> Self {
         Tokens {
-            bytes: input.as_bytes(),
+            input,
             i: 0,
             phantom: PhantomData,
         }
@@ -69,7 +69,8 @@ where
     type Item = Result<Token<'a, T>, &'static str>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let bytes = self.bytes;
+        let input = self.input;
+        let bytes = input.as_bytes();
 
         // Skip whitespace
         while self.i < bytes.len() && is_whitespace(bytes[self.i]) {
@@ -101,7 +102,7 @@ where
                 }
                 let start = self.i;
                 let end = self.read_until_break();
-                let number = str::from_utf8(&bytes[start..end]).unwrap_or("");
+                let number = &input[start..end];
                 match number.parse::<T>() {
                     Ok(parsed_num) => Token::Number(parsed_num),
                     Err(_) => {
@@ -119,9 +120,10 @@ where
             _ => {
                 let start = self.i;
                 let end = self.read_until_break();
-                // Tokens end only on ASCII bytes, which cannot occur within
-                // a multi-byte UTF-8 sequence, so the slice is valid UTF-8.
-                Token::Word(str::from_utf8(&bytes[start..end]).unwrap_or(""))
+                // Tokens only end on ASCII bytes, which can never be part of
+                // a multi-byte UTF-8 sequence, so token indices always fall
+                // on char boundaries and slicing the input cannot panic.
+                Token::Word(&input[start..end])
             }
         };
         Some(Ok(token))
@@ -135,7 +137,7 @@ where
     // Returns the end index of the token beginning at `self.i`, consuming
     // one trailing whitespace byte; marker bytes end the token unconsumed.
     fn read_until_break(&mut self) -> usize {
-        let bytes = self.bytes;
+        let bytes = self.input.as_bytes();
         let mut end = self.i;
         while self.i < bytes.len() {
             match bytes[self.i] {
