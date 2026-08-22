@@ -411,7 +411,7 @@ where
             }
             _ => return Err("Invalid WKT format"),
         };
-        Wkt::from_word_and_tokens(&word, &mut tokens)
+        Wkt::from_word_and_tokens(word, &mut tokens)
     }
 }
 
@@ -742,7 +742,7 @@ fn infer_geom_dimension<T: WktNum + FromStr + Default>(
     if let Some(Ok(c)) = tokens.peek() {
         match c {
             // If we match a word check if it's Z/M/ZM and consume the token from the stream
-            Token::Word(w) => match w.as_str() {
+            Token::Word(w) => match w {
                 w if w.eq_ignore_ascii_case("Z") => {
                     tokens.next().unwrap().unwrap();
                     Ok(Dimension::XYZ)
@@ -795,7 +795,7 @@ where
     ) -> Result<Self, &'static str> {
         match tokens.next().transpose()? {
             Some(Token::ParenOpen) => (),
-            Some(Token::Word(ref s)) if s.eq_ignore_ascii_case("EMPTY") => {
+            Some(Token::Word(s)) if s.eq_ignore_ascii_case("EMPTY") => {
                 return Ok(Self::new_empty(dim));
             }
             _ => return Err("Missing open parenthesis for type"),
