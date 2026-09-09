@@ -14,6 +14,7 @@
 
 use geo_traits::CoordTrait;
 
+use crate::error::{Axis, ParseError};
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
 use crate::{FromTokens, WktNum};
@@ -44,14 +45,14 @@ impl<T> FromTokens<T> for Coord<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         let x = match tokens.next().transpose()? {
             Some(Token::Number(n)) => n,
-            _ => return Err("Expected a number for the X coordinate"),
+            _ => return Err(ParseError::ExpectedNumberForCoord(Axis::X)),
         };
         let y = match tokens.next().transpose()? {
             Some(Token::Number(n)) => n,
-            _ => return Err("Expected a number for the Y coordinate"),
+            _ => return Err(ParseError::ExpectedNumberForCoord(Axis::Y)),
         };
 
         let mut z = None;
@@ -63,26 +64,26 @@ where
                 Some(Token::Number(n)) => {
                     z = Some(n);
                 }
-                _ => return Err("Expected a number for the Z coordinate"),
+                _ => return Err(ParseError::ExpectedNumberForCoord(Axis::Z)),
             },
             Dimension::XYM => match tokens.next().transpose()? {
                 Some(Token::Number(n)) => {
                     m = Some(n);
                 }
-                _ => return Err("Expected a number for the M coordinate"),
+                _ => return Err(ParseError::ExpectedNumberForCoord(Axis::M)),
             },
             Dimension::XYZM => {
                 match tokens.next().transpose()? {
                     Some(Token::Number(n)) => {
                         z = Some(n);
                     }
-                    _ => return Err("Expected a number for the Z coordinate"),
+                    _ => return Err(ParseError::ExpectedNumberForCoord(Axis::Z)),
                 }
                 match tokens.next().transpose()? {
                     Some(Token::Number(n)) => {
                         m = Some(n);
                     }
-                    _ => return Err("Expected a number for the M coordinate"),
+                    _ => return Err(ParseError::ExpectedNumberForCoord(Axis::M)),
                 }
             }
         }
