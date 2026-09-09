@@ -14,6 +14,7 @@
 
 use geo_traits::LineStringTrait;
 
+use crate::error::ParseError;
 use crate::to_wkt::write_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
@@ -88,7 +89,7 @@ impl<T> FromTokens<T> for LineString<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         let result = FromTokens::comma_many(<Coord<T> as FromTokens<T>>::from_tokens, tokens, dim);
         result.map(|coords| LineString { coords, dim })
     }

@@ -1,3 +1,4 @@
+use crate::error::ParseError;
 use crate::types::{Dimension, GeometryType};
 
 const POINT: &str = "POINT";
@@ -26,7 +27,7 @@ const GEOMETRYCOLLECTION: &str = "GEOMETRYCOLLECTION";
 ///     (GeometryType::Point, Dimension::XYZ)
 /// );
 /// ```
-pub fn infer_type(input: &str) -> Result<(GeometryType, Dimension), String> {
+pub fn infer_type(input: &str) -> Result<(GeometryType, Dimension), ParseError> {
     let input = input.trim_start();
 
     if let Some((prefix, _suffix)) = input.split_once("(") {
@@ -47,7 +48,7 @@ pub fn infer_type(input: &str) -> Result<(GeometryType, Dimension), String> {
         } else if let Some(dim_str) = prefix.strip_prefix(GEOMETRYCOLLECTION) {
             (GeometryType::GeometryCollection, dim_str)
         } else {
-            return Err(format!("Unsupported WKT prefix {}", prefix));
+            return Err(ParseError::UnsupportedPrefix(prefix));
         };
 
         let dim = if dim_str.contains("ZM") {
@@ -81,14 +82,10 @@ pub fn infer_type(input: &str) -> Result<(GeometryType, Dimension), String> {
                         Dimension::XY
                     }
                 }
-                None => {
-                    return Err(
-                        "Invalid WKT; no whitespace between geometry type and EMPTY.".to_string(),
-                    )
-                }
+                None => return Err(ParseError::MissingWhitespaceBeforeEmpty),
             }
         } else {
-            return Err("Invalid WKT; no '(' character and not EMPTY".to_string());
+            return Err(ParseError::MissingOpenParenthesisNotEmpty);
         };
 
         if input.starts_with(POINT) {
@@ -106,7 +103,7 @@ pub fn infer_type(input: &str) -> Result<(GeometryType, Dimension), String> {
         } else if input.starts_with(GEOMETRYCOLLECTION) {
             Ok((GeometryType::GeometryCollection, dim))
         } else {
-            Err(format!("Unsupported WKT prefix {}", input))
+            Err(ParseError::UnsupportedPrefix(input))
         }
     }
 }

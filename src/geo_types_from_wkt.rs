@@ -39,7 +39,7 @@ pub enum Error {
     #[error("Wrong number of Geometries: {0}")]
     WrongNumberOfGeometries(usize),
     #[error("Invalid WKT: {0}")]
-    InvalidWKT(&'static str),
+    InvalidWKT(#[from] crate::error::ParseError),
     #[error("External error: {0}")]
     External(Box<dyn std::error::Error>),
 }
@@ -354,7 +354,7 @@ macro_rules! try_from_wkt_impl {
             impl<T: CoordNum + FromStr + Default> TryFromWkt<T> for $type {
                 type Error = Error;
                 fn try_from_wkt_str(wkt_str: &str) -> Result<Self, Self::Error> {
-                    let wkt = Wkt::from_str(wkt_str).map_err(|e| Error::InvalidWKT(e))?;
+                    let wkt = Wkt::from_str(wkt_str)?;
                     Self::try_from(wkt)
                 }
 
@@ -996,7 +996,7 @@ mod tests {
         let err = geo_types::GeometryCollection::<f64>::try_from_wkt_str("GeomColl(POINT(1 2))")
             .unwrap_err();
         match err {
-            Error::InvalidWKT(err_text) => assert_eq!(err_text, "Invalid type encountered"),
+            Error::InvalidWKT(err) => assert_eq!(err, crate::error::ParseError::InvalidType),
             e => panic!("Not the error we expected. Found: {}", e),
         }
     }
@@ -1020,7 +1020,7 @@ mod tests {
         let a_point_too_many = geo_types::Point::<f64>::try_from_wkt_str("PINT(1 2)");
         let err = a_point_too_many.unwrap_err();
         match err {
-            Error::InvalidWKT(err_text) => assert_eq!(err_text, "Invalid type encountered"),
+            Error::InvalidWKT(err) => assert_eq!(err, crate::error::ParseError::InvalidType),
             e => panic!("Not the error we expected. Found: {}", e),
         }
     }

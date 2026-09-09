@@ -102,6 +102,7 @@ use std::str::FromStr;
 use geo_traits::GeometryTrait;
 use num_traits::{Float, Num, NumCast};
 
+use crate::error::ParseError;
 use crate::to_wkt::write_geometry;
 use crate::tokenizer::{PeekableTokens, Token, Tokens};
 use crate::types::{
@@ -200,7 +201,7 @@ where
         word: &str,
         tokens: &mut PeekableTokens<T>,
         depth: usize,
-    ) -> Result<Self, &'static str> {
+    ) -> Result<Self, ParseError> {
         // Normally Z/M/ZM is separated by a space from the primary WKT word. E.g. `POINT Z`
         // instead of `POINTZ`. However we wish to support both types (in reading). When written
         // without a space, `POINTZ` is considered a single word, which means we need to include
@@ -385,7 +386,7 @@ where
                 );
                 x.map(|y| y.into())
             }
-            _ => Err("Invalid type encountered"),
+            _ => Err(ParseError::InvalidType),
         }
     }
 }
@@ -403,16 +404,16 @@ impl<T> Wkt<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: Tokens<T>) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: Tokens<T>) -> Result<Self, ParseError> {
         let mut tokens = tokens.peekable();
         let word = match tokens.next().transpose()? {
             Some(Token::Word(word)) => {
                 if !word.is_ascii() {
-                    return Err("Encountered non-ascii word");
+                    return Err(ParseError::NonAsciiWord);
                 }
                 word
             }
-            _ => return Err("Invalid WKT format"),
+            _ => return Err(ParseError::InvalidFormat),
         };
         Wkt::from_word_and_tokens(word, &mut tokens, 0)
     }
@@ -422,7 +423,7 @@ impl<T> FromStr for Wkt<T>
 where
     T: WktNum + FromStr + Default,
 {
-    type Err = &'static str;
+    type Err = ParseError;
 
     fn from_str(wkt_str: &str) -> Result<Self, Self::Err> {
         Wkt::from_tokens(Tokens::from_str(wkt_str))
@@ -741,7 +742,7 @@ impl_specialization!(GeometryCollection);
 
 fn infer_geom_dimension<T: WktNum + FromStr + Default>(
     tokens: &mut PeekableTokens<T>,
-) -> Result<Dimension, &'static str> {
+) -> Result<Dimension, ParseError> {
     if let Some(Ok(c)) = tokens.peek() {
         match c {
             // If we match a word check if it's Z/M/ZM and consume the token from the stream
@@ -760,13 +761,13 @@ fn infer_geom_dimension<T: WktNum + FromStr + Default>(
                     Ok(Dimension::XYZM)
                 }
                 w if w.eq_ignore_ascii_case("EMPTY") => Ok(Dimension::XY),
-                _ => Err("Unexpected word before open paren"),
+                _ => Err(ParseError::UnexpectedWordBeforeOpenParen),
             },
             // Not a word, e.g. an open paren
             _ => Ok(Dimension::XY),
         }
     } else {
-        Err("End of stream")
+        Err(ParseError::EndOfStream)
     }
 }
 
@@ -774,7 +775,7 @@ trait FromTokens<T>: Sized + Default
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str>;
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError>;
 
     fn new_empty(dim: Dimension) -> Self;
 
@@ -783,7 +784,7 @@ where
     fn from_tokens_with_header(
         tokens: &mut PeekableTokens<T>,
         dim: Option<Dimension>,
-    ) -> Result<Self, &'static str> {
+    ) -> Result<Self, ParseError> {
         Self::from_tokens_with_header_by(tokens, dim, Self::from_tokens)
     }
 
@@ -792,9 +793,9 @@ where
         tokens: &mut PeekableTokens<'a, T>,
         dim: Option<Dimension>,
         parse: F,
-    ) -> Result<Self, &'static str>
+    ) -> Result<Self, ParseError>
     where
-        F: FnOnce(&mut PeekableTokens<'a, T>, Dimension) -> Result<Self, &'static str>,
+        F: FnOnce(&mut PeekableTokens<'a, T>, Dimension) -> Result<Self, ParseError>,
     {
         let dim = if let Some(dim) = dim {
             dim
@@ -807,7 +808,7 @@ where
     fn from_tokens_with_parens(
         tokens: &mut PeekableTokens<T>,
         dim: Dimension,
-    ) -> Result<Self, &'static str> {
+    ) -> Result<Self, ParseError> {
         Self::from_tokens_with_parens_by(tokens, dim, Self::from_tokens)
     }
 
@@ -815,21 +816,21 @@ where
         tokens: &mut PeekableTokens<'a, T>,
         dim: Dimension,
         parse: F,
-    ) -> Result<Self, &'static str>
+    ) -> Result<Self, ParseError>
     where
-        F: FnOnce(&mut PeekableTokens<'a, T>, Dimension) -> Result<Self, &'static str>,
+        F: FnOnce(&mut PeekableTokens<'a, T>, Dimension) -> Result<Self, ParseError>,
     {
         match tokens.next().transpose()? {
             Some(Token::ParenOpen) => (),
             Some(Token::Word(s)) if s.eq_ignore_ascii_case("EMPTY") => {
                 return Ok(Self::new_empty(dim));
             }
-            _ => return Err("Missing open parenthesis for type"),
+            _ => return Err(ParseError::MissingOpenParenthesis),
         };
         let result = parse(tokens, dim)?;
         match tokens.next().transpose()? {
             Some(Token::ParenClose) => (),
-            _ => return Err("Missing closing parenthesis for type"),
+            _ => return Err(ParseError::MissingClosingParenthesis),
         };
         Ok(result)
     }
@@ -837,7 +838,7 @@ where
     fn from_tokens_with_optional_parens(
         tokens: &mut PeekableTokens<T>,
         dim: Dimension,
-    ) -> Result<Self, &'static str> {
+    ) -> Result<Self, ParseError> {
         match tokens.peek() {
             Some(Ok(Token::ParenOpen)) => Self::from_tokens_with_parens(tokens, dim),
             _ => Self::from_tokens(tokens, dim),
@@ -848,9 +849,9 @@ where
         f: F,
         tokens: &mut PeekableTokens<T>,
         dim: Dimension,
-    ) -> Result<Vec<Self>, &'static str>
+    ) -> Result<Vec<Self>, ParseError>
     where
-        F: Fn(&mut PeekableTokens<T>, Dimension) -> Result<Self, &'static str>,
+        F: Fn(&mut PeekableTokens<T>, Dimension) -> Result<Self, ParseError>,
     {
         let mut items = Vec::new();
 
@@ -870,6 +871,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::error::ParseError;
     use crate::types::{Dimension, MultiPolygon, Point};
     use crate::Wkt;
     use std::str::FromStr;
@@ -916,10 +918,7 @@ mod tests {
     #[test]
     fn invalid_number() {
         let msg = <Wkt<f64>>::from_str("POINT (10 20.1A)").unwrap_err();
-        assert_eq!(
-            "Unable to parse input number as the desired output type",
-            msg
-        );
+        assert_eq!(msg, ParseError::InvalidNumber);
     }
 
     #[test]

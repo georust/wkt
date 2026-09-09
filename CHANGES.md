@@ -5,6 +5,7 @@
 * Perf: tokenize from the input byte slice rather than allocating a `String`
   per token; parsing is ~2x faster.
 * Bound `GEOMETRYCOLLECTION` nesting depth to prevent stack overflow when parsing untrusted WKT.
+* BREAKING: Parsing errors are now the matchable `wkt::error::ParseError` enum instead of `&'static str` / `String`.
 * Your change here.
 
 ## 0.14.0 - 2025-05-08

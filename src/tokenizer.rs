@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::error::ParseError;
 use crate::WktNum;
 use std::any::type_name;
 use std::iter::Peekable;
@@ -66,7 +67,7 @@ impl<'a, T> Iterator for Tokens<'a, T>
 where
     T: WktNum + str::FromStr,
 {
-    type Item = Result<Token<'a, T>, &'static str>;
+    type Item = Result<Token<'a, T>, ParseError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let input = self.input;
@@ -111,9 +112,7 @@ where
                             number,
                             type_name::<T>()
                         );
-                        return Some(Err(
-                            "Unable to parse input number as the desired output type",
-                        ));
+                        return Some(Err(ParseError::InvalidNumber));
                     }
                 }
             }
@@ -201,10 +200,7 @@ fn test_tokenizer_invalid_number() {
     let test_str = "4.2p";
     let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
     let tokens = tokens.unwrap_err();
-    assert_eq!(
-        tokens,
-        "Unable to parse input number as the desired output type"
-    );
+    assert_eq!(tokens, ParseError::InvalidNumber);
 }
 
 #[test]

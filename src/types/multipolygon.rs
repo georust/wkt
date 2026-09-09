@@ -14,6 +14,7 @@
 
 use geo_traits::MultiPolygonTrait;
 
+use crate::error::ParseError;
 use crate::to_wkt::write_multi_polygon;
 use crate::tokenizer::PeekableTokens;
 use crate::types::polygon::Polygon;
@@ -97,7 +98,7 @@ impl<T> FromTokens<T> for MultiPolygon<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         let result = FromTokens::comma_many(
             <Polygon<T> as FromTokens<T>>::from_tokens_with_parens,
             tokens,

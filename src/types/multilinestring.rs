@@ -14,6 +14,7 @@
 
 use geo_traits::MultiLineStringTrait;
 
+use crate::error::ParseError;
 use crate::to_wkt::write_multi_linestring;
 use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
@@ -99,7 +100,7 @@ impl<T> FromTokens<T> for MultiLineString<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         let result = FromTokens::comma_many(
             <LineString<T> as FromTokens<T>>::from_tokens_with_parens,
             tokens,
