@@ -14,6 +14,7 @@
 
 use geo_traits::GeometryCollectionTrait;
 
+use crate::error::ParseError;
 use crate::to_wkt::write_geometry_collection;
 use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
@@ -106,9 +107,11 @@ where
         tokens: &mut PeekableTokens<'a, T>,
         dim: Option<Dimension>,
         depth: usize,
-    ) -> Result<Self, &'static str> {
+    ) -> Result<Self, ParseError> {
         if depth >= MAX_DEPTH {
-            return Err("Maximum GeometryCollection nesting depth exceeded");
+            return Err(ParseError::MaxDepthExceeded {
+                max_depth: MAX_DEPTH,
+            });
         }
         Self::from_tokens_with_header_by(tokens, dim, |tokens, dim| {
             Self::from_tokens_at_depth(tokens, dim, depth)
@@ -119,12 +122,12 @@ where
         tokens: &mut PeekableTokens<T>,
         dim: Dimension,
         depth: usize,
-    ) -> Result<Self, &'static str> {
+    ) -> Result<Self, ParseError> {
         let mut items = Vec::new();
 
         let word = match tokens.next().transpose()? {
             Some(Token::Word(w)) => w,
-            _ => return Err("Expected a word in GEOMETRYCOLLECTION"),
+            _ => return Err(ParseError::ExpectedWordInGeometryCollection),
         };
 
         let item = Wkt::from_word_and_tokens(word, tokens, depth + 1)?;
@@ -135,7 +138,7 @@ where
 
             let word = match tokens.next().transpose()? {
                 Some(Token::Word(w)) => w,
-                _ => return Err("Expected a word in GEOMETRYCOLLECTION"),
+                _ => return Err(ParseError::ExpectedWordInGeometryCollection),
             };
 
             let item = Wkt::from_word_and_tokens(word, tokens, depth + 1)?;
@@ -150,7 +153,7 @@ impl<T> FromTokens<T> for GeometryCollection<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         Self::from_tokens_at_depth(tokens, dim, 0)
     }
 
@@ -192,6 +195,7 @@ impl<T: WktNum> GeometryCollectionTrait for &GeometryCollection<T> {
 #[cfg(test)]
 mod tests {
     use super::GeometryCollection;
+    use crate::error::ParseError;
     use crate::types::*;
     use crate::Wkt;
     use std::str::FromStr;
@@ -567,7 +571,9 @@ mod tests {
         );
         assert_eq!(
             result.unwrap_err(),
-            "Maximum GeometryCollection nesting depth exceeded"
+            ParseError::MaxDepthExceeded {
+                max_depth: MAX_DEPTH
+            }
         );
     }
 
