@@ -155,22 +155,41 @@ pub fn write_multi_point<T: WktNum + fmt::Display>(
     // Note: This is largely copied from `write_coord_sequence`, because `multipoint.points()`
     // yields a sequence of Point, not Coord.
     if let Some(first_point) = points.next() {
-        f.write_str("((")?;
+        f.write_char('(')?;
 
-        // Assume no empty points within this MultiPoint
-        write_coord(f, &first_point.coord().unwrap(), size)?;
+        write_multi_point_member(f, &first_point, size)?;
 
         for point in points {
-            f.write_str("),(")?;
-            write_coord(f, &point.coord().unwrap(), size)?;
+            f.write_char(',')?;
+            write_multi_point_member(f, &point, size)?;
         }
 
-        f.write_str("))")?;
+        f.write_char(')')?;
     } else {
         f.write_str(" EMPTY")?;
     }
 
     Ok(())
+}
+
+/// Write a single member of a MultiPoint, which may be an empty point.
+///
+/// A non-empty member is written parenthesized, e.g. `(1 2)`; an empty member is written as the
+/// bare `EMPTY` keyword, matching the WKT form accepted by the parser for empty points in a
+/// MultiPoint.
+fn write_multi_point_member<T: WktNum + fmt::Display>(
+    f: &mut impl Write,
+    point: &impl PointTrait<T = T>,
+    size: PhysicalCoordinateDimension,
+) -> Result<(), Error> {
+    if let Some(coord) = point.coord() {
+        f.write_char('(')?;
+        write_coord(f, &coord, size)?;
+        f.write_char(')')?;
+        Ok(())
+    } else {
+        Ok(f.write_str("EMPTY")?)
+    }
 }
 
 /// Write an object implementing [`MultiLineStringTrait`] to a WKT string.

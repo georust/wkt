@@ -608,6 +608,22 @@ mod tests {
     }
 
     #[test]
+    fn convert_multipoint_with_empty_member() {
+        // geo-types has no empty Point, so a MULTIPOINT with an EMPTY member cannot
+        // be converted and errors rather than dropping the member.
+        use std::str::FromStr;
+
+        for wkt in ["MULTIPOINT(1 2, EMPTY)", "MULTIPOINT((1 2), EMPTY)"] {
+            let w = Wkt::<f64>::from_str(wkt).unwrap();
+            let res: Result<geo_types::Geometry<f64>, Error> = w.try_into();
+            assert!(
+                matches!(res, Err(Error::PointConversionError)),
+                "{wkt}: expected PointConversionError, got {res:?}"
+            );
+        }
+    }
+
+    #[test]
     fn convert_multipoint() {
         let w_multipoint: Wkt = MultiPoint::from_points([
             Point::from_coord(Coord {
