@@ -14,6 +14,7 @@
 
 use geo_traits::MultiPointTrait;
 
+use crate::error::ParseError;
 use crate::to_wkt::write_multi_point;
 use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
@@ -97,7 +98,7 @@ impl<T> FromTokens<T> for MultiPoint<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         let result = FromTokens::comma_many(
             <Point<T> as FromTokens<T>>::from_tokens_with_optional_parens,
             tokens,

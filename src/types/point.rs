@@ -14,6 +14,7 @@
 
 use geo_traits::PointTrait;
 
+use crate::error::ParseError;
 use crate::to_wkt::write_point;
 use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
@@ -88,7 +89,7 @@ impl<T> FromTokens<T> for Point<T>
 where
     T: WktNum + FromStr + Default,
 {
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str> {
+    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         let result = <Coord<T> as FromTokens<T>>::from_tokens(tokens, dim);
         result.map(|coord| Point {
             coord: Some(coord),
