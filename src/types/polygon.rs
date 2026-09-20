@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_traits::PolygonTrait;
-
 use crate::to_wkt::write_polygon;
 use crate::tokenizer::PeekableTokens;
 use crate::types::{Dimension, LineString};
@@ -112,7 +110,58 @@ where
     }
 }
 
-impl<T: WktNum> PolygonTrait for Polygon<T> {
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::PolygonTrait for Polygon<T> {
+    type T = T;
+    type RingType<'a>
+        = &'a LineString<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
+        self.rings.first()
+    }
+
+    fn num_interiors(&self) -> usize {
+        self.rings.len().saturating_sub(1)
+    }
+
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
+        self.rings.get_unchecked(i + 1)
+    }
+}
+
+#[cfg(feature = "geo-traits_0_2")]
+impl<T: WktNum> geo_traits_0_2::PolygonTrait for &Polygon<T> {
+    type T = T;
+    type RingType<'a>
+        = &'a LineString<T>
+    where
+        Self: 'a;
+
+    fn dim(&self) -> geo_traits_0_2::Dimensions {
+        self.dim.into()
+    }
+
+    fn exterior(&self) -> Option<Self::RingType<'_>> {
+        self.rings.first()
+    }
+
+    fn num_interiors(&self) -> usize {
+        self.rings.len().saturating_sub(1)
+    }
+
+    unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
+        self.rings.get_unchecked(i + 1)
+    }
+}
+
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::PolygonTrait for Polygon<T> {
     type RingType<'a>
         = &'a LineString<T>
     where
@@ -131,7 +180,8 @@ impl<T: WktNum> PolygonTrait for Polygon<T> {
     }
 }
 
-impl<T: WktNum> PolygonTrait for &Polygon<T> {
+#[cfg(feature = "geo-traits_0_3")]
+impl<T: WktNum> geo_traits_0_3::PolygonTrait for &Polygon<T> {
     type RingType<'a>
         = &'a LineString<T>
     where
@@ -149,7 +199,6 @@ impl<T: WktNum> PolygonTrait for &Polygon<T> {
         self.rings.get_unchecked(i + 1)
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::{LineString, Polygon};

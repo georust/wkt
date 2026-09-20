@@ -1,12 +1,6 @@
 use std::fmt;
 use std::fmt::Write;
 
-use geo_traits::{
-    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, LineTrait,
-    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PointTrait, PolygonTrait, RectTrait,
-    TriangleTrait,
-};
-
 use crate::error::Error;
 use crate::types::Coord;
 use crate::WktNum;
@@ -22,10 +16,25 @@ enum PhysicalCoordinateDimension {
     Four,
 }
 
-impl TryFrom<geo_traits::Dimensions> for PhysicalCoordinateDimension {
+#[cfg(feature = "geo-traits_0_2")]
+impl TryFrom<geo_traits_0_2::Dimensions> for PhysicalCoordinateDimension {
     type Error = Error;
 
-    fn try_from(value: geo_traits::Dimensions) -> Result<Self, Self::Error> {
+    fn try_from(value: geo_traits_0_2::Dimensions) -> Result<Self, Self::Error> {
+        match value.size() {
+            2 => Ok(Self::Two),
+            3 => Ok(Self::Three),
+            4 => Ok(Self::Four),
+            _ => Err(Error::UnknownDimension),
+        }
+    }
+}
+
+#[cfg(feature = "geo-traits_0_3")]
+impl TryFrom<geo_traits_0_3::Dimensions> for PhysicalCoordinateDimension {
+    type Error = Error;
+
+    fn try_from(value: geo_traits_0_3::Dimensions) -> Result<Self, Self::Error> {
         match value.size() {
             2 => Ok(Self::Two),
             3 => Ok(Self::Three),
