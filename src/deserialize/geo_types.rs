@@ -7,7 +7,7 @@ use std::{default::Default, str::FromStr};
 pub fn deserialize_geometry<'de, D, T>(deserializer: D) -> Result<geo_types::Geometry<T>, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr + Default + WktNum,
+    T: FromStr + Default + WktNum + 'static,
 {
     Wkt::deserialize(deserializer).and_then(|g: Wkt<T>| g.try_into().map_err(D::Error::custom))
 }
@@ -43,7 +43,7 @@ pub fn deserialize_point<'de, D, T>(
 ) -> Result<Option<geo_types::Point<T>>, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr + Default + WktNum,
+    T: FromStr + Default + WktNum + 'static,
 {
     Wkt::deserialize(deserializer).and_then(|wkt: Wkt<T>| {
         geo_types::Geometry::try_from(wkt)

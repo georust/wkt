@@ -194,7 +194,7 @@ where
 
 impl<T> Wkt<T>
 where
-    T: WktNum + FromStr + Default,
+    T: WktNum + FromStr + Default + 'static,
 {
     fn from_word_and_tokens(
         word: &str,
@@ -401,7 +401,7 @@ where
 
 impl<T> Wkt<T>
 where
-    T: WktNum + FromStr + Default,
+    T: WktNum + FromStr + Default + 'static,
 {
     fn from_tokens(tokens: Tokens<T>) -> Result<Self, &'static str> {
         let mut tokens = tokens.peekable();
@@ -420,7 +420,7 @@ where
 
 impl<T> FromStr for Wkt<T>
 where
-    T: WktNum + FromStr + Default,
+    T: WktNum + FromStr + Default + 'static,
 {
     type Err = &'static str;
 
@@ -739,7 +739,7 @@ impl_specialization!(MultiLineString);
 impl_specialization!(MultiPolygon);
 impl_specialization!(GeometryCollection);
 
-fn infer_geom_dimension<T: WktNum + FromStr + Default>(
+fn infer_geom_dimension<T: WktNum + FromStr + Default + 'static>(
     tokens: &mut PeekableTokens<T>,
 ) -> Result<Dimension, &'static str> {
     if let Some(Ok(c)) = tokens.peek() {
@@ -772,7 +772,7 @@ fn infer_geom_dimension<T: WktNum + FromStr + Default>(
 
 trait FromTokens<T>: Sized + Default
 where
-    T: WktNum + FromStr + Default,
+    T: WktNum + FromStr + Default + 'static,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str>;
 

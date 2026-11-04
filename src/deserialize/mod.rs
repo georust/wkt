@@ -64,7 +64,7 @@ pub mod geo_types;
 pub fn deserialize_wkt<'de, D, G, T>(deserializer: D) -> Result<G, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr + Default + WktNum,
+    T: FromStr + Default + WktNum + 'static,
     G: crate::TryFromWkt<T>,
     <G as TryFromWkt<T>>::Error: std::fmt::Display,
 {
@@ -87,7 +87,7 @@ impl<T, G: TryFromWkt<T>> Default for TryFromWktVisitor<T, G> {
 
 impl<T, G> Visitor<'_> for TryFromWktVisitor<T, G>
 where
-    T: FromStr + Default + WktNum,
+    T: FromStr + Default + WktNum + 'static,
     G: TryFromWkt<T>,
     <G as TryFromWkt<T>>::Error: std::fmt::Display,
 {
@@ -117,7 +117,7 @@ impl<T> Default for WktVisitor<T> {
 
 impl<T> Visitor<'_> for WktVisitor<T>
 where
-    T: FromStr + Default + Debug + WktNum,
+    T: FromStr + Default + Debug + WktNum + 'static,
 {
     type Value = Wkt<T>;
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -133,7 +133,7 @@ where
 
 impl<'de, T> serde::Deserialize<'de> for Wkt<T>
 where
-    T: FromStr + Default + Debug + WktNum,
+    T: FromStr + Default + Debug + WktNum + 'static,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

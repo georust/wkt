@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::WktNum;
-use std::any::type_name;
+use std::any::{type_name, Any, TypeId};
 use std::iter::Peekable;
 use std::marker::PhantomData;
 use std::str;
@@ -33,6 +33,12 @@ where
 #[inline]
 fn is_whitespace(c: u8) -> bool {
     c == b' ' || c == b'\n' || c == b'\r' || c == b'\t'
+}
+
+// A byte that ends a word or number token.
+#[inline]
+fn is_break(c: u8) -> bool {
+    c == b'\0' || c == b'(' || c == b')' || c == b',' || is_whitespace(c)
 }
 
 #[inline]
@@ -64,7 +70,7 @@ where
 
 impl<'a, T> Iterator for Tokens<'a, T>
 where
-    T: WktNum + str::FromStr,
+    T: WktNum + str::FromStr + 'static,
 {
     type Item = Result<Token<'a, T>, &'static str>;
 
@@ -100,21 +106,9 @@ where
                 if c == b'+' {
                     self.i += 1;
                 }
-                let start = self.i;
-                let end = self.read_until_break();
-                let number = &input[start..end];
-                match number.parse::<T>() {
+                match self.read_number() {
                     Ok(parsed_num) => Token::Number(parsed_num),
-                    Err(_) => {
-                        log::warn!(
-                            "Failed to parse input: '{}' as {}",
-                            number,
-                            type_name::<T>()
-                        );
-                        return Some(Err(
-                            "Unable to parse input number as the desired output type",
-                        ));
-                    }
+                    Err(e) => return Some(Err(e)),
                 }
             }
             _ => {
@@ -130,10 +124,71 @@ where
     }
 }
 
+const NUMBER_ERROR: &str = "Unable to parse input number as the desired output type";
+
+// Parses a float at the start of `bytes` if `T` is `f32` or `f64`. Returns the
+// value and the number of bytes it uses, or `None` if `T` is a different type.
+#[inline]
+fn parse_float_prefix<T: 'static + Copy>(bytes: &[u8]) -> Option<lexical_core::Result<(T, usize)>> {
+    fn cast<F: 'static, T: 'static + Copy>(
+        result: lexical_core::Result<(F, usize)>,
+    ) -> Option<lexical_core::Result<(T, usize)>> {
+        match result {
+            Ok((value, len)) => (&value as &dyn Any)
+                .downcast_ref::<T>()
+                .map(|value| Ok((*value, len))),
+            Err(e) => Some(Err(e)),
+        }
+    }
+    let id = TypeId::of::<T>();
+    if id == TypeId::of::<f64>() {
+        cast(lexical_core::parse_partial::<f64>(bytes))
+    } else if id == TypeId::of::<f32>() {
+        cast(lexical_core::parse_partial::<f32>(bytes))
+    } else {
+        None
+    }
+}
+
 impl<T> Tokens<'_, T>
 where
-    T: str::FromStr,
+    T: WktNum + str::FromStr + 'static,
 {
+    // Parses the number that begins at `self.i`.
+    fn read_number(&mut self) -> Result<T, &'static str> {
+        let bytes = self.input.as_bytes();
+        if let Some(result) = parse_float_prefix::<T>(&bytes[self.i..]) {
+            // For floats, the parser finds the end of the number, so the
+            // number bytes are read one time only.
+            let start = self.i;
+            if let Ok((value, len)) = result {
+                let end = start + len;
+                if bytes.get(end).is_none_or(|&c| is_break(c)) {
+                    self.i = end;
+                    return Ok(value);
+                }
+            }
+            // Find the full token for the log message.
+            let end = self.read_until_break();
+            return Err(self.number_error(start, end));
+        }
+
+        let start = self.i;
+        let end = self.read_until_break();
+        self.input[start..end]
+            .parse::<T>()
+            .map_err(|_| self.number_error(start, end))
+    }
+
+    fn number_error(&self, start: usize, end: usize) -> &'static str {
+        log::warn!(
+            "Failed to parse input: '{}' as {}",
+            &self.input[start..end],
+            type_name::<T>()
+        );
+        NUMBER_ERROR
+    }
+
     // Returns the end index of the token beginning at `self.i`, consuming
     // one trailing whitespace byte; marker bytes end the token unconsumed.
     fn read_until_break(&mut self) -> usize {
@@ -269,4 +324,129 @@ fn test_tokenizer_utf8_word() {
     let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
     let tokens = tokens.unwrap();
     assert_eq!(tokens, vec![Token::Word("POINT¾Z")]);
+}
+
+#[cfg(test)]
+mod number_tests {
+    use super::{Token, Tokens};
+    use std::str::FromStr;
+
+    // The number parsing of the tokenizer before the one-pass float path:
+    // remove one leading '+', then parse the full token with `FromStr`.
+    fn reference<T: FromStr>(token: &str) -> Option<T> {
+        token.strip_prefix('+').unwrap_or(token).parse().ok()
+    }
+
+    fn first<T: crate::WktNum + FromStr + 'static>(input: &str) -> Option<T> {
+        match Tokens::<T>::from_str(input).next() {
+            Some(Ok(Token::Number(n))) => Some(n),
+            _ => None,
+        }
+    }
+
+    const CASES: &[&str] = &[
+        "0",
+        "-0",
+        "+0",
+        "1",
+        "-1",
+        "+1",
+        "++1",
+        "+-1",
+        "-+1",
+        "--1",
+        "1.",
+        ".5",
+        "-.5",
+        "+.5",
+        "-",
+        "+",
+        ".",
+        "-.",
+        "1.5",
+        "10.25",
+        "6480000.001",
+        "1e5",
+        "1E5",
+        "1e+5",
+        "1e-5",
+        "-1.5e-300",
+        "1e",
+        "1e+",
+        "1.2.3",
+        "1..2",
+        "4.2p",
+        "1x",
+        "0x10",
+        "1_000",
+        "-inf",
+        "+inf",
+        "-infinity",
+        "-Infinity",
+        "+INF",
+        "-nan",
+        "+NaN",
+        "-NAN",
+        "1e400",
+        "-1e400",
+        "1e-400",
+        "2.2250738585072014e-308",
+        "4.9e-324",
+        "123456789012345678901234567890",
+        "0.1000000000000000055511151231257827",
+        "3.4028235e38",
+        "3.4028236e38",
+        "1.17549435e-38",
+        "1.0¾",
+        "00012",
+        "-000.000",
+    ];
+
+    fn check<T: crate::WktNum + FromStr + 'static>(eq: impl Fn(T, T) -> bool) {
+        for case in CASES {
+            for suffix in ["", " ", ",", ")", "(", "\n", "\0"] {
+                let input = format!("{case}{suffix}");
+                let expected = reference::<T>(case);
+                let actual = first::<T>(&input);
+                let same = match (expected, actual) {
+                    (Some(a), Some(b)) => eq(a, b),
+                    (None, None) => true,
+                    _ => false,
+                };
+                assert!(same, "{input:?}: expected {expected:?}, got {actual:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn f64_matches_from_str() {
+        check::<f64>(|a, b| a.to_bits() == b.to_bits() || (a.is_nan() && b.is_nan()));
+    }
+
+    #[test]
+    fn f32_matches_from_str() {
+        check::<f32>(|a, b| a.to_bits() == b.to_bits() || (a.is_nan() && b.is_nan()));
+    }
+
+    #[test]
+    fn integer_path_unchanged() {
+        check::<i64>(|a, b| a == b);
+    }
+
+    #[test]
+    fn number_followed_by_tokens() {
+        let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str("1.5,-2e1)3 4(").collect();
+        assert_eq!(
+            tokens.unwrap(),
+            vec![
+                Token::Number(1.5),
+                Token::Comma,
+                Token::Number(-20.0),
+                Token::ParenClose,
+                Token::Number(3.0),
+                Token::Number(4.0),
+                Token::ParenOpen,
+            ]
+        );
+    }
 }
