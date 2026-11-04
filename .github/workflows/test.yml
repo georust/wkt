@@ -24,6 +24,23 @@ jobs:
       - run: cargo clippy --all-features --all-targets -- -Dwarnings
       - run: cargo test --all-features
       - run: cargo test --no-default-features
+  number-corpus:
+    name: Number parsing corpus
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Checkout parse-number-fxx-test-data
+        uses: actions/checkout@v7
+        with:
+          repository: nigeltao/parse-number-fxx-test-data
+          ref: 55d79b184b7d8fac2e143e89dc19b766ec4e54b8
+          path: parse-number-fxx-test-data
+      - run: cargo test --release --test parse_number_fxx -- --ignored
+        env:
+          PARSE_NUMBER_FXX_DATA: parse-number-fxx-test-data/data
   doc:
     name: Documentation
     runs-on: ubuntu-latest
