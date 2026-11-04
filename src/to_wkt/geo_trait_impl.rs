@@ -35,6 +35,22 @@ impl TryFrom<geo_traits::Dimensions> for PhysicalCoordinateDimension {
     }
 }
 
+/// Whether a geometry is written on its own, after its type tag, or as a member of another geometry.
+#[derive(Clone, Copy)]
+enum Nesting {
+    TopLevel,
+    Member,
+}
+
+impl Nesting {
+    fn empty_keyword(self) -> &'static str {
+        match self {
+            Self::TopLevel => " EMPTY",
+            Self::Member => "EMPTY",
+        }
+    }
+}
+
 /// Write an object implementing [`PointTrait`] to a WKT string.
 pub fn write_point<T: WktNum + fmt::Display>(
     f: &mut impl Write,
@@ -51,15 +67,7 @@ pub fn write_point<T: WktNum + fmt::Display>(
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = dim.try_into()?;
-    if let Some(coord) = g.coord() {
-        f.write_char('(')?;
-        write_coord(f, &coord, size)?;
-        f.write_char(')')?;
-        Ok(())
-    } else {
-        Ok(f.write_str(" EMPTY")?)
-    }
+    write_point_contents(f, g, dim.try_into()?, Nesting::TopLevel)
 }
 
 /// Write an object implementing [`LineStringTrait`] to a WKT string.
@@ -82,12 +90,7 @@ pub fn write_linestring<T: WktNum + fmt::Display>(
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = dim.try_into()?;
-    if linestring.num_coords() == 0 {
-        Ok(f.write_str(" EMPTY")?)
-    } else {
-        write_coord_sequence(f, linestring.coords(), size)
-    }
+    write_linestring_contents(f, linestring, dim.try_into()?, Nesting::TopLevel)
 }
 
 /// Write an object implementing [`PolygonTrait`] to a WKT string.
@@ -108,24 +111,7 @@ pub fn write_polygon<T: WktNum + fmt::Display>(
         }
         geo_traits::Dimensions::Unknown(_) => return Err(Error::UnknownDimension),
     }?;
-    let size = dim.try_into()?;
-    if let Some(exterior) = polygon.exterior() {
-        if exterior.num_coords() != 0 {
-            f.write_str("(")?;
-            write_coord_sequence(f, exterior.coords(), size)?;
-
-            for interior in polygon.interiors() {
-                f.write_char(',')?;
-                write_linestring_or_empty(f, &interior, size)?;
-            }
-
-            Ok(f.write_char(')')?)
-        } else {
-            Ok(f.write_str(" EMPTY")?)
-        }
-    } else {
-        Ok(f.write_str(" EMPTY")?)
-    }
+    write_polygon_contents(f, polygon, dim.try_into()?, Nesting::TopLevel)
 }
 
 /// Write an object implementing [`MultiPointTrait`] to a WKT string.
@@ -157,11 +143,11 @@ pub fn write_multi_point<T: WktNum + fmt::Display>(
     if let Some(first_point) = points.next() {
         f.write_char('(')?;
 
-        write_multi_point_member(f, &first_point, size)?;
+        write_point_contents(f, &first_point, size, Nesting::Member)?;
 
         for point in points {
             f.write_char(',')?;
-            write_multi_point_member(f, &point, size)?;
+            write_point_contents(f, &point, size, Nesting::Member)?;
         }
 
         f.write_char(')')?;
@@ -172,15 +158,12 @@ pub fn write_multi_point<T: WktNum + fmt::Display>(
     Ok(())
 }
 
-/// Write a single member of a MultiPoint, which may be an empty point.
-///
-/// A non-empty member is written parenthesized, e.g. `(1 2)`; an empty member is written as the
-/// bare `EMPTY` keyword, matching the WKT form accepted by the parser for empty points in a
-/// MultiPoint.
-fn write_multi_point_member<T: WktNum + fmt::Display>(
+/// Write a Point without its type tag, as `EMPTY` if it has no coordinate.
+fn write_point_contents<T: WktNum + fmt::Display>(
     f: &mut impl Write,
     point: &impl PointTrait<T = T>,
     size: PhysicalCoordinateDimension,
+    nesting: Nesting,
 ) -> Result<(), Error> {
     if let Some(coord) = point.coord() {
         f.write_char('(')?;
@@ -188,7 +171,7 @@ fn write_multi_point_member<T: WktNum + fmt::Display>(
         f.write_char(')')?;
         Ok(())
     } else {
-        Ok(f.write_str("EMPTY")?)
+        Ok(f.write_str(nesting.empty_keyword())?)
     }
 }
 
@@ -216,11 +199,11 @@ pub fn write_multi_linestring<T: WktNum + fmt::Display>(
     let mut line_strings = multilinestring.line_strings();
     if let Some(first_linestring) = line_strings.next() {
         f.write_str("(")?;
-        write_linestring_or_empty(f, &first_linestring, size)?;
+        write_linestring_contents(f, &first_linestring, size, Nesting::Member)?;
 
         for linestring in line_strings {
             f.write_char(',')?;
-            write_linestring_or_empty(f, &linestring, size)?;
+            write_linestring_contents(f, &linestring, size, Nesting::Member)?;
         }
 
         f.write_char(')')?;
@@ -231,15 +214,15 @@ pub fn write_multi_linestring<T: WktNum + fmt::Display>(
     Ok(())
 }
 
-/// Write a LineString which appears as part of a larger geometry - a MultiLineString member or a
-/// Polygon ring
-fn write_linestring_or_empty<T: WktNum + fmt::Display>(
+/// Write a LineString without its type tag, as `EMPTY` if it has no coordinates.
+fn write_linestring_contents<T: WktNum + fmt::Display>(
     f: &mut impl Write,
     linestring: &impl LineStringTrait<T = T>,
     size: PhysicalCoordinateDimension,
+    nesting: Nesting,
 ) -> Result<(), Error> {
     if linestring.num_coords() == 0 {
-        Ok(f.write_str("EMPTY")?)
+        Ok(f.write_str(nesting.empty_keyword())?)
     } else {
         write_coord_sequence(f, linestring.coords(), size)
     }
@@ -272,11 +255,11 @@ pub fn write_multi_polygon<T: WktNum + fmt::Display>(
     if let Some(first_polygon) = polygons.next() {
         f.write_char('(')?;
 
-        write_multi_polygon_member(f, &first_polygon, size)?;
+        write_polygon_contents(f, &first_polygon, size, Nesting::Member)?;
 
         for polygon in polygons {
             f.write_char(',')?;
-            write_multi_polygon_member(f, &polygon, size)?;
+            write_polygon_contents(f, &polygon, size, Nesting::Member)?;
         }
 
         f.write_char(')')?;
@@ -287,24 +270,22 @@ pub fn write_multi_polygon<T: WktNum + fmt::Display>(
     Ok(())
 }
 
-/// Write a single member of a MultiPolygon, which may be an empty Polygon.
-fn write_multi_polygon_member<T: WktNum + fmt::Display>(
+/// Write a Polygon without its type tag, as `EMPTY` if it has no exterior coordinates.
+fn write_polygon_contents<T: WktNum + fmt::Display>(
     f: &mut impl Write,
     polygon: &impl PolygonTrait<T = T>,
     size: PhysicalCoordinateDimension,
+    nesting: Nesting,
 ) -> Result<(), Error> {
-    let Some(exterior) = polygon.exterior() else {
-        return Ok(f.write_str("EMPTY")?);
+    let Some(exterior) = polygon.exterior().filter(|e| e.num_coords() != 0) else {
+        return Ok(f.write_str(nesting.empty_keyword())?);
     };
-    if exterior.num_coords() == 0 {
-        return Ok(f.write_str("EMPTY")?);
-    }
 
     f.write_char('(')?;
     write_coord_sequence(f, exterior.coords(), size)?;
     for interior in polygon.interiors() {
         f.write_char(',')?;
-        write_linestring_or_empty(f, &interior, size)?;
+        write_linestring_contents(f, &interior, size, Nesting::Member)?;
     }
     Ok(f.write_char(')')?)
 }
