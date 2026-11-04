@@ -22,7 +22,6 @@
 //! - `nan`: PostGIS reads it as NaN. This crate reads it as a word.
 //! - A collection whose members have different dimensions: this crate accepts
 //!   it. PostGIS rejects it.
-//! - Text after the geometry: this crate ignores it. This is a bug.
 //! - An EMPTY ring, as in `POLYGON(EMPTY)`: this crate accepts it. The grammar
 //!   and PostGIS do not. This is a bug.
 //! - A PostGIS quirk: in a collection with a tag, PostGIS replaces the tag of
@@ -467,13 +466,6 @@ struct KnownBug {
     example: &'static str,
 }
 
-// `Wkt::from_str` stops after the first geometry and ignores the text after
-// it. See `only_trailing_text`.
-const TRAILING_TEXT: KnownBug = KnownBug {
-    label: "bug: text after the geometry is ignored",
-    example: "POINT(1 2) garbage",
-};
-
 // This crate reads polygon rings with the linestring parser, which accepts
 // EMPTY. See `has_empty_ring`.
 const EMPTY_RING: KnownBug = KnownBug {
@@ -481,7 +473,7 @@ const EMPTY_RING: KnownBug = KnownBug {
     example: "POLYGON(EMPTY)",
 };
 
-const KNOWN_BUGS: [KnownBug; 2] = [TRAILING_TEXT, EMPTY_RING];
+const KNOWN_BUGS: [KnownBug; 1] = [EMPTY_RING];
 
 #[test]
 fn known_bugs_still_occur() {
@@ -596,23 +588,6 @@ fn only_nan_word(text: &str, postgis: &Outcome) -> bool {
         && (parse_with_crate(&rewritten).0 == *postgis || only_tags_missing(&rewritten, postgis))
 }
 
-// True if `text` has a strict prefix, ending in `)` or `EMPTY`, that both
-// parsers read as `ours`, allowing for missing dimension tags and number
-// forms that PostGIS rejects.
-fn only_trailing_text(text: &str, ours: &Outcome) -> bool {
-    let ends = text
-        .char_indices()
-        .map(|(i, c)| i + c.len_utf8())
-        .filter(|&end| end < text.len());
-    ends.into_iter().any(|end| {
-        let prefix = &text[..end];
-        let ends_geometry = prefix.ends_with(')') || prefix.to_ascii_uppercase().ends_with("EMPTY");
-        ends_geometry
-            && parse_with_crate(prefix).0 == *ours
-            && (postgis_agrees(prefix, ours) || postgis_agrees(&respell_numbers(prefix), ours))
-    })
-}
-
 // Names the known difference that explains why the results for `text`
 // differ, or returns `None`.
 fn difference(
@@ -639,8 +614,6 @@ fn difference(
                 Some(EMPTY_RING.label)
             } else if only_number_spelling(text, ours) {
                 Some("number form that PostGIS rejects")
-            } else if only_trailing_text(text, ours) {
-                Some(TRAILING_TEXT.label)
             } else {
                 None
             }

@@ -75,4 +75,6 @@ pub enum ParseError {
     MissingWhitespaceBeforeEmpty,
     #[error("Invalid WKT; no '(' character and not EMPTY")]
     MissingOpenParenthesisNotEmpty,
+    #[error("Unexpected text after the geometry")]
+    UnexpectedTextAfterGeometry,
 }

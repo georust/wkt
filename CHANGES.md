@@ -7,6 +7,9 @@
   per token; parsing is ~2x faster.
 * Bound `GEOMETRYCOLLECTION` nesting depth to prevent stack overflow when parsing untrusted WKT.
 * BREAKING: Parsing errors are now the matchable `wkt::error::ParseError` enum instead of `&'static str` / `String`.
+* Reject text after the geometry, such as `POINT(1 2) x` or `POINT(1 2),POINT(3 4)`, with
+  `ParseError::UnexpectedTextAfterGeometry`. Before, it was ignored. Whitespace after the geometry is
+  still accepted.
 * Your change here.
 
 ## 0.14.0 - 2025-05-08

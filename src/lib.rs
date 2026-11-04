@@ -415,7 +415,11 @@ where
             }
             _ => return Err(ParseError::InvalidFormat),
         };
-        Wkt::from_word_and_tokens(word, &mut tokens, 0)
+        let wkt = Wkt::from_word_and_tokens(word, &mut tokens, 0)?;
+        match tokens.next() {
+            None => Ok(wkt),
+            Some(_) => Err(ParseError::UnexpectedTextAfterGeometry),
+        }
     }
 }
 
@@ -1018,17 +1022,27 @@ mod tests {
         assert_eq!(wktls.to_string(), "LINESTRING(10 20,20 30)");
     }
 
-    // Known bug: `from_str` ignores the text after the first geometry. This
-    // test passes while the bug is present. When the bug is fixed, remove
-    // `should_panic` and the entry in `KNOWN_BUGS` in tests/postgis.rs.
     #[test]
-    #[should_panic(expected = "known bug")]
     fn text_after_the_geometry_is_rejected() {
-        for wkt in ["POINT(1 2) garbage", "POINT(1 2),POINT(3 4)", "POINT(1 2))"] {
-            assert!(
-                Wkt::<f64>::from_str(wkt).is_err(),
-                "known bug: {wkt} is accepted"
+        for wkt in [
+            "POINT(1 2) garbage",
+            "POINT(1 2),POINT(3 4)",
+            "POINT(1 2))",
+            "POINT EMPTY 3",
+            "POINT(1 2) 4.2p",
+        ] {
+            assert_eq!(
+                Wkt::<f64>::from_str(wkt).unwrap_err(),
+                ParseError::UnexpectedTextAfterGeometry,
+                "input: {wkt}"
             );
+        }
+    }
+
+    #[test]
+    fn whitespace_after_the_geometry_is_accepted() {
+        for wkt in ["POINT(1 2) ", "POINT(1 2)\n\t\r ", "POINT EMPTY  "] {
+            assert!(Wkt::<f64>::from_str(wkt).is_ok(), "input: {wkt:?}");
         }
     }
 
