@@ -97,6 +97,7 @@
 //! of the box on your data.
 use std::default::Default;
 use std::fmt;
+use std::num::Wrapping;
 use std::str::FromStr;
 
 use geo_traits::GeometryTrait;
@@ -156,8 +157,33 @@ pub use deserialize::geo_types::deserialize_geometry;
 )]
 pub use deserialize::geo_types::deserialize_point;
 
-pub trait WktNum: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {}
-impl<T> WktNum for T where T: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {}
+/// A numeric type that WKT coordinates can be parsed into and written from.
+pub trait WktNum: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {
+    /// Parses a number from the start of `bytes`, returning it and its length in bytes, or `None`
+    /// to fall back to `FromStr`.
+    fn parse_prefix(_bytes: &[u8]) -> Option<(Self, usize)> {
+        None
+    }
+}
+
+macro_rules! impl_wkt_num_via_lexical {
+    ($($t:ty),*) => {$(
+        impl WktNum for $t {
+            #[inline]
+            fn parse_prefix(bytes: &[u8]) -> Option<(Self, usize)> {
+                lexical_core::parse_partial(bytes).ok()
+            }
+        }
+    )*};
+}
+impl_wkt_num_via_lexical!(f32, f64);
+
+macro_rules! impl_wkt_num {
+    ($($t:ty),*) => {$(impl WktNum for $t {})*};
+}
+impl_wkt_num!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize);
+
+impl<T> WktNum for Wrapping<T> where Wrapping<T>: Num + NumCast + PartialOrd + Copy + fmt::Debug {}
 
 pub trait WktFloat: WktNum + Float {}
 impl<T> WktFloat for T where T: WktNum + Float {}
@@ -194,7 +220,7 @@ where
 
 impl<T> Wkt<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     fn from_word_and_tokens(
         word: &str,
@@ -401,7 +427,7 @@ where
 
 impl<T> Wkt<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: Tokens<T>) -> Result<Self, &'static str> {
         let mut tokens = tokens.peekable();
@@ -420,7 +446,7 @@ where
 
 impl<T> FromStr for Wkt<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     type Err = &'static str;
 
@@ -739,7 +765,7 @@ impl_specialization!(MultiLineString);
 impl_specialization!(MultiPolygon);
 impl_specialization!(GeometryCollection);
 
-fn infer_geom_dimension<T: WktNum + FromStr + Default + 'static>(
+fn infer_geom_dimension<T: WktNum + FromStr + Default>(
     tokens: &mut PeekableTokens<T>,
 ) -> Result<Dimension, &'static str> {
     if let Some(Ok(c)) = tokens.peek() {
@@ -772,7 +798,7 @@ fn infer_geom_dimension<T: WktNum + FromStr + Default + 'static>(
 
 trait FromTokens<T>: Sized + Default
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, &'static str>;
 

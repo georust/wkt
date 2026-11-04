@@ -6,6 +6,9 @@
 * Perf: tokenize from the input byte slice rather than allocating a `String`
   per token; parsing is ~2x faster.
 * Bound `GEOMETRYCOLLECTION` nesting depth to prevent stack overflow when parsing untrusted WKT.
+* BREAKING: `WktNum` is no longer implemented automatically for every numeric type. It is
+  implemented for the primitive integer and float types and `Wrapping`; for a custom numeric type,
+  add `impl wkt::WktNum for MyNum {}`. geo-types conversions now require `T: CoordNum + WktNum`.
 * Your change here.
 
 ## 0.14.0 - 2025-05-08
