@@ -27,7 +27,7 @@ const MAX_REPORTED: usize = 20;
 
 fn x_coordinate<T>(text: &str) -> Option<T>
 where
-    T: wkt::WktNum + FromStr + Default + 'static,
+    T: wkt::WktNum + FromStr + Default,
 {
     match Wkt::<T>::from_str(&format!("POINT({text} 0)")) {
         Ok(Wkt::Point(point)) => point.coord().map(|coord| coord.x),
