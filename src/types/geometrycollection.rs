@@ -100,7 +100,7 @@ const MAX_DEPTH: usize = 128;
 
 impl<T> GeometryCollection<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     /// Parses a `GEOMETRYCOLLECTION` nested `depth` levels below the top-level geometry.
     pub(crate) fn from_tokens_with_header_at_depth<'a>(
@@ -151,7 +151,7 @@ where
 
 impl<T> FromTokens<T> for GeometryCollection<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         Self::from_tokens_at_depth(tokens, dim, 0)

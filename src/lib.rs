@@ -157,8 +157,8 @@ pub use deserialize::geo_types::deserialize_geometry;
 )]
 pub use deserialize::geo_types::deserialize_point;
 
-pub trait WktNum: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {}
-impl<T> WktNum for T where T: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {}
+pub trait WktNum: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug + 'static {}
+impl<T> WktNum for T where T: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug + 'static {}
 
 pub trait WktFloat: WktNum + Float {}
 impl<T> WktFloat for T where T: WktNum + Float {}
@@ -195,7 +195,7 @@ where
 
 impl<T> Wkt<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     fn from_word_and_tokens(
         word: &str,
@@ -402,7 +402,7 @@ where
 
 impl<T> Wkt<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: Tokens<T>) -> Result<Self, ParseError> {
         let mut tokens = tokens.peekable();
@@ -421,7 +421,7 @@ where
 
 impl<T> FromStr for Wkt<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     type Err = ParseError;
 
@@ -740,7 +740,7 @@ impl_specialization!(MultiLineString);
 impl_specialization!(MultiPolygon);
 impl_specialization!(GeometryCollection);
 
-fn infer_geom_dimension<T: WktNum + FromStr + Default + 'static>(
+fn infer_geom_dimension<T: WktNum + FromStr + Default>(
     tokens: &mut PeekableTokens<T>,
 ) -> Result<Dimension, ParseError> {
     if let Some(Ok(c)) = tokens.peek() {
@@ -773,7 +773,7 @@ fn infer_geom_dimension<T: WktNum + FromStr + Default + 'static>(
 
 trait FromTokens<T>: Sized + Default
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError>;
 

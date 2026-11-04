@@ -87,7 +87,7 @@ where
 
 impl<T> FromTokens<T> for LineString<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         let result = FromTokens::comma_many(<Coord<T> as FromTokens<T>>::from_tokens, tokens, dim);

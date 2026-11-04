@@ -22,7 +22,7 @@ use crate::{ToWkt, Wkt};
 /// ```
 impl<T> ToWkt<T> for geo_types::Geometry<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         match self {
@@ -56,7 +56,7 @@ where
 /// ```
 impl<T> ToWkt<T> for geo_types::Point<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         Wkt::Point(g_point_to_w_point(self))
@@ -79,7 +79,7 @@ where
 /// ```
 impl<T> ToWkt<T> for geo_types::Line<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_line_to_w_linestring(self).into()
@@ -102,7 +102,7 @@ where
 /// ```
 impl<T> ToWkt<T> for geo_types::LineString<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_linestring_to_w_linestring(self).into()
@@ -125,7 +125,7 @@ where
 /// ```
 impl<T> ToWkt<T> for geo_types::Polygon<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_polygon_to_w_polygon(self).into()
@@ -148,7 +148,7 @@ where
 /// ```
 impl<T> ToWkt<T> for geo_types::MultiPoint<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_mpoint_to_w_mpoint(self).into()
@@ -173,7 +173,7 @@ where
 /// ```
 impl<T> ToWkt<T> for geo_types::MultiLineString<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_mline_to_w_mline(self).into()
@@ -201,7 +201,7 @@ where
 /// ```
 impl<T> ToWkt<T> for geo_types::MultiPolygon<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_mpolygon_to_w_mpolygon(self).into()
@@ -227,7 +227,7 @@ where
 /// ```
 impl<T> ToWkt<T> for geo_types::GeometryCollection<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_geocol_to_w_geocol(self).into()
@@ -251,7 +251,7 @@ where
 /// ```
 impl<T> ToWkt<T> for geo_types::Rect<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_rect_to_w_polygon(self).into()
@@ -274,7 +274,7 @@ where
 /// ```
 impl<T> ToWkt<T> for geo_types::Triangle<T>
 where
-    T: CoordNum + std::fmt::Display,
+    T: CoordNum + std::fmt::Display + 'static,
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_triangle_to_w_polygon(self).into()
@@ -288,7 +288,7 @@ where
 
 fn g_point_to_w_coord<T>(g_point: &geo_types::Coord<T>) -> Coord<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     Coord {
         x: g_point.x,
@@ -300,7 +300,7 @@ where
 
 fn g_point_to_w_point<T>(g_point: &geo_types::Point<T>) -> Point<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     let coord = g_point_to_w_coord(&g_point.0);
     Point::from_coord(coord)
@@ -308,14 +308,14 @@ where
 
 fn g_points_to_w_coords<T>(g_points: &[geo_types::Coord<T>]) -> Vec<Coord<T>>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     g_points.iter().map(g_point_to_w_coord).collect()
 }
 
 fn g_points_to_w_points<T>(g_points: &[geo_types::Point<T>]) -> Vec<Point<T>>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     g_points
         .iter()
@@ -327,14 +327,14 @@ where
 
 fn g_line_to_w_linestring<T>(g_line: &geo_types::Line<T>) -> LineString<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     g_points_to_w_linestring(&[g_line.start, g_line.end])
 }
 
 fn g_linestring_to_w_linestring<T>(g_linestring: &geo_types::LineString<T>) -> LineString<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     let geo_types::LineString(g_points) = g_linestring;
     g_points_to_w_linestring(g_points)
@@ -342,7 +342,7 @@ where
 
 fn g_points_to_w_linestring<T>(g_coords: &[geo_types::Coord<T>]) -> LineString<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     let w_coords = g_points_to_w_coords(g_coords);
     LineString::from_coords(w_coords).unwrap_or(LineString::empty(Dimension::XY))
@@ -350,14 +350,14 @@ where
 
 fn g_lines_to_w_lines<T>(g_lines: &[geo_types::LineString<T>]) -> Vec<LineString<T>>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     g_lines.iter().map(g_linestring_to_w_linestring).collect()
 }
 
 fn g_triangle_to_w_polygon<T>(g_triangle: &geo_types::Triangle<T>) -> Polygon<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     let polygon = g_triangle.to_polygon();
     g_polygon_to_w_polygon(&polygon)
@@ -365,7 +365,7 @@ where
 
 fn g_rect_to_w_polygon<T>(g_rect: &geo_types::Rect<T>) -> Polygon<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     let polygon = g_rect.to_polygon();
     g_polygon_to_w_polygon(&polygon)
@@ -373,7 +373,7 @@ where
 
 fn g_polygon_to_w_polygon<T>(g_polygon: &geo_types::Polygon<T>) -> Polygon<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     let outer_line = g_polygon.exterior();
     let inner_lines = g_polygon.interiors();
@@ -396,7 +396,7 @@ where
 
 fn g_mpoint_to_w_mpoint<T>(g_mpoint: &geo_types::MultiPoint<T>) -> MultiPoint<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     let geo_types::MultiPoint(g_points) = g_mpoint;
     let w_points = g_points_to_w_points(g_points);
@@ -405,7 +405,7 @@ where
 
 fn g_mline_to_w_mline<T>(g_mline: &geo_types::MultiLineString<T>) -> MultiLineString<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     let geo_types::MultiLineString(g_lines) = g_mline;
     let w_lines = g_lines_to_w_lines(g_lines);
@@ -414,14 +414,14 @@ where
 
 fn g_polygons_to_w_polygons<T>(g_polygons: &[geo_types::Polygon<T>]) -> Vec<Polygon<T>>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     g_polygons.iter().map(g_polygon_to_w_polygon).collect()
 }
 
 fn g_mpolygon_to_w_mpolygon<T>(g_mpolygon: &geo_types::MultiPolygon<T>) -> MultiPolygon<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     let geo_types::MultiPolygon(g_polygons) = g_mpolygon;
     let w_polygons = g_polygons_to_w_polygons(g_polygons);
@@ -430,7 +430,7 @@ where
 
 fn g_geocol_to_w_geocol<T>(g_geocol: &geo_types::GeometryCollection<T>) -> GeometryCollection<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     let geo_types::GeometryCollection(g_geoms) = g_geocol;
     let w_geoms = g_geoms.iter().map(g_geom_to_w_geom).collect::<Vec<_>>();
@@ -439,7 +439,7 @@ where
 
 fn g_geom_to_w_geom<T>(g_geom: &geo_types::Geometry<T>) -> Wkt<T>
 where
-    T: CoordNum,
+    T: CoordNum + 'static,
 {
     match *g_geom {
         geo_types::Geometry::Point(ref g_point) => g_point_to_w_point(g_point).into(),

@@ -87,7 +87,7 @@ where
 
 impl<T> FromTokens<T> for Point<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         let result = <Coord<T> as FromTokens<T>>::from_tokens(tokens, dim);

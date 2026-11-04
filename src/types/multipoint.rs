@@ -96,7 +96,7 @@ where
 
 impl<T> FromTokens<T> for MultiPoint<T>
 where
-    T: WktNum + FromStr + Default + 'static,
+    T: WktNum + FromStr + Default,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         let result = FromTokens::comma_many(

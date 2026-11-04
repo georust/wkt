@@ -71,7 +71,7 @@ where
 
 impl<'a, T> Iterator for Tokens<'a, T>
 where
-    T: WktNum + str::FromStr + 'static,
+    T: WktNum + str::FromStr,
 {
     type Item = Result<Token<'a, T>, ParseError>;
 
@@ -153,7 +153,7 @@ fn parse_float_prefix<T: 'static + Copy>(
 
 impl<T> Tokens<'_, T>
 where
-    T: WktNum + str::FromStr + 'static,
+    T: WktNum + str::FromStr,
 {
     // Parses the number that begins at `self.i`.
     fn read_number(&mut self) -> Result<T, ParseError> {
@@ -335,7 +335,7 @@ mod number_tests {
         token.strip_prefix('+').unwrap_or(token).parse().ok()
     }
 
-    fn first<T: crate::WktNum + FromStr + 'static>(input: &str) -> Option<T> {
+    fn first<T: crate::WktNum + FromStr>(input: &str) -> Option<T> {
         match Tokens::<T>::from_str(input).next() {
             Some(Ok(Token::Number(n))) => Some(n),
             _ => None,
@@ -400,7 +400,7 @@ mod number_tests {
         "-000.000",
     ];
 
-    fn check<T: crate::WktNum + FromStr + 'static>(eq: impl Fn(T, T) -> bool) {
+    fn check<T: crate::WktNum + FromStr>(eq: impl Fn(T, T) -> bool) {
         for case in CASES {
             for suffix in ["", " ", ",", ")", "(", "\n", "\0"] {
                 let input = format!("{case}{suffix}");
@@ -568,10 +568,7 @@ mod property_tests {
 
     // All the tokens of `input`. Iteration continues after an error, so that
     // the tokens after an invalid number are compared too.
-    fn actual_tokens<T: WktNum + FromStr + 'static, K>(
-        input: &str,
-        key: &impl Fn(T) -> K,
-    ) -> Vec<Tok<K>> {
+    fn actual_tokens<T: WktNum + FromStr, K>(input: &str, key: &impl Fn(T) -> K) -> Vec<Tok<K>> {
         Tokens::<T>::from_str(input)
             .map(|result| match result {
                 Ok(Token::Comma) => Tok::Comma,
@@ -584,7 +581,7 @@ mod property_tests {
             .collect()
     }
 
-    fn assert_same_tokens<T: WktNum + FromStr + 'static, K: PartialEq + std::fmt::Debug>(
+    fn assert_same_tokens<T: WktNum + FromStr, K: PartialEq + std::fmt::Debug>(
         input: &str,
         key: impl Fn(T) -> K,
     ) {
@@ -851,7 +848,7 @@ mod property_tests {
         assert_eq!(decimal_mean("0.1", "0.2"), "00.15");
     }
 
-    fn single_number<T: WktNum + FromStr + 'static>(input: &str) -> Option<T> {
+    fn single_number<T: WktNum + FromStr>(input: &str) -> Option<T> {
         let mut tokens = Tokens::<T>::from_str(input);
         match (tokens.next(), tokens.next()) {
             (Some(Ok(Token::Number(n))), None) => Some(n),
