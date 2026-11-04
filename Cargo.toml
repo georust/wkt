@@ -19,8 +19,11 @@ log = "0.4.17"
 
 [dev-dependencies]
 criterion = "0.5.1"
+hegeltest = "0.50"
+postgres = "0.19"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 serde_json = "1.0"
+wkb = "0.9"
 
 [features]
 default = ["geo-types"]
