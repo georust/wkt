@@ -351,7 +351,7 @@ where
 macro_rules! try_from_wkt_impl {
    ($($type: ty),*$(,)?)  => {
        $(
-            impl<T: CoordNum + FromStr + Default> TryFromWkt<T> for $type {
+            impl<T: CoordNum + FromStr + Default + 'static> TryFromWkt<T> for $type {
                 type Error = Error;
                 fn try_from_wkt_str(wkt_str: &str) -> Result<Self, Self::Error> {
                     let wkt = Wkt::from_str(wkt_str)?;

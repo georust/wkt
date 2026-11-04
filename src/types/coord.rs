@@ -43,7 +43,7 @@ impl<T: WktNum> Coord<T> {
 
 impl<T> FromTokens<T> for Coord<T>
 where
-    T: WktNum + FromStr + Default,
+    T: WktNum + FromStr + Default + 'static,
 {
     fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
         let x = match tokens.next().transpose()? {
