@@ -89,6 +89,12 @@
 //! geometry trait will work with many different geometry representations; not just the one from
 //! this crate.
 //!
+//! ### Reading without an intermediate structure
+//!
+//! If you convert WKT into a different format, [`visitor::visit_wkt`] gives the parts of the
+//! geometry to your own [`visitor::GeometryVisitor`], and does not build a `Wkt` value.
+//! [`visitor::validate`] checks a WKT string without building a value.
+//!
 //! ### Writing
 //!
 //! Consult the functions provided in [`to_wkt`]. Those functions will write any `geo_traits` object to WKT without any intermediate overhead.

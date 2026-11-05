@@ -80,5 +80,22 @@ fn bench_parse_to_geo(c: &mut criterion::Criterion) {
     });
 }
 
-criterion_group!(benches, bench_parse, bench_parse_to_geo);
+fn bench_validate(c: &mut criterion::Criterion) {
+    c.bench_function("validate small", |bencher| {
+        let s = include_str!("./small.wkt");
+        bencher.iter(|| wkt::visitor::validate::<f64>(s).unwrap());
+    });
+
+    c.bench_function("validate big", |bencher| {
+        let s = include_str!("./big.wkt");
+        bencher.iter(|| wkt::visitor::validate::<f64>(s).unwrap());
+    });
+
+    c.bench_function("validate lonlat", |bencher| {
+        let s = lonlat_wkt();
+        bencher.iter(|| wkt::visitor::validate::<f64>(&s).unwrap());
+    });
+}
+
+criterion_group!(benches, bench_parse, bench_parse_to_geo, bench_validate);
 criterion_main!(benches);
