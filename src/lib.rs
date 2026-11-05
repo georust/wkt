@@ -120,6 +120,9 @@ pub mod error;
 /// `WKT` primitive types and collections
 pub mod types;
 pub mod visitor;
+// Compared with the token-based parser in the tests of this module.
+#[cfg(test)]
+mod wkt_builder;
 
 mod infer_type;
 
