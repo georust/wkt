@@ -119,6 +119,7 @@ mod wkt_macro;
 pub mod error;
 /// `WKT` primitive types and collections
 pub mod types;
+pub mod visitor;
 
 mod infer_type;
 
