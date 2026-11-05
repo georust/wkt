@@ -14,11 +14,8 @@
 
 use geo_traits::CoordTrait;
 
-use crate::error::{Axis, ParseError};
-use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
-use crate::{FromTokens, WktNum};
-use std::str::FromStr;
+use crate::WktNum;
 
 /// A parsed coordinate.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -38,61 +35,6 @@ impl<T: WktNum> Coord<T> {
             (false, true) => Dimension::XYM,
             (false, false) => Dimension::XY,
         }
-    }
-}
-
-impl<T> FromTokens<T> for Coord<T>
-where
-    T: WktNum + FromStr + Default,
-{
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
-        let x = match tokens.next().transpose()? {
-            Some(Token::Number(n)) => n,
-            _ => return Err(ParseError::ExpectedNumberForCoord(Axis::X)),
-        };
-        let y = match tokens.next().transpose()? {
-            Some(Token::Number(n)) => n,
-            _ => return Err(ParseError::ExpectedNumberForCoord(Axis::Y)),
-        };
-
-        let mut z = None;
-        let mut m = None;
-
-        match dim {
-            Dimension::XY => (),
-            Dimension::XYZ => match tokens.next().transpose()? {
-                Some(Token::Number(n)) => {
-                    z = Some(n);
-                }
-                _ => return Err(ParseError::ExpectedNumberForCoord(Axis::Z)),
-            },
-            Dimension::XYM => match tokens.next().transpose()? {
-                Some(Token::Number(n)) => {
-                    m = Some(n);
-                }
-                _ => return Err(ParseError::ExpectedNumberForCoord(Axis::M)),
-            },
-            Dimension::XYZM => {
-                match tokens.next().transpose()? {
-                    Some(Token::Number(n)) => {
-                        z = Some(n);
-                    }
-                    _ => return Err(ParseError::ExpectedNumberForCoord(Axis::Z)),
-                }
-                match tokens.next().transpose()? {
-                    Some(Token::Number(n)) => {
-                        m = Some(n);
-                    }
-                    _ => return Err(ParseError::ExpectedNumberForCoord(Axis::M)),
-                }
-            }
-        }
-
-        Ok(Coord { x, y, z, m })
-    }
-
-    fn new_empty(_dim: Dimension) -> Self {
-        unreachable!("empty coord does not exist in WKT")
     }
 }
 

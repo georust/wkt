@@ -105,11 +105,11 @@ use num_traits::{Float, Num, NumCast};
 
 use crate::error::ParseError;
 use crate::to_wkt::write_geometry;
-use crate::tokenizer::{PeekableTokens, Token, Tokens};
 use crate::types::{
     Dimension, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
     Polygon,
 };
+use crate::wkt_builder::{GeometryBuilder, Top};
 
 pub mod to_wkt;
 mod tokenizer;
@@ -120,8 +120,6 @@ pub mod error;
 /// `WKT` primitive types and collections
 pub mod types;
 pub mod visitor;
-// Compared with the token-based parser in the tests of this module.
-#[cfg(test)]
 mod wkt_builder;
 
 mod infer_type;
@@ -228,229 +226,12 @@ where
     }
 }
 
-impl<T> Wkt<T>
-where
-    T: WktNum + FromStr + Default,
-{
-    fn from_word_and_tokens(
-        word: &str,
-        tokens: &mut PeekableTokens<T>,
-        depth: usize,
-    ) -> Result<Self, ParseError> {
-        // Normally Z/M/ZM is separated by a space from the primary WKT word. E.g. `POINT Z`
-        // instead of `POINTZ`. However we wish to support both types (in reading). When written
-        // without a space, `POINTZ` is considered a single word, which means we need to include
-        // matches here.
-        match word {
-            w if w.eq_ignore_ascii_case("POINT") => {
-                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("POINTZ") => {
-                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZ),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("POINTM") => {
-                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("POINTZM") => {
-                let x = <Point<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("LINESTRING") || w.eq_ignore_ascii_case("LINEARRING") => {
-                let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("LINESTRINGZ") => {
-                let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZ),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("LINESTRINGM") => {
-                let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("LINESTRINGZM") => {
-                let x = <LineString<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("POLYGON") => {
-                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("POLYGONZ") => {
-                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZ),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("POLYGONM") => {
-                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("POLYGONZM") => {
-                let x = <Polygon<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTIPOINT") => {
-                let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTIPOINTZ") => {
-                let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZ),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTIPOINTM") => {
-                let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTIPOINTZM") => {
-                let x = <MultiPoint<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTILINESTRING") => {
-                let x =
-                    <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTILINESTRINGZ") => {
-                let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZ),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTILINESTRINGM") => {
-                let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTILINESTRINGZM") => {
-                let x = <MultiLineString<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTIPOLYGON") => {
-                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(tokens, None);
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTIPOLYGONZ") => {
-                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZ),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTIPOLYGONM") => {
-                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("MULTIPOLYGONZM") => {
-                let x = <MultiPolygon<T> as FromTokens<T>>::from_tokens_with_header(
-                    tokens,
-                    Some(Dimension::XYZM),
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTION") => {
-                let x = GeometryCollection::from_tokens_with_header_at_depth(tokens, None, depth);
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZ") => {
-                let x = GeometryCollection::from_tokens_with_header_at_depth(
-                    tokens,
-                    Some(Dimension::XYZ),
-                    depth,
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONM") => {
-                let x = GeometryCollection::from_tokens_with_header_at_depth(
-                    tokens,
-                    Some(Dimension::XYM),
-                    depth,
-                );
-                x.map(|y| y.into())
-            }
-            w if w.eq_ignore_ascii_case("GEOMETRYCOLLECTIONZM") => {
-                let x = GeometryCollection::from_tokens_with_header_at_depth(
-                    tokens,
-                    Some(Dimension::XYZM),
-                    depth,
-                );
-                x.map(|y| y.into())
-            }
-            _ => Err(ParseError::InvalidType),
-        }
-    }
-}
-
 impl<T> fmt::Display for Wkt<T>
 where
     T: WktNum + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         Ok(write_geometry(f, self)?)
-    }
-}
-
-impl<T> Wkt<T>
-where
-    T: WktNum + FromStr + Default,
-{
-    fn from_tokens(tokens: Tokens<T>) -> Result<Self, ParseError> {
-        let mut tokens = tokens.peekable();
-        let word = match tokens.next().transpose()? {
-            Some(Token::Word(word)) => {
-                if !word.is_ascii() {
-                    return Err(ParseError::NonAsciiWord);
-                }
-                word
-            }
-            _ => return Err(ParseError::InvalidFormat),
-        };
-        Wkt::from_word_and_tokens(word, &mut tokens, 0)
     }
 }
 
@@ -461,7 +242,7 @@ where
     type Err = ParseError;
 
     fn from_str(wkt_str: &str) -> Result<Self, Self::Err> {
-        Wkt::from_tokens(Tokens::from_str(wkt_str))
+        visitor::visit_wkt(wkt_str, GeometryBuilder(Top::new()))
     }
 }
 
@@ -774,147 +555,6 @@ impl_specialization!(MultiPoint);
 impl_specialization!(MultiLineString);
 impl_specialization!(MultiPolygon);
 impl_specialization!(GeometryCollection);
-
-fn infer_geom_dimension<T: WktNum + FromStr + Default>(
-    tokens: &mut PeekableTokens<T>,
-) -> Result<Dimension, ParseError> {
-    if let Some(Ok(c)) = tokens.peek() {
-        match c {
-            // If we match a word check if it's Z/M/ZM and consume the token from the stream
-            Token::Word(w) => match w {
-                w if w.eq_ignore_ascii_case("Z") => {
-                    tokens.next().unwrap().unwrap();
-                    Ok(Dimension::XYZ)
-                }
-                w if w.eq_ignore_ascii_case("M") => {
-                    tokens.next().unwrap().unwrap();
-
-                    Ok(Dimension::XYM)
-                }
-                w if w.eq_ignore_ascii_case("ZM") => {
-                    tokens.next().unwrap().unwrap();
-                    Ok(Dimension::XYZM)
-                }
-                w if w.eq_ignore_ascii_case("EMPTY") => Ok(Dimension::XY),
-                _ => Err(ParseError::UnexpectedWordBeforeOpenParen),
-            },
-            // Not a word, e.g. an open paren
-            _ => Ok(Dimension::XY),
-        }
-    } else {
-        Err(ParseError::EndOfStream)
-    }
-}
-
-trait FromTokens<T>: Sized + Default
-where
-    T: WktNum + FromStr + Default,
-{
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError>;
-
-    fn new_empty(dim: Dimension) -> Self;
-
-    /// The preferred top-level FromTokens API, which additionally checks for the presence of Z, M,
-    /// and ZM in the token stream.
-    fn from_tokens_with_header(
-        tokens: &mut PeekableTokens<T>,
-        dim: Option<Dimension>,
-    ) -> Result<Self, ParseError> {
-        Self::from_tokens_with_header_by(tokens, dim, Self::from_tokens)
-    }
-
-    // Only `GeometryCollection` needs extra state, so its body parser is passed in.
-    fn from_tokens_with_header_by<'a, F>(
-        tokens: &mut PeekableTokens<'a, T>,
-        dim: Option<Dimension>,
-        parse: F,
-    ) -> Result<Self, ParseError>
-    where
-        F: FnOnce(&mut PeekableTokens<'a, T>, Dimension) -> Result<Self, ParseError>,
-    {
-        let dim = if let Some(dim) = dim {
-            dim
-        } else {
-            infer_geom_dimension(tokens)?
-        };
-        Self::from_tokens_with_parens_by(tokens, dim, parse)
-    }
-
-    fn from_tokens_with_parens(
-        tokens: &mut PeekableTokens<T>,
-        dim: Dimension,
-    ) -> Result<Self, ParseError> {
-        Self::from_tokens_with_parens_by(tokens, dim, Self::from_tokens)
-    }
-
-    fn from_tokens_with_parens_by<'a, F>(
-        tokens: &mut PeekableTokens<'a, T>,
-        dim: Dimension,
-        parse: F,
-    ) -> Result<Self, ParseError>
-    where
-        F: FnOnce(&mut PeekableTokens<'a, T>, Dimension) -> Result<Self, ParseError>,
-    {
-        match tokens.next().transpose()? {
-            Some(Token::ParenOpen) => (),
-            Some(Token::Word(s)) if s.eq_ignore_ascii_case("EMPTY") => {
-                return Ok(Self::new_empty(dim));
-            }
-            _ => return Err(ParseError::MissingOpenParenthesis),
-        };
-        let result = parse(tokens, dim)?;
-        match tokens.next().transpose()? {
-            Some(Token::ParenClose) => (),
-            _ => return Err(ParseError::MissingClosingParenthesis),
-        };
-        Ok(result)
-    }
-
-    fn from_tokens_with_optional_parens(
-        tokens: &mut PeekableTokens<T>,
-        dim: Dimension,
-    ) -> Result<Self, ParseError> {
-        // An `EMPTY` member (e.g. the empty point in `MULTIPOINT(1 2, EMPTY)`) is valid per the
-        // OGC Simple Feature Access spec, so handle it here in addition to the parenthesized form
-        // already handled by `from_tokens_with_parens`.
-        let is_empty = matches!(
-            tokens.peek(),
-            Some(Ok(Token::Word(word))) if word.eq_ignore_ascii_case("EMPTY")
-        );
-        if is_empty {
-            tokens.next(); // consume the EMPTY token
-            return Ok(Self::new_empty(dim));
-        }
-
-        match tokens.peek() {
-            Some(Ok(Token::ParenOpen)) => Self::from_tokens_with_parens(tokens, dim),
-            _ => Self::from_tokens(tokens, dim),
-        }
-    }
-
-    fn comma_many<F>(
-        f: F,
-        tokens: &mut PeekableTokens<T>,
-        dim: Dimension,
-    ) -> Result<Vec<Self>, ParseError>
-    where
-        F: Fn(&mut PeekableTokens<T>, Dimension) -> Result<Self, ParseError>,
-    {
-        let mut items = Vec::new();
-
-        let item = f(tokens, dim)?;
-        items.push(item);
-
-        while let Some(&Ok(Token::Comma)) = tokens.peek() {
-            tokens.next(); // throw away comma
-
-            let item = f(tokens, dim)?;
-            items.push(item);
-        }
-
-        Ok(items)
-    }
-}
 
 #[cfg(test)]
 mod tests {

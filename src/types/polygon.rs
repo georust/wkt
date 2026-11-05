@@ -14,13 +14,10 @@
 
 use geo_traits::PolygonTrait;
 
-use crate::error::ParseError;
 use crate::to_wkt::write_polygon;
-use crate::tokenizer::PeekableTokens;
 use crate::types::{Dimension, LineString};
-use crate::{FromTokens, Wkt, WktNum};
+use crate::{Wkt, WktNum};
 use std::fmt;
-use std::str::FromStr;
 
 /// A parsed Polygon.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -92,24 +89,6 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         Ok(write_polygon(f, self)?)
-    }
-}
-
-impl<T> FromTokens<T> for Polygon<T>
-where
-    T: WktNum + FromStr + Default,
-{
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
-        let result = FromTokens::comma_many(
-            <LineString<T> as FromTokens<T>>::from_tokens_with_parens,
-            tokens,
-            dim,
-        );
-        result.map(|rings| Polygon { rings, dim })
-    }
-
-    fn new_empty(dim: Dimension) -> Self {
-        Self::empty(dim)
     }
 }
 
