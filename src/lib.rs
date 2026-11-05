@@ -97,6 +97,7 @@
 //! of the box on your data.
 use std::default::Default;
 use std::fmt;
+use std::num::Wrapping;
 use std::str::FromStr;
 
 use geo_traits::GeometryTrait;
@@ -157,8 +158,38 @@ pub use deserialize::geo_types::deserialize_geometry;
 )]
 pub use deserialize::geo_types::deserialize_point;
 
-pub trait WktNum: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {}
-impl<T> WktNum for T where T: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {}
+/// A number type for WKT coordinates.
+///
+/// This trait is implemented for the primitive integer and floating-point types, and for
+/// [`Wrapping`] of those types. To use a different number type, implement this trait for it.
+pub trait WktNum: Num + NumCast + PartialOrd + PartialEq + Copy + fmt::Debug {
+    /// Parses a number at the start of `bytes`. Returns the number and its length in bytes.
+    ///
+    /// Returns `None` if the type does not supply a parser, or if `bytes` does not start with a
+    /// valid number. The parser then reads the full token and uses [`FromStr`].
+    fn parse_prefix(_bytes: &[u8]) -> Option<(Self, usize)> {
+        None
+    }
+}
+
+macro_rules! impl_wkt_num_float {
+    ($($t:ty),*) => {$(
+        impl WktNum for $t {
+            #[inline]
+            fn parse_prefix(bytes: &[u8]) -> Option<(Self, usize)> {
+                fast_float2::parse_partial(bytes).ok()
+            }
+        }
+    )*};
+}
+impl_wkt_num_float!(f32, f64);
+
+macro_rules! impl_wkt_num {
+    ($($t:ty),*) => {$(impl WktNum for $t {})*};
+}
+impl_wkt_num!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize);
+
+impl<T> WktNum for Wrapping<T> where Wrapping<T>: Num + NumCast + PartialOrd + Copy + fmt::Debug {}
 
 pub trait WktFloat: WktNum + Float {}
 impl<T> WktFloat for T where T: WktNum + Float {}

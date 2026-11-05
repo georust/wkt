@@ -7,6 +7,11 @@
   per token; parsing is ~2x faster.
 * Bound `GEOMETRYCOLLECTION` nesting depth to prevent stack overflow when parsing untrusted WKT.
 * BREAKING: Parsing errors are now the matchable `wkt::error::ParseError` enum instead of `&'static str` / `String`.
+* Perf: parse `f32` and `f64` coordinates in one pass with `fast-float2`.
+* BREAKING: `WktNum` is no longer implemented for every type that meets its bounds. It is
+  implemented for the primitive integer and floating-point types and for `Wrapping`. For a
+  different number type, add `impl wkt::WktNum for MyNum {}`. The `geo-types` conversions now
+  require `T: CoordNum + WktNum`.
 * Your change here.
 
 ## 0.14.0 - 2025-05-08
