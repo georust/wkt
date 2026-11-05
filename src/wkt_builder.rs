@@ -260,3 +260,183 @@ impl<T: WktNum, D: Dest<GeometryCollection<T>>> GeometryCollectionVisitor<T, Par
         self.finish()
     }
 }
+
+// Properties of `Wkt::from_str` and `validate` on generated input.
+#[cfg(test)]
+mod tests {
+    use crate::visitor::validate;
+    use crate::Wkt;
+    use hegel::generators as gs;
+    use hegel::TestCase;
+    use std::str::FromStr;
+
+    const DIMS: [&str; 8] = ["", " Z", " M", " ZM", "Z", "M", "ZM", " zm"];
+
+    fn values_per_coord(dim: &str) -> usize {
+        match dim.trim().to_ascii_uppercase().as_str() {
+            "" => 2,
+            "ZM" => 4,
+            _ => 3,
+        }
+    }
+
+    // A comma-separated list of 1 to `max` items.
+    fn list(tc: &TestCase, max: usize, mut item: impl FnMut(&TestCase) -> String) -> String {
+        let n = tc.draw(gs::integers::<usize>().min_value(1).max_value(max));
+        (0..n).map(|_| item(tc)).collect::<Vec<_>>().join(", ")
+    }
+
+    fn coord(tc: &TestCase, n: usize) -> String {
+        (0..n)
+            .map(|_| {
+                tc.draw(gs::sampled_from(vec![
+                    "0",
+                    "-1",
+                    "+2",
+                    "1.5",
+                    "-.5",
+                    "1e3",
+                    "180",
+                    "-90.123456789",
+                    "4294967296",
+                ]))
+                .to_string()
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
+
+    // A parenthesised coordinate sequence. The writer writes a polygon with an empty first
+    // ring as `EMPTY`, so a polygon ring is not `EMPTY`.
+    fn ring(tc: &TestCase, n: usize) -> String {
+        format!("({})", list(tc, 4, |tc| coord(tc, n)))
+    }
+
+    // A parenthesised coordinate sequence, or EMPTY.
+    fn sequence(tc: &TestCase, n: usize) -> String {
+        if tc.draw(gs::weighted_booleans(0.2)) {
+            "EMPTY".into()
+        } else {
+            format!("({})", list(tc, 4, |tc| coord(tc, n)))
+        }
+    }
+
+    // A valid WKT geometry, nested at most `depth` more levels.
+    fn geometry(tc: &TestCase, depth: u32) -> String {
+        let names = [
+            "POINT",
+            "LINESTRING",
+            "POLYGON",
+            "MULTIPOINT",
+            "MULTILINESTRING",
+            "MULTIPOLYGON",
+            "LINEARRING",
+            "GEOMETRYCOLLECTION",
+        ];
+        let max = if depth == 0 { 6 } else { 7 };
+        let kind = tc.draw(gs::integers::<usize>().min_value(0).max_value(max));
+        let mut name = names[kind].to_string();
+        if tc.draw(gs::booleans()) {
+            name = name.to_ascii_lowercase();
+        }
+        let dim = if names[kind] == "LINEARRING" {
+            ""
+        } else {
+            tc.draw(gs::sampled_from(DIMS.to_vec()))
+        };
+        if tc.draw(gs::weighted_booleans(0.15)) {
+            return format!("{name}{dim} EMPTY");
+        }
+        let n = values_per_coord(dim);
+        let body = match names[kind] {
+            "POINT" => coord(tc, n),
+            "LINESTRING" | "LINEARRING" => list(tc, 4, |tc| coord(tc, n)),
+            "POLYGON" => list(tc, 3, |tc| ring(tc, n)),
+            "MULTILINESTRING" => list(tc, 3, |tc| sequence(tc, n)),
+            "MULTIPOINT" => list(tc, 4, |tc| {
+                match tc.draw(gs::integers::<u8>().min_value(0).max_value(2)) {
+                    0 => coord(tc, n),
+                    1 => format!("({})", coord(tc, n)),
+                    _ => "EMPTY".into(),
+                }
+            }),
+            "MULTIPOLYGON" => list(tc, 3, |tc| {
+                if tc.draw(gs::weighted_booleans(0.2)) {
+                    "EMPTY".into()
+                } else {
+                    format!("({})", list(tc, 3, |tc| ring(tc, n)))
+                }
+            }),
+            _ => list(tc, 3, |tc| geometry(tc, depth - 1)),
+        };
+        format!("{name}{dim}({body})")
+    }
+
+    const VOCABULARY: [&str; 14] = [
+        "POINT",
+        "MULTIPOINT",
+        "POLYGON",
+        "GEOMETRYCOLLECTION",
+        "Z",
+        "ZM",
+        "EMPTY",
+        "(",
+        ")",
+        ",",
+        "1",
+        "-2.5",
+        "x",
+        "\u{be}",
+    ];
+
+    // Deletes a range of bytes or inserts a token at a random position.
+    fn mutate(tc: &TestCase, mut input: String) -> String {
+        let at = tc.draw(gs::integers::<usize>().min_value(0).max_value(input.len()));
+        if tc.draw(gs::booleans()) {
+            let len = tc.draw(gs::integers::<usize>().min_value(1).max_value(4));
+            input.replace_range(at..(at + len).min(input.len()), "");
+        } else {
+            input.insert_str(at, tc.draw(gs::sampled_from(VOCABULARY.to_vec())));
+        }
+        input
+    }
+
+    // Valid input parses, and the written WKT parses to the same value.
+    #[hegel::test(test_cases = 3000)]
+    fn valid_input_round_trips(tc: TestCase) {
+        let input = geometry(&tc, 3);
+        let wkt = Wkt::<f64>::from_str(&input).unwrap_or_else(|e| panic!("{input:?}: {e}"));
+        let written = wkt.to_string();
+        assert_eq!(
+            Wkt::from_str(&written),
+            Ok(wkt),
+            "input: {input:?}, written: {written:?}"
+        );
+    }
+
+    // The builder and the validator give the same result for each input.
+    fn assert_validate_agrees(input: &str) {
+        assert_eq!(
+            validate::<f64>(input),
+            Wkt::<f64>::from_str(input).map(|_| ()),
+            "input: {input:?}"
+        );
+    }
+
+    #[hegel::test(test_cases = 3000)]
+    fn validate_agrees_on_mutated_input(tc: TestCase) {
+        let input = geometry(&tc, 3);
+        assert_validate_agrees(&mutate(&tc, input));
+    }
+
+    #[hegel::test(test_cases = 3000)]
+    fn validate_agrees_on_token_sequences(tc: TestCase) {
+        let tokens = tc.draw(gs::vecs(gs::sampled_from(VOCABULARY.to_vec())).max_size(12));
+        assert_validate_agrees(&tokens.join(tc.draw(gs::sampled_from(vec![" ", ""]))));
+    }
+
+    #[hegel::test(test_cases = 2000)]
+    fn validate_agrees_on_any_text(tc: TestCase) {
+        assert_validate_agrees(&tc.draw(gs::text()));
+    }
+}
