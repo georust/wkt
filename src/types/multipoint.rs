@@ -14,14 +14,11 @@
 
 use geo_traits::MultiPointTrait;
 
-use crate::error::ParseError;
 use crate::to_wkt::write_multi_point;
-use crate::tokenizer::PeekableTokens;
 use crate::types::point::Point;
 use crate::types::Dimension;
-use crate::{FromTokens, Wkt, WktNum};
+use crate::{Wkt, WktNum};
 use std::fmt;
-use std::str::FromStr;
 
 /// A parsed MultiPoint.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -91,24 +88,6 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         Ok(write_multi_point(f, self)?)
-    }
-}
-
-impl<T> FromTokens<T> for MultiPoint<T>
-where
-    T: WktNum + FromStr + Default,
-{
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
-        let result = FromTokens::comma_many(
-            <Point<T> as FromTokens<T>>::from_tokens_with_optional_parens,
-            tokens,
-            dim,
-        );
-        result.map(|points| MultiPoint { points, dim })
-    }
-
-    fn new_empty(dim: Dimension) -> Self {
-        Self::empty(dim)
     }
 }
 

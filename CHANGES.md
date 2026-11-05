@@ -12,6 +12,9 @@
   implemented for the primitive integer and floating-point types and for `Wrapping`. For a
   different number type, add `impl wkt::WktNum for MyNum {}`. The `geo-types` conversions now
   require `T: CoordNum + WktNum`.
+* Add `wkt::visitor`: `visit_wkt` gives each part of a geometry to a visitor for that kind of
+  geometry, with coordinates in batches, and does not build a `Wkt` value. `visitor::validate` checks WKT
+  without building a value. `Wkt::from_str` now uses this parser. (#162)
 * Your change here.
 
 ## 0.14.0 - 2025-05-08

@@ -14,14 +14,11 @@
 
 use geo_traits::LineStringTrait;
 
-use crate::error::ParseError;
 use crate::to_wkt::write_linestring;
-use crate::tokenizer::PeekableTokens;
 use crate::types::coord::Coord;
 use crate::types::Dimension;
-use crate::{FromTokens, Wkt, WktNum};
+use crate::{Wkt, WktNum};
 use std::fmt;
-use std::str::FromStr;
 
 /// A parsed LineString.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -82,20 +79,6 @@ where
 {
     fn from(value: LineString<T>) -> Self {
         Wkt::LineString(value)
-    }
-}
-
-impl<T> FromTokens<T> for LineString<T>
-where
-    T: WktNum + FromStr + Default,
-{
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
-        let result = FromTokens::comma_many(<Coord<T> as FromTokens<T>>::from_tokens, tokens, dim);
-        result.map(|coords| LineString { coords, dim })
-    }
-
-    fn new_empty(dim: Dimension) -> Self {
-        Self::empty(dim)
     }
 }
 

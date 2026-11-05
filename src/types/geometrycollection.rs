@@ -14,13 +14,10 @@
 
 use geo_traits::GeometryCollectionTrait;
 
-use crate::error::ParseError;
 use crate::to_wkt::write_geometry_collection;
-use crate::tokenizer::{PeekableTokens, Token};
 use crate::types::Dimension;
-use crate::{FromTokens, Wkt, WktNum};
+use crate::{Wkt, WktNum};
 use std::fmt;
-use std::str::FromStr;
 
 /// A parsed GeometryCollection.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -92,73 +89,6 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         Ok(write_geometry_collection(f, self)?)
-    }
-}
-
-/// Maximum `GEOMETRYCOLLECTION` nesting depth before parsing fails instead of overflowing.
-const MAX_DEPTH: usize = 128;
-
-impl<T> GeometryCollection<T>
-where
-    T: WktNum + FromStr + Default,
-{
-    /// Parses a `GEOMETRYCOLLECTION` nested `depth` levels below the top-level geometry.
-    pub(crate) fn from_tokens_with_header_at_depth<'a>(
-        tokens: &mut PeekableTokens<'a, T>,
-        dim: Option<Dimension>,
-        depth: usize,
-    ) -> Result<Self, ParseError> {
-        if depth >= MAX_DEPTH {
-            return Err(ParseError::MaxDepthExceeded {
-                max_depth: MAX_DEPTH,
-            });
-        }
-        Self::from_tokens_with_header_by(tokens, dim, |tokens, dim| {
-            Self::from_tokens_at_depth(tokens, dim, depth)
-        })
-    }
-
-    fn from_tokens_at_depth(
-        tokens: &mut PeekableTokens<T>,
-        dim: Dimension,
-        depth: usize,
-    ) -> Result<Self, ParseError> {
-        let mut items = Vec::new();
-
-        let word = match tokens.next().transpose()? {
-            Some(Token::Word(w)) => w,
-            _ => return Err(ParseError::ExpectedWordInGeometryCollection),
-        };
-
-        let item = Wkt::from_word_and_tokens(word, tokens, depth + 1)?;
-        items.push(item);
-
-        while let Some(&Ok(Token::Comma)) = tokens.peek() {
-            tokens.next(); // throw away comma
-
-            let word = match tokens.next().transpose()? {
-                Some(Token::Word(w)) => w,
-                _ => return Err(ParseError::ExpectedWordInGeometryCollection),
-            };
-
-            let item = Wkt::from_word_and_tokens(word, tokens, depth + 1)?;
-            items.push(item);
-        }
-
-        Ok(GeometryCollection { geoms: items, dim })
-    }
-}
-
-impl<T> FromTokens<T> for GeometryCollection<T>
-where
-    T: WktNum + FromStr + Default,
-{
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
-        Self::from_tokens_at_depth(tokens, dim, 0)
-    }
-
-    fn new_empty(dim: Dimension) -> Self {
-        Self::empty(dim)
     }
 }
 
@@ -539,7 +469,7 @@ mod tests {
 
     #[test]
     fn geometrycollection_depth_boundary() {
-        use super::MAX_DEPTH;
+        use crate::visitor::MAX_DEPTH;
 
         let mut s = String::new();
         for _ in 0..MAX_DEPTH {

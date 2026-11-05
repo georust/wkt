@@ -14,14 +14,11 @@
 
 use geo_traits::MultiLineStringTrait;
 
-use crate::error::ParseError;
 use crate::to_wkt::write_multi_linestring;
-use crate::tokenizer::PeekableTokens;
 use crate::types::linestring::LineString;
 use crate::types::Dimension;
-use crate::{FromTokens, Wkt, WktNum};
+use crate::{Wkt, WktNum};
 use std::fmt;
-use std::str::FromStr;
 
 /// A parsed MultiLineString.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -93,24 +90,6 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         Ok(write_multi_linestring(f, self)?)
-    }
-}
-
-impl<T> FromTokens<T> for MultiLineString<T>
-where
-    T: WktNum + FromStr + Default,
-{
-    fn from_tokens(tokens: &mut PeekableTokens<T>, dim: Dimension) -> Result<Self, ParseError> {
-        let result = FromTokens::comma_many(
-            <LineString<T> as FromTokens<T>>::from_tokens_with_parens,
-            tokens,
-            dim,
-        );
-        result.map(|line_strings| MultiLineString { line_strings, dim })
-    }
-
-    fn new_empty(dim: Dimension) -> Self {
-        Self::empty(dim)
     }
 }
 
