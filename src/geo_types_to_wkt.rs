@@ -1,4 +1,5 @@
 use geo_types::CoordNum;
+use std::fmt::Write;
 
 use crate::to_wkt::{
     write_geometry, write_geometry_collection, write_line, write_linestring,
@@ -39,6 +40,10 @@ where
         }
     }
 
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_string_geometry(writer, self))
+    }
+
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
         let mut writer_wrapper = WriterWrapper::new(writer);
         write_geometry(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
@@ -60,6 +65,10 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         Wkt::Point(g_point_to_w_point(self))
+    }
+
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_point(writer, self))
     }
 
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
@@ -85,6 +94,10 @@ where
         g_line_to_w_linestring(self).into()
     }
 
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_line(writer, self))
+    }
+
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
         let mut writer_wrapper = WriterWrapper::new(writer);
         write_line(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
@@ -106,6 +119,10 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_linestring_to_w_linestring(self).into()
+    }
+
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_linestring(writer, self))
     }
 
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
@@ -131,6 +148,10 @@ where
         g_polygon_to_w_polygon(self).into()
     }
 
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_string_polygon(writer, self))
+    }
+
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
         let mut writer_wrapper = WriterWrapper::new(writer);
         write_polygon(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
@@ -152,6 +173,10 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_mpoint_to_w_mpoint(self).into()
+    }
+
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_multi_point(writer, self))
     }
 
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
@@ -177,6 +202,10 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_mline_to_w_mline(self).into()
+    }
+
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_multi_linestring(writer, self))
     }
 
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
@@ -207,6 +236,10 @@ where
         g_mpolygon_to_w_mpolygon(self).into()
     }
 
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_string_multi_polygon(writer, self))
+    }
+
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
         let mut writer_wrapper = WriterWrapper::new(writer);
         write_multi_polygon(&mut writer_wrapper, self)
@@ -233,6 +266,10 @@ where
         g_geocol_to_w_geocol(self).into()
     }
 
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_string_collection(writer, self))
+    }
+
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
         let mut writer_wrapper = WriterWrapper::new(writer);
         write_geometry_collection(&mut writer_wrapper, self)
@@ -255,6 +292,10 @@ where
 {
     fn to_wkt(&self) -> Wkt<T> {
         g_rect_to_w_polygon(self).into()
+    }
+
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_string_rect(writer, self))
     }
 
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
@@ -280,10 +321,103 @@ where
         g_triangle_to_w_polygon(self).into()
     }
 
+    fn wkt_string(&self) -> String {
+        wkt_string_with(|writer| write_triangle(writer, self))
+    }
+
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
         let mut writer_wrapper = WriterWrapper::new(writer);
         write_triangle(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
     }
+}
+
+// Keep the trait default unchanged for external implementors. These overrides
+// write into the final UTF-8 String using the existing fmt::Write serializers.
+fn wkt_string_with(write: impl FnOnce(&mut String) -> Result<(), crate::error::Error>) -> String {
+    let mut result = String::new();
+    write(&mut result).expect("writing WKT to a String failed");
+    result
+}
+
+// The io writer's rectangle traversal differs from Rect::to_polygon(). Preserve
+// the established wkt_string vertex order without allocating that polygon.
+fn write_string_rect<T: CoordNum + std::fmt::Display>(
+    writer: &mut String,
+    rect: &geo_types::Rect<T>,
+) -> Result<(), crate::error::Error> {
+    let min = rect.min();
+    let max = rect.max();
+    Ok(write!(
+        writer,
+        "POLYGON(({} {},{} {},{} {},{} {},{} {}))",
+        max.x, min.y, max.x, max.y, min.x, max.y, min.x, min.y, max.x, min.y
+    )?)
+}
+
+fn write_string_polygon<T: CoordNum + std::fmt::Display>(
+    writer: &mut String,
+    polygon: &geo_types::Polygon<T>,
+) -> Result<(), crate::error::Error> {
+    if polygon.exterior().0.is_empty() && !polygon.interiors().is_empty() {
+        // The conversion treats the first interior as the exterior in this
+        // unusual representation. Retain that behavior instead of dropping it.
+        Ok(write!(writer, "{}", polygon.to_wkt())?)
+    } else {
+        write_polygon(writer, polygon)
+    }
+}
+
+fn write_string_multi_polygon<T: CoordNum + std::fmt::Display>(
+    writer: &mut String,
+    polygons: &geo_types::MultiPolygon<T>,
+) -> Result<(), crate::error::Error> {
+    if polygons
+        .0
+        .iter()
+        .any(|p| p.exterior().0.is_empty() && !p.interiors().is_empty())
+    {
+        Ok(write!(writer, "{}", polygons.to_wkt())?)
+    } else {
+        write_multi_polygon(writer, polygons)
+    }
+}
+
+fn write_string_geometry<T: CoordNum + std::fmt::Display>(
+    writer: &mut String,
+    geometry: &geo_types::Geometry<T>,
+) -> Result<(), crate::error::Error> {
+    match geometry {
+        geo_types::Geometry::Point(g) => write_point(writer, g),
+        geo_types::Geometry::Line(g) => write_line(writer, g),
+        geo_types::Geometry::LineString(g) => write_linestring(writer, g),
+        geo_types::Geometry::Polygon(g) => write_string_polygon(writer, g),
+        geo_types::Geometry::MultiPoint(g) => write_multi_point(writer, g),
+        geo_types::Geometry::MultiLineString(g) => write_multi_linestring(writer, g),
+        geo_types::Geometry::MultiPolygon(g) => write_string_multi_polygon(writer, g),
+        geo_types::Geometry::GeometryCollection(g) => write_string_collection(writer, g),
+        geo_types::Geometry::Rect(g) => write_string_rect(writer, g),
+        geo_types::Geometry::Triangle(g) => write_triangle(writer, g),
+    }
+}
+
+fn write_string_collection<T: CoordNum + std::fmt::Display>(
+    writer: &mut String,
+    collection: &geo_types::GeometryCollection<T>,
+) -> Result<(), crate::error::Error> {
+    writer.write_str("GEOMETRYCOLLECTION")?;
+    if collection.0.is_empty() {
+        writer.write_str(" EMPTY")?;
+    } else {
+        writer.write_char('(')?;
+        for (index, geometry) in collection.0.iter().enumerate() {
+            if index != 0 {
+                writer.write_char(',')?;
+            }
+            write_string_geometry(writer, geometry)?;
+        }
+        writer.write_char(')')?;
+    }
+    Ok(())
 }
 
 fn g_point_to_w_coord<T>(g_point: &geo_types::Coord<T>) -> Coord<T>
