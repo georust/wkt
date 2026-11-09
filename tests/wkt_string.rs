@@ -100,6 +100,23 @@ fn geo_types_match_the_previous_string_for_every_kind() {
     );
     check!(Rect, Rect::new((4., 4.), (8., 8.)));
     check!(Rect, Rect::new((0., 0.), (0., 0.)));
+
+    // A NaN endpoint compares unequal to itself when geo-types closes a ring.
+    let nan_rect = Rect::new((f64::NAN, 0.), (f64::NAN, 1.));
+    let nan_triangle = Triangle::new(
+        Coord { x: f64::NAN, y: 0. },
+        Coord { x: 1., y: 0. },
+        Coord { x: 0., y: 1. },
+    );
+    check!(Rect, nan_rect);
+    check!(Triangle, nan_triangle);
+    check!(
+        GeometryCollection,
+        GeometryCollection::new_from(vec![
+            Geometry::Rect(nan_rect),
+            Geometry::Triangle(nan_triangle),
+        ])
+    );
     check!(
         GeometryCollection,
         GeometryCollection::<f64>::new_from(vec![])
