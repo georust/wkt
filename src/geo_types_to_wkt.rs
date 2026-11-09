@@ -294,10 +294,6 @@ where
         g_rect_to_w_polygon(self).into()
     }
 
-    fn wkt_string(&self) -> String {
-        wkt_string_with(|writer| write_string_rect(writer, self))
-    }
-
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
         let mut writer_wrapper = WriterWrapper::new(writer);
         write_rect(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
@@ -321,10 +317,6 @@ where
         g_triangle_to_w_polygon(self).into()
     }
 
-    fn wkt_string(&self) -> String {
-        wkt_string_with(|writer| write_triangle(writer, self))
-    }
-
     fn write_wkt(&self, writer: impl std::io::Write) -> std::io::Result<()> {
         let mut writer_wrapper = WriterWrapper::new(writer);
         write_triangle(&mut writer_wrapper, self).map_err(|err| writer_wrapper.into_io_err(err))
@@ -337,21 +329,6 @@ fn wkt_string_with(write: impl FnOnce(&mut String) -> Result<(), crate::error::E
     let mut result = String::new();
     write(&mut result).expect("writing WKT to a String failed");
     result
-}
-
-// The io writer's rectangle traversal differs from Rect::to_polygon(). Preserve
-// the established wkt_string vertex order without allocating that polygon.
-fn write_string_rect<T: CoordNum + std::fmt::Display>(
-    writer: &mut String,
-    rect: &geo_types::Rect<T>,
-) -> Result<(), crate::error::Error> {
-    let min = rect.min();
-    let max = rect.max();
-    Ok(write!(
-        writer,
-        "POLYGON(({} {},{} {},{} {},{} {},{} {}))",
-        max.x, min.y, max.x, max.y, min.x, max.y, min.x, min.y, max.x, min.y
-    )?)
 }
 
 fn write_string_polygon<T: CoordNum + std::fmt::Display>(
@@ -395,8 +372,9 @@ fn write_string_geometry<T: CoordNum + std::fmt::Display>(
         geo_types::Geometry::MultiLineString(g) => write_multi_linestring(writer, g),
         geo_types::Geometry::MultiPolygon(g) => write_string_multi_polygon(writer, g),
         geo_types::Geometry::GeometryCollection(g) => write_string_collection(writer, g),
-        geo_types::Geometry::Rect(g) => write_string_rect(writer, g),
-        geo_types::Geometry::Triangle(g) => write_triangle(writer, g),
+        // Preserve the ring order and closure used by the geo-types conversions.
+        geo_types::Geometry::Rect(g) => Ok(write!(writer, "{}", g.to_wkt())?),
+        geo_types::Geometry::Triangle(g) => Ok(write!(writer, "{}", g.to_wkt())?),
     }
 }
 
