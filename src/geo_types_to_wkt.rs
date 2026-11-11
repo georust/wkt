@@ -375,21 +375,17 @@ fn g_polygon_to_w_polygon<T>(g_polygon: &geo_types::Polygon<T>) -> Polygon<T>
 where
     T: CoordNum,
 {
-    let outer_line = g_polygon.exterior();
+    let geo_types::LineString(outer_points) = g_polygon.exterior();
     let inner_lines = g_polygon.interiors();
 
-    // Outer
-    let geo_types::LineString(outer_points) = outer_line;
-    let poly_lines = std::iter::once_with(|| {
-        if !outer_points.is_empty() {
-            Some(g_points_to_w_linestring(outer_points))
-        } else {
-            None
-        }
-    })
-    .flatten()
-    .chain(inner_lines.iter().map(g_linestring_to_w_linestring))
-    .collect::<Vec<_>>();
+    // A polygon without an exterior is empty, whatever its interiors: they must not become its exterior
+    if outer_points.is_empty() {
+        return Polygon::empty(Dimension::XY);
+    }
+
+    let poly_lines = std::iter::once(g_points_to_w_linestring(outer_points))
+        .chain(inner_lines.iter().map(g_linestring_to_w_linestring))
+        .collect::<Vec<_>>();
 
     Polygon::from_rings(poly_lines).unwrap_or(Polygon::empty(Dimension::XY))
 }
@@ -485,5 +481,20 @@ mod tests {
 
         let point = geo_types::Point::new(1.1f32, 2.9f32);
         assert_eq!("POINT(1.1 2.9)", &point.wkt_string());
+    }
+
+    #[test]
+    fn polygon_with_empty_exterior() {
+        // The interior must not be written as the exterior
+        let hole = geo_types::LineString::from(vec![(0., 0.), (1., 0.), (1., 1.), (0., 0.)]);
+        let polygon = geo_types::Polygon::new(geo_types::LineString::new(vec![]), vec![hole]);
+        assert_eq!("POLYGON EMPTY", &polygon.wkt_string());
+
+        let mut via_traits = String::new();
+        crate::to_wkt::write_geometry(&mut via_traits, &polygon).unwrap();
+        assert_eq!(via_traits, polygon.wkt_string());
+
+        let multi = geo_types::MultiPolygon::new(vec![polygon]);
+        assert_eq!("MULTIPOLYGON(EMPTY)", &multi.wkt_string());
     }
 }
