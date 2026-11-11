@@ -7,6 +7,7 @@
   per token; parsing is ~2x faster.
 * Bound `GEOMETRYCOLLECTION` nesting depth to prevent stack overflow when parsing untrusted WKT.
 * BREAKING: Parsing errors are now the matchable `wkt::error::ParseError` enum instead of `&'static str` / `String`.
+* Fix writing a geo-types `Polygon` with an empty exterior and interiors: it is `POLYGON EMPTY`, as the geo-traits writer has it, rather than its first interior written as its exterior.
 * Your change here.
 
 ## 0.14.0 - 2025-05-08
