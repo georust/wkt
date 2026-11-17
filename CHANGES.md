@@ -1,16 +1,14 @@
 # Changes
 
-## Unreleased
+## 0.15.0 - 2025-11-17
 
 * Reduce allocations when converting `geo-types` geometries with `wkt_string`.
-
 * Parse and write `MULTIPOINT`, `MULTILINESTRING`, and `MULTIPOLYGON` with a mix of `EMPTY` and non-empty members, e.g. `MULTIPOINT(1 2, EMPTY)`. (#111)
 * Perf: tokenize from the input byte slice rather than allocating a `String`
   per token; parsing is ~2x faster.
 * Bound `GEOMETRYCOLLECTION` nesting depth to prevent stack overflow when parsing untrusted WKT.
 * BREAKING: Parsing errors are now the matchable `wkt::error::ParseError` enum instead of `&'static str` / `String`.
 * Fix writing a geo-types `Polygon` with an empty exterior and interiors: it is `POLYGON EMPTY`, as the geo-traits writer has it, rather than its first interior written as its exterior.
-* Your change here.
 
 ## 0.14.0 - 2025-05-08
 
