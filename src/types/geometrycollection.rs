@@ -202,7 +202,7 @@ mod tests {
 
     #[test]
     fn basic_geometrycollection() {
-        let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4)))")
+        let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4))")
             .ok()
             .unwrap();
         let geoms = match wkt {
@@ -217,7 +217,7 @@ mod tests {
 
     #[test]
     fn complex_geometrycollection() {
-        let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4),LINESTRING(4 6,7 10)))")
+        let wkt: Wkt<f64> = Wkt::from_str("GEOMETRYCOLLECTION (POINT (8 4),LINESTRING(4 6,7 10))")
             .ok()
             .unwrap();
         let geoms = match wkt {

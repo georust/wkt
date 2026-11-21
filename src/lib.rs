@@ -415,7 +415,13 @@ where
             }
             _ => return Err(ParseError::InvalidFormat),
         };
-        Wkt::from_word_and_tokens(word, &mut tokens, 0)
+        let wkt = Wkt::from_word_and_tokens(word, &mut tokens, 0)?;
+        // Anything after the geometry, e.g. a second geometry, is an error rather than
+        // being silently dropped.
+        if tokens.next().transpose()?.is_some() {
+            return Err(ParseError::UnexpectedTrailingInput);
+        }
+        Ok(wkt)
     }
 }
 
@@ -925,6 +931,26 @@ mod tests {
             }
             _ => unreachable!(),
         };
+    }
+
+    #[test]
+    fn trailing_input() {
+        for wkt_str in [
+            "POINT (10 20) x",
+            "POINT (10 20))",
+            "POINT (10 20),POINT (30 40)",
+            "POINT EMPTY 1",
+            "LINESTRING (1 2, 3 4) (5 6)",
+            "GEOMETRYCOLLECTION (POINT (1 2)) ,",
+        ] {
+            assert_eq!(
+                <Wkt<f64>>::from_str(wkt_str).unwrap_err(),
+                ParseError::UnexpectedTrailingInput,
+                "{wkt_str}"
+            );
+        }
+        // Surrounding whitespace is still fine.
+        assert!(<Wkt<f64>>::from_str(" POINT (10 20) \n").is_ok());
     }
 
     #[test]
