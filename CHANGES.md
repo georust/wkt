@@ -1,5 +1,9 @@
 # Changes
 
+## Unreleased
+
+* Reject input after the end of the geometry, e.g. `POINT(1 2),POINT(3 4)` or `POINT(1 2))`, with `ParseError::UnexpectedTrailingInput` instead of silently ignoring it.
+
 ## 0.15.0 - 2025-11-17
 
 * Reduce allocations when converting `geo-types` geometries with `wkt_string`.
