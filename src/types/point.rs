@@ -190,6 +190,26 @@ mod tests {
     }
 
     #[test]
+    fn non_finite_point_round_trip() {
+        let point: Wkt<f64> = Wkt::Point(Point::from_coord(Coord {
+            x: f64::NAN,
+            y: f64::INFINITY,
+            z: Some(f64::NEG_INFINITY),
+            m: None,
+        }));
+        let text = point.to_string();
+        assert_eq!(text, "POINT Z(NaN inf -inf)");
+
+        let Wkt::Point(Point { coord, .. }) = Wkt::<f64>::from_str(&text).unwrap() else {
+            unreachable!()
+        };
+        let coord = coord.unwrap();
+        assert!(coord.x.is_nan());
+        assert_eq!(coord.y, f64::INFINITY);
+        assert_eq!(coord.z, Some(f64::NEG_INFINITY));
+    }
+
+    #[test]
     fn parse_empty_point() {
         let wkt: Wkt<f64> = Wkt::from_str("POINT EMPTY").ok().unwrap();
         match wkt {

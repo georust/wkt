@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Read unsigned `NaN` and `inf` coordinates, e.g. `POINT(NaN inf)`, so the WKT written for non-finite coordinates can be read back. `-inf` and `+NaN` were already accepted.
 * Reject input after the end of the geometry, e.g. `POINT(1 2),POINT(3 4)` or `POINT(1 2))`, with `ParseError::UnexpectedTrailingInput` instead of silently ignoring it.
 
 ## 0.15.0 - 2025-11-17
