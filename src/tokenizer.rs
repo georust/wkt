@@ -122,7 +122,16 @@ where
                 // Tokens only end on ASCII bytes, which can never be part of
                 // a multi-byte UTF-8 sequence, so token indices always fall
                 // on char boundaries and slicing the input cannot panic.
-                Token::Word(&input[start..end])
+                let word = &input[start..end];
+                // Unsigned NaN and infinity (as written by `Display`) start
+                // with a letter. Read them as numbers, like `-inf` already is.
+                match c {
+                    b'n' | b'N' | b'i' | b'I' => match word.parse::<T>() {
+                        Ok(parsed_num) => Token::Number(parsed_num),
+                        Err(_) => Token::Word(word),
+                    },
+                    _ => Token::Word(word),
+                }
             }
         };
         Some(Ok(token))
@@ -201,6 +210,29 @@ fn test_tokenizer_invalid_number() {
     let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
     let tokens = tokens.unwrap_err();
     assert_eq!(tokens, ParseError::InvalidNumber);
+}
+
+#[test]
+fn test_tokenizer_non_finite_numbers() {
+    // Unsigned NaN and infinity read the same as signed ones, which is also
+    // how they are written.
+    let test_str = "NaN inf -inf +inf Infinity nan";
+    let tokens: Result<Vec<Token<f64>>, _> = Tokens::from_str(test_str).collect();
+    let tokens = tokens.unwrap();
+    assert_eq!(tokens.len(), 6);
+    assert!(matches!(tokens[0], Token::Number(n) if n.is_nan()));
+    assert_eq!(tokens[1], Token::Number(f64::INFINITY));
+    assert_eq!(tokens[2], Token::Number(f64::NEG_INFINITY));
+    assert_eq!(tokens[3], Token::Number(f64::INFINITY));
+    assert_eq!(tokens[4], Token::Number(f64::INFINITY));
+    assert!(matches!(tokens[5], Token::Number(n) if n.is_nan()));
+
+    // Integer types have no NaN or infinity, so these stay words.
+    let tokens: Result<Vec<Token<i32>>, _> = Tokens::from_str("NaN inf").collect();
+    assert_eq!(
+        tokens.unwrap(),
+        vec![Token::Word("NaN"), Token::Word("inf")]
+    );
 }
 
 #[test]
